@@ -3,6 +3,7 @@ package lox
 import (
 	"fmt"
 	"strconv"
+	"strings"
 )
 
 var keywords = map[string]TokenType{
@@ -228,6 +229,21 @@ type scanErr struct {
 
 func (s *Scanner) addError(line int, msg string) {
 	s.errors = append(s.errors, scanErr{line, msg})
+}
+
+func (s *Scanner) Err() error {
+	if len(s.errors) == 0 {
+		return nil
+	}
+	if len(s.errors) == 1 {
+		err := s.errors[0]
+		return fmt.Errorf("line %d: %s", err.line, err.msg)
+	}
+	lines := make([]string, len(s.errors))
+	for i, err := range s.errors {
+		lines[i] = fmt.Sprintf("  line %d: %s", err.line, err.msg)
+	}
+	return fmt.Errorf("multiple errors:\n%s", strings.Join(lines, "\n"))
 }
 
 // ----

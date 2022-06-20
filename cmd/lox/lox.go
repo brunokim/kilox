@@ -27,7 +27,9 @@ func runFile(path string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	run(string(bs))
+	if !run(string(bs)) {
+		os.Exit(65)
+	}
 }
 
 func runPrompt() {
@@ -42,10 +44,15 @@ func runPrompt() {
 	}
 }
 
-func run(text string) {
+func run(text string) bool {
 	s := lox.NewScanner(text)
 	tokens := s.ScanTokens()
+	if err := s.Err(); err != nil {
+		log.Print(err)
+		return false
+	}
 	for _, token := range tokens {
 		fmt.Println(token)
 	}
+	return true
 }
