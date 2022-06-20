@@ -15,6 +15,17 @@ func main() {
 		fmt.Println("Usage: lox [script]")
 		return
 	}
+	expr := lox.Binary{
+		lox.Unary{
+			lox.Token{lox.Minus, "-", nil, 1},
+			lox.Literal{123},
+		},
+		lox.Token{lox.Star, "*", nil, 1},
+		lox.Grouping{
+			lox.Literal{45.67},
+		},
+	}
+	fmt.Println(new(lox.ASTPrinter).Print(expr))
 	if len(os.Args) == 2 {
 		runFile(os.Args[1])
 	} else {
