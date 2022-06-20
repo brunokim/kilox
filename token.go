@@ -52,6 +52,7 @@ const (
 	Var
 	While
 
+	// Sentinel for end-of-file.
 	Eof
 )
 

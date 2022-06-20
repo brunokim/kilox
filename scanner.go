@@ -1,8 +1,8 @@
 package lox
 
 import (
-    "fmt"
-    "strconv"
+	"fmt"
+	"strconv"
 )
 
 var keywords = map[string]TokenType{
