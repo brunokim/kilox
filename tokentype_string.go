@@ -46,10 +46,10 @@ func _() {
 	_ = x[True-35]
 	_ = x[Var-36]
 	_ = x[While-37]
-	_ = x[Eof-38]
+	_ = x[EOF-38]
 }
 
-const _TokenType_name = "LeftParenRightParenLeftBraceRightBraceCommaDotMinusPlusSemicolonSlashStarBangBangEqualEqualEqualEqualGreaterGreaterEqualLessLessEqualIdentifierStringNumberAndClassElseFalseFunForIfNilOrPrintReturnSuperThisTrueVarWhileEof"
+const _TokenType_name = "LeftParenRightParenLeftBraceRightBraceCommaDotMinusPlusSemicolonSlashStarBangBangEqualEqualEqualEqualGreaterGreaterEqualLessLessEqualIdentifierStringNumberAndClassElseFalseFunForIfNilOrPrintReturnSuperThisTrueVarWhileEOF"
 
 var _TokenType_index = [...]uint8{0, 9, 19, 28, 38, 43, 46, 51, 55, 64, 69, 73, 77, 86, 91, 101, 108, 120, 124, 133, 143, 149, 155, 158, 163, 167, 172, 175, 178, 180, 183, 185, 190, 196, 201, 205, 209, 212, 217, 220}
 

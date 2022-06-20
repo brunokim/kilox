@@ -53,7 +53,7 @@ const (
 	While
 
 	// Sentinel for end-of-file.
-	Eof
+	EOF
 )
 
 type Token struct {
