@@ -168,6 +168,7 @@ func (s *Scanner) readString() {
 	}
 	if s.isAtEnd() {
 		s.addError(s.line, fmt.Sprintf("unterminated string"))
+		return
 	}
 	s.advance()                                // Consume the final '"'.
 	value := s.source[s.start+1 : s.current-1] // Trim the surrounding quotes.
