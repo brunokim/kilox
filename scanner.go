@@ -164,6 +164,15 @@ func (s *Scanner) readString() {
 		if s.peek() == '\n' {
 			s.line++
 		}
+		if s.peek() != '\\' {
+			s.advance()
+			continue
+		}
+		// Escaped character.
+		if !(s.peekNext() == '"' || s.peekNext() == '\\') {
+			s.addError(s.line, fmt.Sprintf("invalid escaped character '%c' in string", s.peekNext()))
+		}
+		s.advance()
 		s.advance()
 	}
 	if s.isAtEnd() {
@@ -172,6 +181,8 @@ func (s *Scanner) readString() {
 	}
 	s.advance()                                // Consume the final '"'.
 	value := s.source[s.start+1 : s.current-1] // Trim the surrounding quotes.
+	value = strings.ReplaceAll(value, `\"`, `"`)
+	value = strings.ReplaceAll(value, `\\`, `\`)
 	s.addLiteralToken(String, value)
 }
 
