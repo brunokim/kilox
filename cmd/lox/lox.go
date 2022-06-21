@@ -57,5 +57,11 @@ func run(text string) bool {
 		return false
 	}
 	fmt.Println(new(lox.ASTPrinter).Print(expr))
+	i := new(lox.Interpreter)
+	v := i.Interpret(expr)
+	if v == nil {
+		return false
+	}
+	fmt.Println("=>", v)
 	return true
 }
