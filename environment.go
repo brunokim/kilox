@@ -23,5 +23,5 @@ func (env *Environment) Get(name Token) interface{} {
 	if ok {
 		return v
 	}
-	panic(newRuntimeError(name, fmt.Sprintf("undefined variable %q", name.Lexeme)))
+	panic(runtimeError{name, fmt.Sprintf("undefined variable %q", name.Lexeme)})
 }

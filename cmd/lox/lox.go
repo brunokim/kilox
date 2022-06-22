@@ -68,6 +68,10 @@ func (r *runner) run(text string) bool {
 		fmt.Println(err)
 		return false
 	}
-	r.i.Interpret(stmts)
+	err = r.i.Interpret(stmts)
+	if err != nil {
+		fmt.Println(err)
+		return false
+	}
 	return true
 }

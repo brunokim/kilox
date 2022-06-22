@@ -2,30 +2,41 @@ package lox
 
 import (
 	"fmt"
+	"io"
+	"os"
 )
 
 type Interpreter struct {
-	env   *Environment
-	value interface{}
+	env    *Environment
+	value  interface{}
+	stdout io.Writer
 }
 
 func NewInterpreter() *Interpreter {
 	return &Interpreter{
-		env: NewEnvironment(),
+		env:    NewEnvironment(),
+		stdout: os.Stdout,
 	}
 }
 
-func (i *Interpreter) Interpret(stmts []Stmt) {
+func (i *Interpreter) SetStdout(w io.Writer) {
+	i.stdout = w
+}
+
+func (i *Interpreter) Interpret(stmts []Stmt) (err error) {
 	defer func() {
-		if err := recover(); err != nil {
-			if _, ok := err.(runtimeError); !ok {
-				panic(err) // Rethrow
+		if err_ := recover(); err_ != nil {
+			runtimeErr, ok := err_.(runtimeError)
+			if !ok {
+				panic(err_) // Rethrow
 			}
+			err = runtimeErr
 		}
 	}()
 	for _, stmt := range stmts {
 		i.execute(stmt)
 	}
+	return nil
 }
 
 // ----
@@ -40,7 +51,7 @@ func (i *Interpreter) visitExpressionStmt(stmt ExpressionStmt) {
 
 func (i *Interpreter) visitPrintStmt(stmt PrintStmt) {
 	v := i.evaluate(stmt.Expression)
-	fmt.Println(v)
+	fmt.Fprintln(i.stdout, v)
 }
 
 func (i *Interpreter) visitVarStmt(stmt VarStmt) {
@@ -115,7 +126,7 @@ func operate2(token Token, left, right interface{}) interface{} {
 		if ok3 && ok4 {
 			return aStr + bStr
 		}
-		panic(newRuntimeError(token, "operands must be two numbers or two strings"))
+		panic(runtimeError{token, "operands must be two numbers or two strings"})
 	case Slash:
 		a, b := checkNumberOperands(token, left, right)
 		return a / b
@@ -158,18 +169,12 @@ func (err runtimeError) Error() string {
 	return fmt.Sprintf("operator %s in line %d: %s", err.token.Lexeme, err.token.Line, err.msg)
 }
 
-func newRuntimeError(token Token, msg string) error {
-	err := runtimeError{token, msg}
-	fmt.Println(err)
-	return err
-}
-
 func checkNumberOperand(token Token, right interface{}) float64 {
 	b, ok := right.(float64)
 	if ok {
 		return b
 	}
-	panic(newRuntimeError(token, "operand must be number"))
+	panic(runtimeError{token, "operand must be number"})
 }
 
 func checkNumberOperands(token Token, left, right interface{}) (float64, float64) {
@@ -178,5 +183,5 @@ func checkNumberOperands(token Token, left, right interface{}) (float64, float64
 	if ok1 && ok2 {
 		return a, b
 	}
-	panic(newRuntimeError(token, "operands must be numbers"))
+	panic(runtimeError{token, "operands must be numbers"})
 }
