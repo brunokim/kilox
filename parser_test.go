@@ -120,6 +120,35 @@ func TestParserExpression(t *testing.T) {
 	}
 }
 
+func TestParserStatements(t *testing.T) {
+	tests := []struct {
+		text string
+		want []lox.Stmt
+	}{
+		{"a+2;", []lox.Stmt{lox.ExpressionStmt{lox.BinaryExpr{
+			Left:     lox.VariableExpr{token(lox.Identifier, "a")},
+			Operator: token(lox.Plus, "+"),
+			Right:    literal(2.0),
+		}}}},
+		{"print a; print b;", []lox.Stmt{
+			lox.PrintStmt{lox.VariableExpr{token(lox.Identifier, "a")}},
+			lox.PrintStmt{lox.VariableExpr{token(lox.Identifier, "b")}},
+		}},
+		{"var a; var b = false;", []lox.Stmt{
+			lox.VarStmt{Name: token(lox.Identifier, "a")},
+			lox.VarStmt{Name: token(lox.Identifier, "b"), Init: literal(false)},
+		}},
+	}
+
+	for _, test := range tests {
+		got := parseStmts(t, test.text)
+		opt := cmpopts.IgnoreFields(lox.Token{}, "Line")
+		if diff := cmp.Diff(test.want, got, opt); diff != "" {
+			t.Errorf("%s: (-want, +got)%s", test.text, diff)
+		}
+	}
+}
+
 // -----
 
 func parseStmts(t *testing.T, text string) []lox.Stmt {
