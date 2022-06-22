@@ -57,14 +57,15 @@ func (r *runner) runPrompt() {
 
 func (r *runner) run(text string) bool {
 	s := lox.NewScanner(text)
-	tokens := s.ScanTokens()
-	if err := s.Err(); err != nil {
-		log.Print(err)
+	tokens, err := s.ScanTokens()
+	if err != nil {
+		fmt.Println(err)
 		return false
 	}
 	p := lox.NewParser(tokens)
 	stmts, err := p.Parse()
 	if err != nil {
+		fmt.Println(err)
 		return false
 	}
 	r.i.Interpret(stmts)

@@ -31,7 +31,7 @@ type Scanner struct {
 	start   int
 	current int
 	line    int
-	errors  []scanErr
+	errors  []scanError
 }
 
 func NewScanner(source string) *Scanner {
@@ -41,13 +41,16 @@ func NewScanner(source string) *Scanner {
 	}
 }
 
-func (s *Scanner) ScanTokens() []Token {
+func (s *Scanner) ScanTokens() ([]Token, error) {
 	for !s.isAtEnd() {
 		s.start = s.current
 		s.scanToken()
 	}
+	if len(s.errors) > 0 {
+		return nil, errors[scanError](s.errors)
+	}
 	s.tokens = append(s.tokens, Token{EOF, "", nil, s.line})
-	return s.tokens
+	return s.tokens, nil
 }
 
 func (s *Scanner) scanToken() {
@@ -234,28 +237,17 @@ func (s *Scanner) addLiteralToken(tokenType TokenType, literal interface{}) {
 
 // ----
 
-type scanErr struct {
+type scanError struct {
 	line int
 	msg  string
 }
 
-func (s *Scanner) addError(line int, msg string) {
-	s.errors = append(s.errors, scanErr{line, msg})
+func (err scanError) Error() string {
+	return fmt.Sprintf("line %d: %s", err.line, err.msg)
 }
 
-func (s *Scanner) Err() error {
-	if len(s.errors) == 0 {
-		return nil
-	}
-	if len(s.errors) == 1 {
-		err := s.errors[0]
-		return fmt.Errorf("line %d: %s", err.line, err.msg)
-	}
-	lines := make([]string, len(s.errors))
-	for i, err := range s.errors {
-		lines[i] = fmt.Sprintf("  line %d: %s", err.line, err.msg)
-	}
-	return fmt.Errorf("multiple errors:\n%s", strings.Join(lines, "\n"))
+func (s *Scanner) addError(line int, msg string) {
+	s.errors = append(s.errors, scanError{line, msg})
 }
 
 // ----

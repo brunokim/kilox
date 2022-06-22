@@ -2,7 +2,6 @@ package lox
 
 import (
 	"fmt"
-	"strings"
 )
 
 // program     ::= declaration* eof;
@@ -46,7 +45,7 @@ func (p *Parser) Parse() ([]Stmt, error) {
 		stmts = append(stmts, p.declaration())
 	}
 	if len(p.errors) > 0 {
-		return nil, parseErrors(p.errors)
+		return nil, errors[parseError](p.errors)
 	}
 	return stmts, nil
 }
@@ -56,11 +55,11 @@ func (p *Parser) Parse() ([]Stmt, error) {
 func (p *Parser) declaration() Stmt {
 	defer func() {
 		if err := recover(); err != nil {
-			runtimeErr, ok := err.(parseError)
+			parseErr, ok := err.(parseError)
 			if !ok {
 				panic(err) // Rethrow
 			}
-			p.errors = append(p.errors, runtimeErr)
+			p.errors = append(p.errors, parseErr)
 			p.synchronize()
 		}
 	}()
@@ -175,7 +174,7 @@ func (p *Parser) primary() Expr {
 		p.consume(RightParen, "expect ')' after expression")
 		return GroupingExpr{expr}
 	}
-	panic(p.err(p.peek(), "expect expression"))
+	panic(parseError{p.peek(), "expect expression"})
 }
 
 // ----
@@ -186,36 +185,17 @@ type parseError struct {
 }
 
 func (err parseError) Error() string {
-	return fmt.Sprintf("%v - %s", err.token, err.msg)
-}
-
-type parseErrors []parseError
-
-func (errs parseErrors) Error() string {
-	if len(errs) == 1 {
-		return errs[0].Error()
+	if err.token.TokenType == EOF {
+		return fmt.Sprintf("line %d at end: %s", err.token.Line, err.msg)
 	}
-	msgs := make([]string, len(errs))
-	for i, err := range errs {
-		msgs[i] = "  " + err.Error()
-	}
-	return fmt.Sprintf("multiple errors:\n%s", strings.Join(msgs, "\n"))
+	return fmt.Sprintf("line %d at '%s': %s", err.token.Line, err.token.Lexeme, err.msg)
 }
 
 func (p *Parser) consume(t TokenType, msg string) Token {
 	if p.check(t) {
 		return p.advance()
 	}
-	panic(p.err(p.peek(), msg))
-}
-
-func (p *Parser) err(token Token, msg string) error {
-	if token.TokenType == EOF {
-		fmt.Printf("line %d at end: %s\n", token.Line, msg)
-	} else {
-		fmt.Printf("line %d at '%s': %s\n", token.Line, token.Lexeme, msg)
-	}
-	return parseError{token, msg}
+	panic(parseError{p.peek(), msg})
 }
 
 func (p *Parser) synchronize() {
