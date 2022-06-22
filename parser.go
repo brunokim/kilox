@@ -2,6 +2,7 @@ package lox
 
 import (
 	"fmt"
+	"strings"
 )
 
 // program     ::= declaration* eof;
@@ -30,6 +31,7 @@ import (
 type Parser struct {
 	tokens  []Token
 	current int
+	errors  []parseError
 }
 
 func NewParser(tokens []Token) *Parser {
@@ -38,12 +40,15 @@ func NewParser(tokens []Token) *Parser {
 	}
 }
 
-func (p *Parser) Parse() []Stmt {
+func (p *Parser) Parse() ([]Stmt, error) {
 	var stmts []Stmt
 	for !p.isAtEnd() {
 		stmts = append(stmts, p.declaration())
 	}
-	return stmts
+	if len(p.errors) > 0 {
+		return nil, parseErrors(p.errors)
+	}
+	return stmts, nil
 }
 
 // ----
@@ -51,9 +56,11 @@ func (p *Parser) Parse() []Stmt {
 func (p *Parser) declaration() Stmt {
 	defer func() {
 		if err := recover(); err != nil {
-			if _, ok := err.(parseError); !ok {
+			runtimeErr, ok := err.(parseError)
+			if !ok {
 				panic(err) // Rethrow
 			}
+			p.errors = append(p.errors, runtimeErr)
 			p.synchronize()
 		}
 	}()
@@ -180,6 +187,19 @@ type parseError struct {
 
 func (err parseError) Error() string {
 	return fmt.Sprintf("%v - %s", err.token, err.msg)
+}
+
+type parseErrors []parseError
+
+func (errs parseErrors) Error() string {
+	if len(errs) == 1 {
+		return errs[0].Error()
+	}
+	msgs := make([]string, len(errs))
+	for i, err := range errs {
+		msgs[i] = "  " + err.Error()
+	}
+	return fmt.Sprintf("multiple errors:\n%s", strings.Join(msgs, "\n"))
 }
 
 func (p *Parser) consume(t TokenType, msg string) Token {

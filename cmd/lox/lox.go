@@ -63,8 +63,8 @@ func (r *runner) run(text string) bool {
 		return false
 	}
 	p := lox.NewParser(tokens)
-	stmts := p.Parse()
-	if len(stmts) == 0 {
+	stmts, err := p.Parse()
+	if err != nil {
 		return false
 	}
 	r.i.Interpret(stmts)
