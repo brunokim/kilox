@@ -149,16 +149,52 @@ func TestParserStatements(t *testing.T) {
 	}
 }
 
+func TestParserError(t *testing.T) {
+	tests := []struct {
+		text string
+		want string
+	}{
+		{"!)", "line 1 at ')': expecting expression"},
+		{"(1", "line 1 at end: expecting ')' after expression"},
+		{"var 1 = 2;", "line 1 at '1': expecting variable name"},
+		{"1 + 2", "line 1 at end: expecting ';' after expression"},
+		{"print 1 + 2", "line 1 at end: expecting ';' after expression"},
+		{"var a", "line 1 at end: expecting ';' after variable declaration"},
+		{"var a = 1", "line 1 at end: expecting ';' after variable declaration"},
+		{`var a == 2
+          print 1, !false ;
+          (a + b
+          print "fin";`, `multiple errors:
+  line 1 at '==': expecting ';' after variable declaration
+  line 2 at ',': expecting ';' after expression
+  line 4 at 'print': expecting ')' after expression`},
+	}
+
+	for _, test := range tests {
+		stmts, err := parse(t, test.text)
+		if err == nil {
+			t.Fatalf("%q: want err, got stmts: %v", test.text, stmts)
+		}
+		if diff := cmp.Diff(test.want, err.Error()); diff != "" {
+			t.Errorf("%q: (-want, +got)%s", test.text, diff)
+		}
+	}
+}
+
 // -----
 
-func parseStmts(t *testing.T, text string) []lox.Stmt {
+func parse(t *testing.T, text string) ([]lox.Stmt, error) {
 	s := lox.NewScanner(text)
 	tokens, err := s.ScanTokens()
 	if err != nil {
 		t.Fatalf("%q: want nil, got err: %v", text, err)
 	}
 	p := lox.NewParser(tokens)
-	stmts, err := p.Parse()
+	return p.Parse()
+}
+
+func parseStmts(t *testing.T, text string) []lox.Stmt {
+	stmts, err := parse(t, text)
 	if err != nil {
 		t.Fatalf("%q: want nil, got err: %v", text, err)
 	}

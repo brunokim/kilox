@@ -88,13 +88,13 @@ func (p *Parser) statement() Stmt {
 
 func (p *Parser) printStatement() PrintStmt {
 	expr := p.expression()
-	p.consume(Semicolon, "expected ';' after expression")
+	p.consume(Semicolon, "expecting ';' after expression")
 	return PrintStmt{expr}
 }
 
 func (p *Parser) expressionStatement() ExpressionStmt {
 	expr := p.expression()
-	p.consume(Semicolon, "expected ';' after expression")
+	p.consume(Semicolon, "expecting ';' after expression")
 	return ExpressionStmt{expr}
 }
 
@@ -171,10 +171,10 @@ func (p *Parser) primary() Expr {
 	}
 	if p.match(LeftParen) {
 		expr := p.expression()
-		p.consume(RightParen, "expect ')' after expression")
+		p.consume(RightParen, "expecting ')' after expression")
 		return GroupingExpr{expr}
 	}
-	panic(parseError{p.peek(), "expect expression"})
+	panic(parseError{p.peek(), "expecting expression"})
 }
 
 // ----
