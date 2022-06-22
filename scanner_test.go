@@ -9,10 +9,10 @@ import (
 )
 
 func token(tokenType lox.TokenType, text string) lox.Token {
-	return literal(tokenType, text, nil)
+	return literalToken(tokenType, text, nil)
 }
 
-func literal(tokenType lox.TokenType, text string, literal interface{}) lox.Token {
+func literalToken(tokenType lox.TokenType, text string, literal interface{}) lox.Token {
 	return lox.Token{
 		TokenType: tokenType,
 		Lexeme:    text,
@@ -31,7 +31,7 @@ func TestScanner(t *testing.T) {
 		{"a + 1", []lox.Token{
 			token(lox.Identifier, "a"),
 			token(lox.Plus, "+"),
-			literal(lox.Number, "1", 1.0),
+			literalToken(lox.Number, "1", 1.0),
 			token(lox.EOF, "")}},
 		{"!(x and false)", []lox.Token{
 			token(lox.Bang, "!"),
@@ -43,11 +43,11 @@ func TestScanner(t *testing.T) {
 			token(lox.EOF, ""),
 		}},
 		{`"abc \" def \\ ghi"`, []lox.Token{
-			literal(lox.String, `"abc \" def \\ ghi"`, `abc " def \ ghi`),
+			literalToken(lox.String, `"abc \" def \\ ghi"`, `abc " def \ ghi`),
 			token(lox.EOF, ""),
 		}},
 		{"\"abc\ndef\"", []lox.Token{
-			literal(lox.String, "\"abc\ndef\"", "abc\ndef"),
+			literalToken(lox.String, "\"abc\ndef\"", "abc\ndef"),
 			token(lox.EOF, ""),
 		}},
 	}
