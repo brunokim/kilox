@@ -53,7 +53,7 @@ func (p *Parser) equality() Expr {
 	for p.match(BangEqual, EqualEqual) {
 		operator := p.previous()
 		right := p.comparison()
-		expr = Binary{expr, operator, right}
+		expr = BinaryExpr{expr, operator, right}
 	}
 	return expr
 }
@@ -63,7 +63,7 @@ func (p *Parser) comparison() Expr {
 	for p.match(Greater, GreaterEqual, Less, LessEqual) {
 		operator := p.previous()
 		right := p.term()
-		expr = Binary{expr, operator, right}
+		expr = BinaryExpr{expr, operator, right}
 	}
 	return expr
 }
@@ -73,7 +73,7 @@ func (p *Parser) term() Expr {
 	for p.match(Minus, Plus) {
 		operator := p.previous()
 		right := p.factor()
-		expr = Binary{expr, operator, right}
+		expr = BinaryExpr{expr, operator, right}
 	}
 	return expr
 }
@@ -83,7 +83,7 @@ func (p *Parser) factor() Expr {
 	for p.match(Slash, Star) {
 		operator := p.previous()
 		right := p.unary()
-		expr = Binary{expr, operator, right}
+		expr = BinaryExpr{expr, operator, right}
 	}
 	return expr
 }
@@ -92,28 +92,28 @@ func (p *Parser) unary() Expr {
 	if p.match(Bang, Minus) {
 		operator := p.previous()
 		right := p.unary()
-		return Unary{operator, right}
+		return UnaryExpr{operator, right}
 	}
 	return p.primary()
 }
 
 func (p *Parser) primary() Expr {
 	if p.match(False) {
-		return Literal{false}
+		return LiteralExpr{false}
 	}
 	if p.match(True) {
-		return Literal{true}
+		return LiteralExpr{true}
 	}
 	if p.match(Nil) {
-		return Literal{nil}
+		return LiteralExpr{nil}
 	}
 	if p.match(Number, String) {
-		return Literal{p.previous().Literal}
+		return LiteralExpr{p.previous().Literal}
 	}
 	if p.match(LeftParen) {
 		expr := p.expression()
 		p.consume(RightParen, "expect ')' after expression")
-		return Grouping{expr}
+		return GroupingExpr{expr}
 	}
 	panic(p.err(p.peek(), "expect expression"))
 }

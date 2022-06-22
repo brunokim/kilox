@@ -15,15 +15,15 @@ func (p *ASTPrinter) Print(expr Expr) string {
 	return strings.Join(p.parts, "")
 }
 
-func (p *ASTPrinter) visitBinaryExpr(expr Binary) {
+func (p *ASTPrinter) visitBinaryExpr(expr BinaryExpr) {
 	p.parenthesize(expr.Operator.Lexeme, expr.Left, expr.Right)
 }
 
-func (p *ASTPrinter) visitGroupingExpr(expr Grouping) {
+func (p *ASTPrinter) visitGroupingExpr(expr GroupingExpr) {
 	p.parenthesize("group", expr.Expression)
 }
 
-func (p *ASTPrinter) visitLiteralExpr(expr Literal) {
+func (p *ASTPrinter) visitLiteralExpr(expr LiteralExpr) {
 	var part string
 	if expr.Value == nil {
 		part = "nil"
@@ -33,7 +33,7 @@ func (p *ASTPrinter) visitLiteralExpr(expr Literal) {
 	p.parts = append(p.parts, part)
 }
 
-func (p *ASTPrinter) visitUnaryExpr(expr Unary) {
+func (p *ASTPrinter) visitUnaryExpr(expr UnaryExpr) {
 	p.parenthesize(expr.Operator.Lexeme, expr.Right)
 }
 

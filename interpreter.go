@@ -28,21 +28,21 @@ func (i *Interpreter) evaluate(expr Expr) interface{} {
 	return i.value
 }
 
-func (i *Interpreter) visitBinaryExpr(expr Binary) {
+func (i *Interpreter) visitBinaryExpr(expr BinaryExpr) {
 	left := i.evaluate(expr.Left)
 	right := i.evaluate(expr.Right)
 	i.value = operate2(expr.Operator, left, right)
 }
 
-func (i *Interpreter) visitGroupingExpr(expr Grouping) {
+func (i *Interpreter) visitGroupingExpr(expr GroupingExpr) {
 	i.evaluate(expr.Expression)
 }
 
-func (i *Interpreter) visitLiteralExpr(expr Literal) {
+func (i *Interpreter) visitLiteralExpr(expr LiteralExpr) {
 	i.value = expr.Value
 }
 
-func (i *Interpreter) visitUnaryExpr(expr Unary) {
+func (i *Interpreter) visitUnaryExpr(expr UnaryExpr) {
 	right := i.evaluate(expr.Right)
 	i.value = operate1(expr.Operator, right)
 }

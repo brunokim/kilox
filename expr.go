@@ -1,10 +1,10 @@
 package lox
 
 type exprVisitor interface {
-	visitBinaryExpr(expr Binary)
-	visitGroupingExpr(expr Grouping)
-	visitLiteralExpr(expr Literal)
-	visitUnaryExpr(expr Unary)
+	visitBinaryExpr(expr BinaryExpr)
+	visitGroupingExpr(expr GroupingExpr)
+	visitLiteralExpr(expr LiteralExpr)
+	visitUnaryExpr(expr UnaryExpr)
 }
 
 type Expr interface {
@@ -13,39 +13,39 @@ type Expr interface {
 
 // ----
 
-type Binary struct {
+type BinaryExpr struct {
 	Left     Expr
 	Operator Token
 	Right    Expr
 }
 
-type Grouping struct {
+type GroupingExpr struct {
 	Expression Expr
 }
 
-type Literal struct {
+type LiteralExpr struct {
 	Value interface{}
 }
 
-type Unary struct {
+type UnaryExpr struct {
 	Operator Token
 	Right    Expr
 }
 
 // ----
 
-func (expr Binary) accept(v exprVisitor) {
+func (expr BinaryExpr) accept(v exprVisitor) {
 	v.visitBinaryExpr(expr)
 }
 
-func (expr Grouping) accept(v exprVisitor) {
+func (expr GroupingExpr) accept(v exprVisitor) {
 	v.visitGroupingExpr(expr)
 }
 
-func (expr Literal) accept(v exprVisitor) {
+func (expr LiteralExpr) accept(v exprVisitor) {
 	v.visitLiteralExpr(expr)
 }
 
-func (expr Unary) accept(v exprVisitor) {
+func (expr UnaryExpr) accept(v exprVisitor) {
 	v.visitUnaryExpr(expr)
 }
