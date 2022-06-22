@@ -2,7 +2,8 @@ package lox
 
 type stmtVisitor interface {
 	visitExpressionStmt(stmt ExpressionStmt)
-	visitPrintStmt(expr PrintStmt)
+	visitPrintStmt(stmt PrintStmt)
+	visitVarStmt(stmt VarStmt)
 }
 
 type Stmt interface {
@@ -19,6 +20,11 @@ type PrintStmt struct {
 	Expression Expr
 }
 
+type VarStmt struct {
+	Name Token
+	Init Expr
+}
+
 // ----
 
 func (stmt ExpressionStmt) accept(v stmtVisitor) {
@@ -27,4 +33,8 @@ func (stmt ExpressionStmt) accept(v stmtVisitor) {
 
 func (stmt PrintStmt) accept(v stmtVisitor) {
 	v.visitPrintStmt(stmt)
+}
+
+func (stmt VarStmt) accept(v stmtVisitor) {
+	v.visitVarStmt(stmt)
 }

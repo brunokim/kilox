@@ -37,6 +37,10 @@ func (p *ASTPrinter) visitUnaryExpr(expr UnaryExpr) {
 	p.parenthesize(expr.Operator.Lexeme, expr.Right)
 }
 
+func (p *ASTPrinter) visitVariableExpr(expr VariableExpr) {
+	p.parts = append(p.parts, expr.Name.Lexeme)
+}
+
 func (p *ASTPrinter) parenthesize(name string, exprs ...Expr) {
 	p.parts = append(p.parts, "(", name)
 	for _, expr := range exprs {

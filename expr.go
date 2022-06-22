@@ -5,6 +5,7 @@ type exprVisitor interface {
 	visitGroupingExpr(expr GroupingExpr)
 	visitLiteralExpr(expr LiteralExpr)
 	visitUnaryExpr(expr UnaryExpr)
+	visitVariableExpr(expr VariableExpr)
 }
 
 type Expr interface {
@@ -32,6 +33,10 @@ type UnaryExpr struct {
 	Right    Expr
 }
 
+type VariableExpr struct {
+	Name Token
+}
+
 // ----
 
 func (expr BinaryExpr) accept(v exprVisitor) {
@@ -48,4 +53,8 @@ func (expr LiteralExpr) accept(v exprVisitor) {
 
 func (expr UnaryExpr) accept(v exprVisitor) {
 	v.visitUnaryExpr(expr)
+}
+
+func (expr VariableExpr) accept(v exprVisitor) {
+	v.visitVariableExpr(expr)
 }

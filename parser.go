@@ -4,23 +4,28 @@ import (
 	"fmt"
 )
 
-// program    ::= statement* eof;
-// statement  ::= exprStmt
-//              | printStmt
-//              ;
-// exprStmt   ::= expression ";" ;
-// printStmt  ::= "print" expression ";" ;
-// expression ::= equality ;
-// equality   ::= comparison (("!="|"==") comparison)* ;
-// comparison ::= term ((">"|"<"|">="|"<=") term)* ;
-// term       ::= factor (("-"|"+") factor)* ;
-// factor     ::= unary (("/"|"*") unary)* ;
-// unary      ::= ("!"|"-") unary
-//              | primary
-//              ;
-// primary    ::= number | string | "true" | "false" | "nil"
-//              | "(" expression ")"
-//              ;
+// program     ::= declaration* eof;
+// declaration ::= varDecl
+//               | statement
+//               ;
+// varDecl     ::= "var" identifier ( "=" expression )? ";" ;
+// statement   ::= exprStmt
+//               | printStmt
+//               ;
+// exprStmt    ::= expression ";" ;
+// printStmt   ::= "print" expression ";" ;
+// expression  ::= equality ;
+// equality    ::= comparison (("!="|"==") comparison)* ;
+// comparison  ::= term ((">"|"<"|">="|"<=") term)* ;
+// term        ::= factor (("-"|"+") factor)* ;
+// factor      ::= unary (("/"|"*") unary)* ;
+// unary       ::= ("!"|"-") unary
+//               | primary
+//               ;
+// primary     ::= number | string | "true" | "false" | "nil"
+//               | "(" expression ")"
+//               | identifier
+//               ;
 
 type Parser struct {
 	tokens  []Token
@@ -36,12 +41,37 @@ func NewParser(tokens []Token) *Parser {
 func (p *Parser) Parse() []Stmt {
 	var stmts []Stmt
 	for !p.isAtEnd() {
-		stmts = append(stmts, p.statement())
+		stmts = append(stmts, p.declaration())
 	}
 	return stmts
 }
 
 // ----
+
+func (p *Parser) declaration() Stmt {
+	defer func() {
+		if err := recover(); err != nil {
+			if _, ok := err.(parseError); !ok {
+				panic(err) // Rethrow
+			}
+			p.synchronize()
+		}
+	}()
+	if p.match(Var) {
+		return p.varDeclaration()
+	}
+	return p.statement()
+}
+
+func (p *Parser) varDeclaration() Stmt {
+	name := p.consume(Identifier, "expecting variable name")
+	var init Expr
+	if p.match(Equal) {
+		init = p.expression()
+	}
+	p.consume(Semicolon, "expecting ';' after variable declaration")
+	return VarStmt{name, init}
+}
 
 func (p *Parser) statement() Stmt {
 	if p.match(Print) {
@@ -129,6 +159,9 @@ func (p *Parser) primary() Expr {
 	}
 	if p.match(Number, String) {
 		return LiteralExpr{p.previous().Literal}
+	}
+	if p.match(Identifier) {
+		return VariableExpr{p.previous()}
 	}
 	if p.match(LeftParen) {
 		expr := p.expression()

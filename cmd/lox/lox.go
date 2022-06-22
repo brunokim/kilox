@@ -15,28 +15,39 @@ func main() {
 		fmt.Println("Usage: lox [script]")
 		return
 	}
+	r := newRunner()
 	if len(os.Args) == 2 {
-		runFile(os.Args[1])
+		r.runFile(os.Args[1])
 	} else {
-		runPrompt()
+		r.runPrompt()
 	}
 }
 
-func runFile(path string) {
+type runner struct {
+	i *lox.Interpreter
+}
+
+func newRunner() *runner {
+	return &runner{
+		i: lox.NewInterpreter(),
+	}
+}
+
+func (r *runner) runFile(path string) {
 	bs, err := ioutil.ReadFile(path)
 	if err != nil {
 		log.Fatal(err)
 	}
-	if !run(string(bs)) {
+	if !r.run(string(bs)) {
 		os.Exit(65)
 	}
 }
 
-func runPrompt() {
+func (r *runner) runPrompt() {
 	scanner := bufio.NewScanner(os.Stdin)
 	fmt.Print("> ")
 	for scanner.Scan() {
-		run(scanner.Text())
+		r.run(scanner.Text())
 		fmt.Print("> ")
 	}
 	if err := scanner.Err(); err != nil {
@@ -44,7 +55,7 @@ func runPrompt() {
 	}
 }
 
-func run(text string) bool {
+func (r *runner) run(text string) bool {
 	s := lox.NewScanner(text)
 	tokens := s.ScanTokens()
 	if err := s.Err(); err != nil {
@@ -56,7 +67,6 @@ func run(text string) bool {
 	if len(stmts) == 0 {
 		return false
 	}
-	i := new(lox.Interpreter)
-	i.Interpret(stmts)
+	r.i.Interpret(stmts)
 	return true
 }
