@@ -4,6 +4,12 @@ import (
 	"fmt"
 )
 
+// program    ::= statement* eof;
+// statement  ::= exprStmt
+//              | printStmt
+//              ;
+// exprStmt   ::= expression ";" ;
+// printStmt  ::= "print" expression ";" ;
 // expression ::= equality ;
 // equality   ::= comparison (("!="|"==") comparison)* ;
 // comparison ::= term ((">"|"<"|">="|"<=") term)* ;
@@ -27,19 +33,33 @@ func NewParser(tokens []Token) *Parser {
 	}
 }
 
-func (p *Parser) Parse() (expr Expr) {
-	defer func() {
-		if err := recover(); err != nil {
-			err, ok := err.(parseError)
-			if !ok {
-				// Rethrow
-				panic(err)
-			}
-			expr = nil
-		}
-	}()
-	expr = p.expression()
-	return
+func (p *Parser) Parse() []Stmt {
+	var stmts []Stmt
+	for !p.isAtEnd() {
+		stmts = append(stmts, p.statement())
+	}
+	return stmts
+}
+
+// ----
+
+func (p *Parser) statement() Stmt {
+	if p.match(Print) {
+		return p.printStatement()
+	}
+	return p.expressionStatement()
+}
+
+func (p *Parser) printStatement() PrintStmt {
+	expr := p.expression()
+	p.consume(Semicolon, "expected ';' after expression")
+	return PrintStmt{expr}
+}
+
+func (p *Parser) expressionStatement() ExpressionStmt {
+	expr := p.expression()
+	p.consume(Semicolon, "expected ';' after expression")
+	return ExpressionStmt{expr}
 }
 
 // ----

@@ -8,17 +8,32 @@ type Interpreter struct {
 	value interface{}
 }
 
-func (i *Interpreter) Interpret(expr Expr) (v interface{}) {
+func (i *Interpreter) Interpret(stmts []Stmt) {
 	defer func() {
 		if err := recover(); err != nil {
 			if _, ok := err.(runtimeErr); !ok {
 				panic(err) // Rethrow
 			}
-			v = nil
 		}
 	}()
-	v = i.evaluate(expr)
-	return
+	for _, stmt := range stmts {
+		i.execute(stmt)
+	}
+}
+
+// ----
+
+func (i *Interpreter) execute(stmt Stmt) {
+	stmt.accept(i)
+}
+
+func (i *Interpreter) visitExpressionStmt(stmt ExpressionStmt) {
+	i.evaluate(stmt.Expression)
+}
+
+func (i *Interpreter) visitPrintStmt(stmt PrintStmt) {
+	v := i.evaluate(stmt.Expression)
+	fmt.Println(v)
 }
 
 // ----
