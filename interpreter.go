@@ -92,6 +92,16 @@ func (i *Interpreter) visitVariableExpr(expr VariableExpr) {
 	i.value = i.env.Get(expr.Name)
 }
 
+func (i *Interpreter) visitAssignmentExpr(expr AssignmentExpr) {
+	i.evaluate(expr.Value)
+	switch e := expr.Target.(type) {
+	case VariableExpr:
+		i.env.Set(e.Name, i.value)
+	default:
+		panic(fmt.Errorf("compiler error: unhandled assignment to %T (%v)", expr.Target, expr.Target))
+	}
+}
+
 // ----
 
 func operate2(token Token, left, right interface{}) interface{} {

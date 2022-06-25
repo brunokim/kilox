@@ -41,6 +41,10 @@ func (p *ASTPrinter) visitVariableExpr(expr VariableExpr) {
 	p.parts = append(p.parts, expr.Name.Lexeme)
 }
 
+func (p *ASTPrinter) visitAssignmentExpr(expr AssignmentExpr) {
+	p.parenthesize("set", expr.Target, expr.Value)
+}
+
 func (p *ASTPrinter) parenthesize(name string, exprs ...Expr) {
 	p.parts = append(p.parts, "(", name)
 	for _, expr := range exprs {

@@ -25,3 +25,11 @@ func (env *Environment) Get(name Token) interface{} {
 	}
 	panic(runtimeError{name, fmt.Sprintf("undefined variable %q", name.Lexeme)})
 }
+
+func (env *Environment) Set(name Token, value interface{}) {
+	_, ok := env.values[name.Lexeme]
+	if !ok {
+		panic(runtimeError{name, fmt.Sprintf("undefined variable %q", name.Lexeme)})
+	}
+	env.values[name.Lexeme] = value
+}

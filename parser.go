@@ -14,7 +14,8 @@ import (
 //               ;
 // exprStmt    ::= expression ";" ;
 // printStmt   ::= "print" expression ";" ;
-// expression  ::= equality ;
+// expression  ::= assignment ;
+// assignment  ::= equality ("=" assignment)? ;
 // equality    ::= comparison (("!="|"==") comparison)* ;
 // comparison  ::= term ((">"|"<"|">="|"<=") term)* ;
 // term        ::= factor (("-"|"+") factor)* ;
@@ -59,7 +60,7 @@ func (p *Parser) declaration() Stmt {
 			if !ok {
 				panic(err) // Rethrow
 			}
-			p.errors = append(p.errors, parseErr)
+			p.addError(parseErr)
 			p.synchronize()
 		}
 	}()
@@ -101,7 +102,23 @@ func (p *Parser) expressionStatement() ExpressionStmt {
 // ----
 
 func (p *Parser) expression() Expr {
-	return p.equality()
+	return p.assignment()
+}
+
+func (p *Parser) assignment() Expr {
+	expr := p.equality()
+	if !p.match(Equal) {
+		return expr
+	}
+	_, isVar := expr.(VariableExpr)
+	if !isVar {
+		msg := fmt.Sprintf("invalid target for assignment: want variable, got %T", expr)
+		p.addError(parseError{p.previous(), msg})
+		p.assignment() // Keep consuming tokens after '=', but discard them.
+		return nil
+	}
+	value := p.assignment()
+	return AssignmentExpr{expr, value}
 }
 
 func (p *Parser) equality() Expr {
@@ -189,6 +206,10 @@ func (err parseError) Error() string {
 		return fmt.Sprintf("line %d at end: %s", err.token.Line, err.msg)
 	}
 	return fmt.Sprintf("line %d at '%s': %s", err.token.Line, err.token.Lexeme, err.msg)
+}
+
+func (p *Parser) addError(err parseError) {
+	p.errors = append(p.errors, err)
 }
 
 func (p *Parser) consume(t TokenType, msg string) Token {

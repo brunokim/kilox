@@ -109,6 +109,17 @@ func TestParserExpression(t *testing.T) {
 				},
 			},
 		}},
+		{"a = 1", lox.AssignmentExpr{
+			Target: lox.VariableExpr{token(lox.Identifier, "a")},
+			Value:  literal(1.0),
+		}},
+		{"a = b = 10", lox.AssignmentExpr{
+			Target: lox.VariableExpr{token(lox.Identifier, "a")},
+			Value: lox.AssignmentExpr{
+				Target: lox.VariableExpr{token(lox.Identifier, "b")},
+				Value:  literal(10.0),
+			},
+		}},
 	}
 
 	for _, test := range tests {
@@ -168,6 +179,7 @@ func TestParserError(t *testing.T) {
   line 1 at '==': expecting ';' after variable declaration
   line 2 at ',': expecting ';' after expression
   line 4 at 'print': expecting ')' after expression`},
+		{"(a) = 1;", "line 1 at '=': invalid target for assignment: want variable, got lox.GroupingExpr"},
 	}
 
 	for _, test := range tests {

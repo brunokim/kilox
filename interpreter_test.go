@@ -17,6 +17,7 @@ func TestInterpreter(t *testing.T) {
 		{"var a = 10; print a; print a;", "10\n10\n"},
 		{"var a = 10; var a = 20; print a;", "20\n"},
 		{"var a = 10; var b = a + 5; print b;", "15\n"},
+        {"var a; var b; a = b = 10; print a + b;", "20\n"},
 	}
 
 	for _, test := range tests {
