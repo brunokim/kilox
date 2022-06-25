@@ -149,6 +149,28 @@ func TestParserStatements(t *testing.T) {
 			lox.VarStmt{Name: token(lox.Identifier, "a")},
 			lox.VarStmt{Name: token(lox.Identifier, "b"), Init: literal(false)},
 		}},
+		{"if (a) b = 10;", []lox.Stmt{
+			lox.IfStmt{
+				Condition: lox.VariableExpr{Name: token(lox.Identifier, "a")},
+				Then: lox.ExpressionStmt{lox.AssignmentExpr{
+					Target: lox.VariableExpr{token(lox.Identifier, "b")},
+					Value:  literal(10.0),
+				}},
+			},
+		}},
+		{"if (a) b = 10; else a = 5;", []lox.Stmt{
+			lox.IfStmt{
+				Condition: lox.VariableExpr{Name: token(lox.Identifier, "a")},
+				Then: lox.ExpressionStmt{lox.AssignmentExpr{
+					Target: lox.VariableExpr{token(lox.Identifier, "b")},
+					Value:  literal(10.0),
+				}},
+				Else: lox.ExpressionStmt{lox.AssignmentExpr{
+					Target: lox.VariableExpr{token(lox.Identifier, "a")},
+					Value:  literal(5.0),
+				}},
+			},
+		}},
 	}
 
 	for _, test := range tests {
@@ -180,6 +202,11 @@ func TestParserError(t *testing.T) {
   line 2 at ',': expecting ';' after expression
   line 4 at 'print': expecting ')' after expression`},
 		{"(a) = 1;", "line 1 at '=': invalid target for assignment: want variable, got lox.GroupingExpr"},
+		{"if a then b = 10;", "line 1 at 'a': expecting '(' after 'if'"},
+		{"if (a then b = 10;", "line 1 at 'then': expecting ')' after expression"},
+		{"if (a) then b = 10;", "line 1 at 'b': expecting ';' after expression"},
+		{"if (a) b = 10; else", "line 1 at end: expecting expression"},
+		{"if (a) var b = 10;", "line 1 at 'var': expecting expression"},
 	}
 
 	for _, test := range tests {

@@ -11,9 +11,11 @@ import (
 // varDecl     ::= "var" identifier ( "=" expression )? ";" ;
 // statement   ::= exprStmt
 //               | printStmt
+//               | ifStmt
 //               ;
 // exprStmt    ::= expression ";" ;
 // printStmt   ::= "print" expression ";" ;
+// ifStmt      ::= "if" "(" expression ")" statement ("else" statement)? ;
 // expression  ::= assignment ;
 // assignment  ::= equality ("=" assignment)? ;
 // equality    ::= comparison (("!="|"==") comparison)* ;
@@ -84,6 +86,9 @@ func (p *Parser) statement() Stmt {
 	if p.match(Print) {
 		return p.printStatement()
 	}
+	if p.match(If) {
+		return p.ifStatement()
+	}
 	return p.expressionStatement()
 }
 
@@ -91,6 +96,18 @@ func (p *Parser) printStatement() PrintStmt {
 	expr := p.expression()
 	p.consume(Semicolon, "expecting ';' after expression")
 	return PrintStmt{expr}
+}
+
+func (p *Parser) ifStatement() IfStmt {
+	p.consume(LeftParen, "expecting '(' after 'if'")
+	cond := p.expression()
+	p.consume(RightParen, "expecting ')' after expression")
+	thenStmt := p.statement()
+	if p.match(Else) {
+		elseStmt := p.statement()
+		return IfStmt{Condition: cond, Then: thenStmt, Else: elseStmt}
+	}
+	return IfStmt{Condition: cond, Then: thenStmt}
 }
 
 func (p *Parser) expressionStatement() ExpressionStmt {

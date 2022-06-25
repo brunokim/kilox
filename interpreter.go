@@ -62,6 +62,15 @@ func (i *Interpreter) visitVarStmt(stmt VarStmt) {
 	i.env.Define(stmt.Name.Lexeme, value)
 }
 
+func (i *Interpreter) visitIfStmt(stmt IfStmt) {
+	cond := i.evaluate(stmt.Condition)
+	if isTruthy(cond) {
+		i.execute(stmt.Then)
+	} else if stmt.Else != nil {
+		i.execute(stmt.Else)
+	}
+}
+
 // ----
 
 func (i *Interpreter) evaluate(expr Expr) interface{} {
