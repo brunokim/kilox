@@ -188,6 +188,21 @@ func TestParserStatements(t *testing.T) {
 				}},
 			},
 		}},
+		{"1; {2; {3; 4; {}} 5;} {6;}", []lox.Stmt{
+			lox.ExpressionStmt{literal(1.0)},
+			lox.BlockStmt{[]lox.Stmt{
+				lox.ExpressionStmt{literal(2.0)},
+				lox.BlockStmt{[]lox.Stmt{
+					lox.ExpressionStmt{literal(3.0)},
+					lox.ExpressionStmt{literal(4.0)},
+					lox.BlockStmt{},
+				}},
+				lox.ExpressionStmt{literal(5.0)},
+			}},
+			lox.BlockStmt{[]lox.Stmt{
+				lox.ExpressionStmt{literal(6.0)},
+			}},
+		}},
 	}
 
 	for _, test := range tests {

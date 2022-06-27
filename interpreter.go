@@ -45,6 +45,14 @@ func (i *Interpreter) execute(stmt Stmt) {
 	stmt.accept(i)
 }
 
+func (i *Interpreter) executeBlock(stmts []Stmt, env *Environment) {
+	defer func(prev *Environment) { i.env = prev }(i.env)
+	i.env = env
+	for _, stmt := range stmts {
+		i.execute(stmt)
+	}
+}
+
 func (i *Interpreter) visitExpressionStmt(stmt ExpressionStmt) {
 	i.evaluate(stmt.Expression)
 }
@@ -72,6 +80,10 @@ func (i *Interpreter) visitIfStmt(stmt IfStmt) {
 	} else if stmt.Else != nil {
 		i.execute(stmt.Else)
 	}
+}
+
+func (i *Interpreter) visitBlockStmt(stmt BlockStmt) {
+	i.executeBlock(stmt.Statements, i.env.Child())
 }
 
 // ----

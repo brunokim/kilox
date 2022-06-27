@@ -12,10 +12,12 @@ import (
 // statement   ::= exprStmt
 //               | printStmt
 //               | ifStmt
+//               | block
 //               ;
 // exprStmt    ::= expression ";" ;
 // printStmt   ::= "print" expression ";" ;
 // ifStmt      ::= "if" "(" expression ")" statement ("else" statement)? ;
+// block       ::= "{" declaration* "}" ;
 // expression  ::= assignment ;
 // assignment  ::= identifier "=" assignment ;
 //               | logic_or
@@ -93,6 +95,9 @@ func (p *Parser) statement() Stmt {
 	if p.match(If) {
 		return p.ifStatement()
 	}
+	if p.match(LeftBrace) {
+		return BlockStmt{p.block()}
+	}
 	return p.expressionStatement()
 }
 
@@ -112,6 +117,15 @@ func (p *Parser) ifStatement() IfStmt {
 		return IfStmt{Condition: cond, Then: thenStmt, Else: elseStmt}
 	}
 	return IfStmt{Condition: cond, Then: thenStmt}
+}
+
+func (p *Parser) block() []Stmt {
+	var stmts []Stmt
+	for !p.check(RightBrace) && !p.isAtEnd() {
+		stmts = append(stmts, p.declaration())
+	}
+	p.consume(RightBrace, "expecting '}' after block")
+	return stmts
 }
 
 func (p *Parser) expressionStatement() ExpressionStmt {

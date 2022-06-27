@@ -5,6 +5,7 @@ type stmtVisitor interface {
 	visitPrintStmt(stmt PrintStmt)
 	visitVarStmt(stmt VarStmt)
 	visitIfStmt(stmt IfStmt)
+	visitBlockStmt(stmt BlockStmt)
 }
 
 type Stmt interface {
@@ -32,6 +33,10 @@ type IfStmt struct {
 	Else      Stmt
 }
 
+type BlockStmt struct {
+	Statements []Stmt
+}
+
 // ----
 
 func (stmt ExpressionStmt) accept(v stmtVisitor) {
@@ -48,4 +53,8 @@ func (stmt VarStmt) accept(v stmtVisitor) {
 
 func (stmt IfStmt) accept(v stmtVisitor) {
 	v.visitIfStmt(stmt)
+}
+
+func (stmt BlockStmt) accept(v stmtVisitor) {
+	v.visitBlockStmt(stmt)
 }
