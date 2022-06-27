@@ -31,6 +31,9 @@ func TestInterpreter(t *testing.T) {
             a = 4;
           print a + b;`,
 			"44\n"},
+		{`print 10 and 0 and nil and "a";`, "nil\n"},
+		{`print nil or false or "b" or false;`, "b\n"},
+		{`print nil or true and "b" or false;`, "b\n"},
 	}
 
 	for _, test := range tests {

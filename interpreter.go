@@ -51,6 +51,9 @@ func (i *Interpreter) visitExpressionStmt(stmt ExpressionStmt) {
 
 func (i *Interpreter) visitPrintStmt(stmt PrintStmt) {
 	v := i.evaluate(stmt.Expression)
+	if v == nil {
+		v = "nil"
+	}
 	fmt.Fprintln(i.stdout, v)
 }
 
@@ -109,6 +112,17 @@ func (i *Interpreter) visitAssignmentExpr(expr AssignmentExpr) {
 	default:
 		panic(fmt.Errorf("compiler error: unhandled assignment to %T (%v)", expr.Target, expr.Target))
 	}
+}
+
+func (i *Interpreter) visitLogicExpr(expr LogicExpr) {
+	left := i.evaluate(expr.Left)
+	if expr.Operator.TokenType == Or && isTruthy(left) {
+		return
+	}
+	if expr.Operator.TokenType == And && !isTruthy(left) {
+		return
+	}
+	i.evaluate(expr.Right)
 }
 
 // ----

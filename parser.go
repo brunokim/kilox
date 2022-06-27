@@ -17,7 +17,11 @@ import (
 // printStmt   ::= "print" expression ";" ;
 // ifStmt      ::= "if" "(" expression ")" statement ("else" statement)? ;
 // expression  ::= assignment ;
-// assignment  ::= equality ("=" assignment)? ;
+// assignment  ::= identifier "=" assignment ;
+//               | logic_or
+//               ;
+// logic_or    ::= logic_and ("or" logic_and)* ;
+// logic_and   ::= equality ("and" equality)* ;
 // equality    ::= comparison (("!="|"==") comparison)* ;
 // comparison  ::= term ((">"|"<"|">="|"<=") term)* ;
 // term        ::= factor (("-"|"+") factor)* ;
@@ -123,7 +127,7 @@ func (p *Parser) expression() Expr {
 }
 
 func (p *Parser) assignment() Expr {
-	expr := p.equality()
+	expr := p.or()
 	if !p.match(Equal) {
 		return expr
 	}
@@ -136,6 +140,26 @@ func (p *Parser) assignment() Expr {
 	}
 	value := p.assignment()
 	return AssignmentExpr{expr, value}
+}
+
+func (p *Parser) or() Expr {
+	expr := p.and()
+	for p.match(Or) {
+		operator := p.previous()
+		right := p.and()
+		expr = LogicExpr{expr, operator, right}
+	}
+	return expr
+}
+
+func (p *Parser) and() Expr {
+	expr := p.equality()
+	for p.match(And) {
+		operator := p.previous()
+		right := p.equality()
+		expr = LogicExpr{expr, operator, right}
+	}
+	return expr
 }
 
 func (p *Parser) equality() Expr {

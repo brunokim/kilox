@@ -120,6 +120,23 @@ func TestParserExpression(t *testing.T) {
 				Value:  literal(10.0),
 			},
 		}},
+		{"a and b or c or d and e", lox.LogicExpr{
+			Left: lox.LogicExpr{
+				Left: lox.LogicExpr{
+					Left:     lox.VariableExpr{token(lox.Identifier, "a")},
+					Operator: token(lox.And, "and"),
+					Right:    lox.VariableExpr{token(lox.Identifier, "b")},
+				},
+				Operator: token(lox.Or, "or"),
+				Right:    lox.VariableExpr{token(lox.Identifier, "c")},
+			},
+			Operator: token(lox.Or, "or"),
+			Right: lox.LogicExpr{
+				Left:     lox.VariableExpr{token(lox.Identifier, "d")},
+				Operator: token(lox.And, "and"),
+				Right:    lox.VariableExpr{token(lox.Identifier, "e")},
+			},
+		}},
 	}
 
 	for _, test := range tests {
