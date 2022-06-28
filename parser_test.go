@@ -216,6 +216,47 @@ func TestParserStatements(t *testing.T) {
 				}},
 			},
 		}},
+		{"for (;;) print 42;", []lox.Stmt{
+			lox.WhileStmt{
+				Condition: literal(true),
+				Body:      lox.PrintStmt{literal(42.0)},
+			},
+		}},
+		{"for (var i = 0;;) print i;", []lox.Stmt{
+			lox.BlockStmt{[]lox.Stmt{
+				lox.VarStmt{Name: token(lox.Identifier, "i"), Init: literal(0.0)},
+				lox.WhileStmt{
+					Condition: literal(true),
+					Body:      lox.PrintStmt{lox.VariableExpr{token(lox.Identifier, "i")}},
+				},
+			}},
+		}},
+		{"for (; i > 0;) print i;", []lox.Stmt{
+			lox.WhileStmt{
+				Condition: lox.BinaryExpr{
+					Left:     lox.VariableExpr{token(lox.Identifier, "i")},
+					Operator: token(lox.Greater, ">"),
+					Right:    literal(0.0),
+				},
+				Body: lox.PrintStmt{lox.VariableExpr{token(lox.Identifier, "i")}},
+			},
+		}},
+		{"for (;; i = i+1) print i;", []lox.Stmt{
+			lox.WhileStmt{
+				Condition: literal(true),
+				Body: lox.BlockStmt{[]lox.Stmt{
+					lox.PrintStmt{lox.VariableExpr{token(lox.Identifier, "i")}},
+					lox.ExpressionStmt{lox.AssignmentExpr{
+						Target: lox.VariableExpr{token(lox.Identifier, "i")},
+						Value: lox.BinaryExpr{
+							Left:     lox.VariableExpr{token(lox.Identifier, "i")},
+							Operator: token(lox.Plus, "+"),
+							Right:    literal(1.0),
+						},
+					}},
+				}},
+			},
+		}},
 	}
 
 	for _, test := range tests {

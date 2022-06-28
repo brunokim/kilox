@@ -14,12 +14,15 @@ import (
 //               | ifStmt
 //               | block
 //               | whileStmt
+//               | forStmt
 //               ;
 // exprStmt    ::= expression ";" ;
 // printStmt   ::= "print" expression ";" ;
 // ifStmt      ::= "if" "(" expression ")" statement ("else" statement)? ;
 // block       ::= "{" declaration* "}" ;
 // whileStmt   ::= "while" "(" expression ")" statement ;
+// forStmt     ::= "for" "(" forInit expression? ";" expression? ")" statement ;
+// forInit     ::= varDecl | exprStmt | ";" ;
 // expression  ::= assignment ;
 // assignment  ::= identifier "=" assignment ;
 //               | logic_or
@@ -117,6 +120,9 @@ func (p *Parser) statement() Stmt {
 	if p.match(While) {
 		return p.whileStatement()
 	}
+	if p.match(For) {
+		return p.forStatement()
+	}
 	return p.expressionStatement()
 }
 
@@ -153,6 +159,43 @@ func (p *Parser) whileStatement() WhileStmt {
 	p.consume(RightParen, "expecting ')' after condition")
 	stmt := p.statement()
 	return WhileStmt{Condition: cond, Body: stmt}
+}
+
+func (p *Parser) forStatement() Stmt {
+	p.consume(LeftParen, "expecting '(' after 'for'")
+	// Initializer
+	var init Stmt
+	if p.match(Semicolon) {
+		init = nil
+	} else if p.match(Var) {
+		init = p.varDeclaration()
+	} else {
+		init = p.expressionStatement()
+	}
+	// Condition
+	var cond Expr
+	if !p.check(Semicolon) {
+		cond = p.expression()
+	} else {
+		cond = LiteralExpr{true}
+	}
+	p.consume(Semicolon, "Expect ';' after loop condition")
+	// Increment
+	var inc Expr
+	if !p.check(RightParen) {
+		inc = p.expression()
+	}
+	p.consume(RightParen, "Expect ')' after loop increment")
+	// Build desugared statement.
+	body := p.statement()
+	if inc != nil {
+		body = BlockStmt{[]Stmt{body, ExpressionStmt{inc}}}
+	}
+	body = WhileStmt{cond, body}
+	if init != nil {
+		body = BlockStmt{[]Stmt{init, body}}
+	}
+	return body
 }
 
 func (p *Parser) expressionStatement() ExpressionStmt {

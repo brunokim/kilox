@@ -47,6 +47,32 @@ func TestInterpreter(t *testing.T) {
 			"10\n"},
 		{"var a = 1; { var a = a + 2; print a; }", "3\n"},
 		{"var a = 5; while (a >= 0) { print a; a = a - 1; }", "5\n4\n3\n2\n1\n0\n"},
+		{"for (var i = 0; i < 5; i = i + 1) print i;", "0\n1\n2\n3\n4\n"},
+		{`var a = 0;
+          var temp;
+
+          for (var b = 1; a < 1000; b = temp + b) {
+              print a;
+              temp = a;
+              a = b;
+          }`, `0
+1
+1
+2
+3
+5
+8
+13
+21
+34
+55
+89
+144
+233
+377
+610
+987
+`},
 	}
 
 	for _, test := range tests {
