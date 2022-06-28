@@ -62,11 +62,14 @@ func (r *runner) run(text string) bool {
 		fmt.Println(err)
 		return false
 	}
-	p := lox.NewParser(tokens)
-	stmts, err := p.Parse()
-	if err != nil {
-		fmt.Println(err)
-		return false
+	stmts, err1 := lox.NewParser(tokens).Parse()
+	if err1 != nil {
+		expr, err2 := lox.NewParser(tokens).ParseExpression()
+		if err2 != nil {
+			fmt.Println(err1)
+			return false
+		}
+		stmts = []lox.Stmt{lox.PrintStmt{expr}}
 	}
 	err = r.i.Interpret(stmts)
 	if err != nil {

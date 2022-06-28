@@ -59,6 +59,20 @@ func (p *Parser) Parse() ([]Stmt, error) {
 	return stmts, nil
 }
 
+func (p *Parser) ParseExpression() (expr Expr, err error) {
+	defer func() {
+		if err_ := recover(); err_ != nil {
+			parseErr, ok := err_.(parseError)
+			if !ok {
+				panic(err_) // Rethrow
+			}
+			expr = nil
+			err = parseErr
+		}
+	}()
+	return p.expression(), nil
+}
+
 // ----
 
 func (p *Parser) declaration() Stmt {
