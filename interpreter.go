@@ -86,6 +86,12 @@ func (i *Interpreter) visitBlockStmt(stmt BlockStmt) {
 	i.executeBlock(stmt.Statements, i.env.Child())
 }
 
+func (i *Interpreter) visitWhileStmt(stmt WhileStmt) {
+	for isTruthy(i.evaluate(stmt.Condition)) {
+		i.execute(stmt.Body)
+	}
+}
+
 // ----
 
 func (i *Interpreter) evaluate(expr Expr) interface{} {

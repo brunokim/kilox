@@ -46,6 +46,7 @@ func TestInterpreter(t *testing.T) {
           print a;`,
 			"10\n"},
 		{"var a = 1; { var a = a + 2; print a; }", "3\n"},
+		{"var a = 5; while (a >= 0) { print a; a = a - 1; }", "5\n4\n3\n2\n1\n0\n"},
 	}
 
 	for _, test := range tests {

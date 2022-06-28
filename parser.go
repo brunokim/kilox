@@ -13,11 +13,13 @@ import (
 //               | printStmt
 //               | ifStmt
 //               | block
+//               | whileStmt
 //               ;
 // exprStmt    ::= expression ";" ;
 // printStmt   ::= "print" expression ";" ;
 // ifStmt      ::= "if" "(" expression ")" statement ("else" statement)? ;
 // block       ::= "{" declaration* "}" ;
+// whileStmt   ::= "while" "(" expression ")" statement ;
 // expression  ::= assignment ;
 // assignment  ::= identifier "=" assignment ;
 //               | logic_or
@@ -112,6 +114,9 @@ func (p *Parser) statement() Stmt {
 	if p.match(LeftBrace) {
 		return BlockStmt{p.block()}
 	}
+	if p.match(While) {
+		return p.whileStatement()
+	}
 	return p.expressionStatement()
 }
 
@@ -124,7 +129,7 @@ func (p *Parser) printStatement() PrintStmt {
 func (p *Parser) ifStatement() IfStmt {
 	p.consume(LeftParen, "expecting '(' after 'if'")
 	cond := p.expression()
-	p.consume(RightParen, "expecting ')' after expression")
+	p.consume(RightParen, "expecting ')' after condition")
 	thenStmt := p.statement()
 	if p.match(Else) {
 		elseStmt := p.statement()
@@ -140,6 +145,14 @@ func (p *Parser) block() []Stmt {
 	}
 	p.consume(RightBrace, "expecting '}' after block")
 	return stmts
+}
+
+func (p *Parser) whileStatement() WhileStmt {
+	p.consume(LeftParen, "expecting '(' after 'while'")
+	cond := p.expression()
+	p.consume(RightParen, "expecting ')' after condition")
+	stmt := p.statement()
+	return WhileStmt{Condition: cond, Body: stmt}
 }
 
 func (p *Parser) expressionStatement() ExpressionStmt {

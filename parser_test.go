@@ -203,6 +203,19 @@ func TestParserStatements(t *testing.T) {
 				lox.ExpressionStmt{literal(6.0)},
 			}},
 		}},
+		{"while (a) a = a - 1;", []lox.Stmt{
+			lox.WhileStmt{
+				Condition: lox.VariableExpr{token(lox.Identifier, "a")},
+				Body: lox.ExpressionStmt{lox.AssignmentExpr{
+					Target: lox.VariableExpr{token(lox.Identifier, "a")},
+					Value: lox.BinaryExpr{
+						Left:     lox.VariableExpr{token(lox.Identifier, "a")},
+						Operator: token(lox.Minus, "-"),
+						Right:    literal(1.0),
+					},
+				}},
+			},
+		}},
 	}
 
 	for _, test := range tests {
@@ -235,12 +248,15 @@ func TestParserError(t *testing.T) {
   line 4 at 'print': expecting ')' after expression`},
 		{"(a) = 1;", "line 1 at '=': invalid target for assignment: want variable, got lox.GroupingExpr"},
 		{"if a then b = 10;", "line 1 at 'a': expecting '(' after 'if'"},
-		{"if (a then b = 10;", "line 1 at 'then': expecting ')' after expression"},
+		{"if (a then b = 10;", "line 1 at 'then': expecting ')' after condition"},
 		{"if (a) then b = 10;", "line 1 at 'b': expecting ';' after expression"},
 		{"if (a) b = 10; else", "line 1 at end: expecting expression"},
 		{"if (a) var b = 10;", "line 1 at 'var': expecting expression"},
 		{"{1;}; 2;", "line 1 at ';': expecting expression"},
 		{"{1; 2;", "line 1 at end: expecting '}' after block"},
+		{"while a do a = a - 1;", "line 1 at 'a': expecting '(' after 'while'"},
+		{"while (a do a = a - 1;", "line 1 at 'do': expecting ')' after condition"},
+		{"while (a) do a = a - 1;", "line 1 at 'a': expecting ';' after expression"},
 	}
 
 	for _, test := range tests {
