@@ -239,6 +239,8 @@ func TestParserError(t *testing.T) {
 		{"if (a) then b = 10;", "line 1 at 'b': expecting ';' after expression"},
 		{"if (a) b = 10; else", "line 1 at end: expecting expression"},
 		{"if (a) var b = 10;", "line 1 at 'var': expecting expression"},
+		{"{1;}; 2;", "line 1 at ';': expecting expression"},
+		{"{1; 2;", "line 1 at end: expecting '}' after block"},
 	}
 
 	for _, test := range tests {
