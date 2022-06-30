@@ -251,7 +251,7 @@ func (p *Parser) continueStatement() Stmt {
 	}
 	p.consume(Semicolon, "expecting ';' after 'continue'")
 	var stmt Stmt = ContinueStmt{token}
-	if p.loopEnv.inc != nil {
+	if p.loopEnv != nil && p.loopEnv.inc != nil {
 		stmt = BlockStmt{[]Stmt{
 			ExpressionStmt{p.loopEnv.inc},
 			stmt,

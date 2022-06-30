@@ -323,6 +323,8 @@ func TestParserError(t *testing.T) {
 		{"while a do a = a - 1;", "line 1 at 'a': expecting '(' after 'while'"},
 		{"while (a do a = a - 1;", "line 1 at 'do': expecting ')' after condition"},
 		{"while (a) do a = a - 1;", "line 1 at 'a': expecting ';' after expression"},
+		{"var a; break;", "line 1 at 'break': 'break' can only be used within loops"},
+		{"{var a; continue;}", "line 1 at 'continue': 'continue' can only be used within loops"},
 	}
 
 	for _, test := range tests {
