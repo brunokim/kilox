@@ -19,7 +19,6 @@ type Interpreter struct {
 	value  interface{}
 	stdout io.Writer
 
-	loopCount int
 	loopState loopState
 }
 
@@ -42,7 +41,6 @@ func (i *Interpreter) Interpret(stmts []Stmt) (err error) {
 			if !ok {
 				panic(err_) // Rethrow
 			}
-			i.loopCount = 0
 			i.loopState = sequentialLoop
 			err = runtimeErr
 		}
@@ -104,26 +102,18 @@ func (i *Interpreter) visitBlockStmt(stmt BlockStmt) {
 }
 
 func (i *Interpreter) visitWhileStmt(stmt WhileStmt) {
-	i.loopCount++
 	for isTruthy(i.evaluate(stmt.Condition)) && i.loopState != breakLoop {
 		i.loopState = sequentialLoop
 		i.execute(stmt.Body)
 	}
 	i.loopState = sequentialLoop
-	i.loopCount--
 }
 
 func (i *Interpreter) visitBreakStmt(stmt BreakStmt) {
-	if i.loopCount == 0 {
-		panic(runtimeError{stmt.Token, "'break' disallowed outside a loop"})
-	}
 	i.loopState = breakLoop
 }
 
 func (i *Interpreter) visitContinueStmt(stmt ContinueStmt) {
-	if i.loopCount == 0 {
-		panic(runtimeError{stmt.Token, "'continue' disallowed outside a loop"})
-	}
 	i.loopState = continueLoop
 }
 
