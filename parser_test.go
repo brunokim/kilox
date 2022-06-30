@@ -12,6 +12,10 @@ func literal(v interface{}) lox.LiteralExpr {
 	return lox.LiteralExpr{Value: v}
 }
 
+func variableExpr(name string) lox.VariableExpr {
+	return lox.VariableExpr{Name: token(lox.Identifier, name)}
+}
+
 func TestParserExpression(t *testing.T) {
 	tests := []struct {
 		text string
@@ -23,7 +27,7 @@ func TestParserExpression(t *testing.T) {
 		{"true", literal(true)},
 		{"nil", literal(nil)},
 		{`"abc def"`, literal("abc def")},
-		{"x", lox.VariableExpr{Name: token(lox.Identifier, "x")}},
+		{"x", variableExpr("x")},
 		{"-1", lox.UnaryExpr{Operator: token(lox.Minus, "-"), Right: literal(1.0)}},
 		{"(1)", lox.GroupingExpr{Expression: literal(1.0)}},
 		{"2-1", lox.BinaryExpr{
@@ -110,31 +114,31 @@ func TestParserExpression(t *testing.T) {
 			},
 		}},
 		{"a = 1", lox.AssignmentExpr{
-			Target: lox.VariableExpr{token(lox.Identifier, "a")},
+			Target: variableExpr("a"),
 			Value:  literal(1.0),
 		}},
 		{"a = b = 10", lox.AssignmentExpr{
-			Target: lox.VariableExpr{token(lox.Identifier, "a")},
+			Target: variableExpr("a"),
 			Value: lox.AssignmentExpr{
-				Target: lox.VariableExpr{token(lox.Identifier, "b")},
+				Target: variableExpr("b"),
 				Value:  literal(10.0),
 			},
 		}},
 		{"a and b or c or d and e", lox.LogicExpr{
 			Left: lox.LogicExpr{
 				Left: lox.LogicExpr{
-					Left:     lox.VariableExpr{token(lox.Identifier, "a")},
+					Left:     variableExpr("a"),
 					Operator: token(lox.And, "and"),
-					Right:    lox.VariableExpr{token(lox.Identifier, "b")},
+					Right:    variableExpr("b"),
 				},
 				Operator: token(lox.Or, "or"),
-				Right:    lox.VariableExpr{token(lox.Identifier, "c")},
+				Right:    variableExpr("c"),
 			},
 			Operator: token(lox.Or, "or"),
 			Right: lox.LogicExpr{
-				Left:     lox.VariableExpr{token(lox.Identifier, "d")},
+				Left:     variableExpr("d"),
 				Operator: token(lox.And, "and"),
-				Right:    lox.VariableExpr{token(lox.Identifier, "e")},
+				Right:    variableExpr("e"),
 			},
 		}},
 	}
@@ -154,13 +158,13 @@ func TestParserStatements(t *testing.T) {
 		want []lox.Stmt
 	}{
 		{"a+2;", []lox.Stmt{lox.ExpressionStmt{lox.BinaryExpr{
-			Left:     lox.VariableExpr{token(lox.Identifier, "a")},
+			Left:     variableExpr("a"),
 			Operator: token(lox.Plus, "+"),
 			Right:    literal(2.0),
 		}}}},
 		{"print a; print b;", []lox.Stmt{
-			lox.PrintStmt{lox.VariableExpr{token(lox.Identifier, "a")}},
-			lox.PrintStmt{lox.VariableExpr{token(lox.Identifier, "b")}},
+			lox.PrintStmt{variableExpr("a")},
+			lox.PrintStmt{variableExpr("b")},
 		}},
 		{"var a; var b = false;", []lox.Stmt{
 			lox.VarStmt{Name: token(lox.Identifier, "a")},
@@ -168,22 +172,22 @@ func TestParserStatements(t *testing.T) {
 		}},
 		{"if (a) b = 10;", []lox.Stmt{
 			lox.IfStmt{
-				Condition: lox.VariableExpr{Name: token(lox.Identifier, "a")},
+				Condition: variableExpr("a"),
 				Then: lox.ExpressionStmt{lox.AssignmentExpr{
-					Target: lox.VariableExpr{token(lox.Identifier, "b")},
+					Target: variableExpr("b"),
 					Value:  literal(10.0),
 				}},
 			},
 		}},
 		{"if (a) b = 10; else a = 5;", []lox.Stmt{
 			lox.IfStmt{
-				Condition: lox.VariableExpr{Name: token(lox.Identifier, "a")},
+				Condition: variableExpr("a"),
 				Then: lox.ExpressionStmt{lox.AssignmentExpr{
-					Target: lox.VariableExpr{token(lox.Identifier, "b")},
+					Target: variableExpr("b"),
 					Value:  literal(10.0),
 				}},
 				Else: lox.ExpressionStmt{lox.AssignmentExpr{
-					Target: lox.VariableExpr{token(lox.Identifier, "a")},
+					Target: variableExpr("a"),
 					Value:  literal(5.0),
 				}},
 			},
@@ -205,11 +209,11 @@ func TestParserStatements(t *testing.T) {
 		}},
 		{"while (a) a = a - 1;", []lox.Stmt{
 			lox.WhileStmt{
-				Condition: lox.VariableExpr{token(lox.Identifier, "a")},
+				Condition: variableExpr("a"),
 				Body: lox.ExpressionStmt{lox.AssignmentExpr{
-					Target: lox.VariableExpr{token(lox.Identifier, "a")},
+					Target: variableExpr("a"),
 					Value: lox.BinaryExpr{
-						Left:     lox.VariableExpr{token(lox.Identifier, "a")},
+						Left:     variableExpr("a"),
 						Operator: token(lox.Minus, "-"),
 						Right:    literal(1.0),
 					},
@@ -227,29 +231,29 @@ func TestParserStatements(t *testing.T) {
 				lox.VarStmt{Name: token(lox.Identifier, "i"), Init: literal(0.0)},
 				lox.WhileStmt{
 					Condition: literal(true),
-					Body:      lox.PrintStmt{lox.VariableExpr{token(lox.Identifier, "i")}},
+					Body:      lox.PrintStmt{variableExpr("i")},
 				},
 			}},
 		}},
 		{"for (; i > 0;) print i;", []lox.Stmt{
 			lox.WhileStmt{
 				Condition: lox.BinaryExpr{
-					Left:     lox.VariableExpr{token(lox.Identifier, "i")},
+					Left:     variableExpr("i"),
 					Operator: token(lox.Greater, ">"),
 					Right:    literal(0.0),
 				},
-				Body: lox.PrintStmt{lox.VariableExpr{token(lox.Identifier, "i")}},
+				Body: lox.PrintStmt{variableExpr("i")},
 			},
 		}},
 		{"for (;; i = i+1) print i;", []lox.Stmt{
 			lox.WhileStmt{
 				Condition: literal(true),
 				Body: lox.BlockStmt{[]lox.Stmt{
-					lox.PrintStmt{lox.VariableExpr{token(lox.Identifier, "i")}},
+					lox.PrintStmt{variableExpr("i")},
 					lox.ExpressionStmt{lox.AssignmentExpr{
-						Target: lox.VariableExpr{token(lox.Identifier, "i")},
+						Target: variableExpr("i"),
 						Value: lox.BinaryExpr{
-							Left:     lox.VariableExpr{token(lox.Identifier, "i")},
+							Left:     variableExpr("i"),
 							Operator: token(lox.Plus, "+"),
 							Right:    literal(1.0),
 						},
@@ -263,18 +267,18 @@ func TestParserStatements(t *testing.T) {
 				Body: lox.BlockStmt{[]lox.Stmt{
 					lox.BlockStmt{[]lox.Stmt{
 						lox.IfStmt{
-							Condition: lox.VariableExpr{token(lox.Identifier, "a")},
+							Condition: variableExpr("a"),
 							Then: lox.BlockStmt{[]lox.Stmt{
-								lox.ExpressionStmt{lox.VariableExpr{token(lox.Identifier, "inc")}},
+								lox.ExpressionStmt{variableExpr("inc")},
 								lox.ContinueStmt{token(lox.Continue, "continue")},
 							}},
 						},
 						lox.BlockStmt{[]lox.Stmt{
-							lox.ExpressionStmt{lox.VariableExpr{token(lox.Identifier, "inc")}},
+							lox.ExpressionStmt{variableExpr("inc")},
 							lox.ContinueStmt{token(lox.Continue, "continue")},
 						}},
 					}},
-					lox.ExpressionStmt{lox.VariableExpr{token(lox.Identifier, "inc")}},
+					lox.ExpressionStmt{variableExpr("inc")},
 				}},
 			},
 		}},
