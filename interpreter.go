@@ -6,20 +6,28 @@ import (
 	"os"
 )
 
+type loopState int
+
+const (
+	sequentialLoop loopState = iota
+	breakLoop
+	continueLoop
+)
+
 type Interpreter struct {
 	env    *Environment
 	value  interface{}
 	stdout io.Writer
 
-	loopCount      int
-	shouldBreak    bool
-	shouldContinue bool
+	loopCount int
+	loopState loopState
 }
 
 func NewInterpreter() *Interpreter {
 	return &Interpreter{
-		env:    NewEnvironment(),
-		stdout: os.Stdout,
+		env:       NewEnvironment(),
+		stdout:    os.Stdout,
+		loopState: sequentialLoop,
 	}
 }
 
@@ -35,8 +43,7 @@ func (i *Interpreter) Interpret(stmts []Stmt) (err error) {
 				panic(err_) // Rethrow
 			}
 			i.loopCount = 0
-			i.shouldBreak = false
-			i.shouldContinue = false
+			i.loopState = sequentialLoop
 			err = runtimeErr
 		}
 	}()
@@ -57,7 +64,7 @@ func (i *Interpreter) executeBlock(stmts []Stmt, env *Environment) {
 	i.env = env
 	for _, stmt := range stmts {
 		i.execute(stmt)
-		if i.shouldBreak || i.shouldContinue {
+		if i.loopState == breakLoop || i.loopState == continueLoop {
 			break
 		}
 	}
@@ -98,11 +105,11 @@ func (i *Interpreter) visitBlockStmt(stmt BlockStmt) {
 
 func (i *Interpreter) visitWhileStmt(stmt WhileStmt) {
 	i.loopCount++
-	for isTruthy(i.evaluate(stmt.Condition)) && !i.shouldBreak {
-		i.shouldContinue = false
+	for isTruthy(i.evaluate(stmt.Condition)) && i.loopState != breakLoop {
+		i.loopState = sequentialLoop
 		i.execute(stmt.Body)
 	}
-	i.shouldBreak = false
+	i.loopState = sequentialLoop
 	i.loopCount--
 }
 
@@ -110,14 +117,14 @@ func (i *Interpreter) visitBreakStmt(stmt BreakStmt) {
 	if i.loopCount == 0 {
 		panic(runtimeError{stmt.Token, "'break' disallowed outside a loop"})
 	}
-	i.shouldBreak = true
+	i.loopState = breakLoop
 }
 
 func (i *Interpreter) visitContinueStmt(stmt ContinueStmt) {
 	if i.loopCount == 0 {
 		panic(runtimeError{stmt.Token, "'continue' disallowed outside a loop"})
 	}
-	i.shouldContinue = true
+	i.loopState = continueLoop
 }
 
 // ----
