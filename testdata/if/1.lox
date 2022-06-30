@@ -1,0 +1,7 @@
+var a;
+if (a)
+    a = 10;
+else
+    a = 20;
+
+print a; // Output: 20

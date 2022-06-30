@@ -1,0 +1,6 @@
+for (var i = 0; i < 5; i = i + 1) print i;
+// Output: 0
+// Output: 1
+// Output: 2
+// Output: 3
+// Output: 4

@@ -1,0 +1,2 @@
+print 10 and 0 and nil and "a";
+// Output: nil

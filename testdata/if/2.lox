@@ -1,0 +1,14 @@
+var a;
+var b;
+if (!a)
+    if (b)
+        b = 20;
+    else
+        b = 40;
+else
+    a = 2;
+
+if (!a)
+    a = 4;
+
+print a + b; // Output: 44

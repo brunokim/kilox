@@ -1,0 +1,26 @@
+var a = 0;
+var temp;
+
+for (var b = 1; a < 1000; b = temp + b) {
+  print a;
+  temp = a;
+  a = b;
+}
+
+// Output: 0
+// Output: 1
+// Output: 1
+// Output: 2
+// Output: 3
+// Output: 5
+// Output: 8
+// Output: 13
+// Output: 21
+// Output: 34
+// Output: 55
+// Output: 89
+// Output: 144
+// Output: 233
+// Output: 377
+// Output: 610
+// Output: 987

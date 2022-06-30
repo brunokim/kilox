@@ -1,0 +1,2 @@
+print nil or true and "b" or false;
+// output: b

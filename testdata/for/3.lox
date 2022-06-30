@@ -1,0 +1,13 @@
+for (var i=0; i < 10; i = i+1) {
+    if (i < 4) {
+        continue;
+    }
+    print i;
+    if (i > 6) {
+        break;
+    }
+}
+// Output: 4
+// Output: 5
+// Output: 6
+// Output: 7
