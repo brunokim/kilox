@@ -257,6 +257,27 @@ func TestParserStatements(t *testing.T) {
 				}},
 			},
 		}},
+		{"for (;; inc) { if (a) continue; continue; }", []lox.Stmt{
+			lox.WhileStmt{
+				Condition: literal(true),
+				Body: lox.BlockStmt{[]lox.Stmt{
+					lox.BlockStmt{[]lox.Stmt{
+						lox.IfStmt{
+							Condition: lox.VariableExpr{token(lox.Identifier, "a")},
+							Then: lox.BlockStmt{[]lox.Stmt{
+								lox.ExpressionStmt{lox.VariableExpr{token(lox.Identifier, "inc")}},
+								lox.ContinueStmt{token(lox.Continue, "continue")},
+							}},
+						},
+						lox.BlockStmt{[]lox.Stmt{
+							lox.ExpressionStmt{lox.VariableExpr{token(lox.Identifier, "inc")}},
+							lox.ContinueStmt{token(lox.Continue, "continue")},
+						}},
+					}},
+					lox.ExpressionStmt{lox.VariableExpr{token(lox.Identifier, "inc")}},
+				}},
+			},
+		}},
 	}
 
 	for _, test := range tests {
