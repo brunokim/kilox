@@ -7,6 +7,8 @@ type stmtVisitor interface {
 	visitIfStmt(stmt IfStmt)
 	visitBlockStmt(stmt BlockStmt)
 	visitWhileStmt(stmt WhileStmt)
+	visitBreakStmt(stmt BreakStmt)
+	visitContinueStmt(stmt ContinueStmt)
 }
 
 type Stmt interface {
@@ -43,6 +45,14 @@ type WhileStmt struct {
 	Body      Stmt
 }
 
+type BreakStmt struct {
+	Token Token
+}
+
+type ContinueStmt struct {
+	Token Token
+}
+
 // ----
 
 func (stmt ExpressionStmt) accept(v stmtVisitor) {
@@ -67,4 +77,12 @@ func (stmt BlockStmt) accept(v stmtVisitor) {
 
 func (stmt WhileStmt) accept(v stmtVisitor) {
 	v.visitWhileStmt(stmt)
+}
+
+func (stmt BreakStmt) accept(v stmtVisitor) {
+	v.visitBreakStmt(stmt)
+}
+
+func (stmt ContinueStmt) accept(v stmtVisitor) {
+	v.visitContinueStmt(stmt)
 }

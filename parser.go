@@ -4,47 +4,52 @@ import (
 	"fmt"
 )
 
-// program     ::= declaration* eof;
-// declaration ::= varDecl
-//               | statement
-//               ;
-// varDecl     ::= "var" identifier ( "=" expression )? ";" ;
-// statement   ::= exprStmt
-//               | printStmt
-//               | ifStmt
-//               | block
-//               | whileStmt
-//               | forStmt
-//               ;
-// exprStmt    ::= expression ";" ;
-// printStmt   ::= "print" expression ";" ;
-// ifStmt      ::= "if" "(" expression ")" statement ("else" statement)? ;
-// block       ::= "{" declaration* "}" ;
-// whileStmt   ::= "while" "(" expression ")" statement ;
-// forStmt     ::= "for" "(" forInit expression? ";" expression? ")" statement ;
-// forInit     ::= varDecl | exprStmt | ";" ;
-// expression  ::= assignment ;
-// assignment  ::= identifier "=" assignment ;
-//               | logic_or
-//               ;
-// logic_or    ::= logic_and ("or" logic_and)* ;
-// logic_and   ::= equality ("and" equality)* ;
-// equality    ::= comparison (("!="|"==") comparison)* ;
-// comparison  ::= term ((">"|"<"|">="|"<=") term)* ;
-// term        ::= factor (("-"|"+") factor)* ;
-// factor      ::= unary (("/"|"*") unary)* ;
-// unary       ::= ("!"|"-") unary
-//               | primary
-//               ;
-// primary     ::= number | string | "true" | "false" | "nil"
-//               | "(" expression ")"
-//               | identifier
-//               ;
+// program      ::= declaration* eof;
+// declaration  ::= varDecl
+//                | statement
+//                ;
+// varDecl      ::= "var" identifier ( "=" expression )? ";" ;
+// statement    ::= exprStmt
+//                | printStmt
+//                | ifStmt
+//                | block
+//                | whileStmt
+//                | forStmt
+//                | breakStmt
+//                | continueStmt
+//                ;
+// exprStmt     ::= expression ";" ;
+// printStmt    ::= "print" expression ";" ;
+// ifStmt       ::= "if" "(" expression ")" statement ("else" statement)? ;
+// block        ::= "{" declaration* "}" ;
+// whileStmt    ::= "while" "(" expression ")" statement ;
+// forStmt      ::= "for" "(" forInit expression? ";" expression? ")" statement ;
+// breakStmt    ::= "break" ";" ;
+// continueStmt ::= "continue" ";" ;
+// forInit      ::= varDecl | exprStmt | ";" ;
+// expression   ::= assignment ;
+// assignment   ::= identifier "=" assignment ;
+//                | logic_or
+//                ;
+// logic_or     ::= logic_and ("or" logic_and)* ;
+// logic_and    ::= equality ("and" equality)* ;
+// equality     ::= comparison (("!="|"==") comparison)* ;
+// comparison   ::= term ((">"|"<"|">="|"<=") term)* ;
+// term         ::= factor (("-"|"+") factor)* ;
+// factor       ::= unary (("/"|"*") unary)* ;
+// unary        ::= ("!"|"-") unary
+//                | primary
+//                ;
+// primary      ::= number | string | "true" | "false" | "nil"
+//                | "(" expression ")"
+//                | identifier
+//                ;
 
 type Parser struct {
 	tokens  []Token
 	current int
 	errors  []parseError
+	loopEnv *loopEnvironment
 }
 
 func NewParser(tokens []Token) *Parser {
@@ -76,6 +81,21 @@ func (p *Parser) ParseExpression() (expr Expr, err error) {
 		}
 	}()
 	return p.expression(), nil
+}
+
+// ----
+
+type loopType int
+
+const (
+	whileLoop loopType = iota
+	forLoop
+)
+
+type loopEnvironment struct {
+	enclosing *loopEnvironment
+	loopType  loopType
+	inc       Expr
 }
 
 // ----
@@ -123,6 +143,12 @@ func (p *Parser) statement() Stmt {
 	if p.match(For) {
 		return p.forStatement()
 	}
+	if p.match(Break) {
+		return p.breakStatement()
+	}
+	if p.match(Continue) {
+		return p.continueStatement()
+	}
 	return p.expressionStatement()
 }
 
@@ -154,14 +180,23 @@ func (p *Parser) block() []Stmt {
 }
 
 func (p *Parser) whileStatement() WhileStmt {
+	p.loopEnv = &loopEnvironment{
+		loopType:  whileLoop,
+		enclosing: p.loopEnv,
+	}
 	p.consume(LeftParen, "expecting '(' after 'while'")
 	cond := p.expression()
 	p.consume(RightParen, "expecting ')' after condition")
 	stmt := p.statement()
+	p.loopEnv = p.loopEnv.enclosing
 	return WhileStmt{Condition: cond, Body: stmt}
 }
 
 func (p *Parser) forStatement() Stmt {
+	p.loopEnv = &loopEnvironment{
+		loopType:  forLoop,
+		enclosing: p.loopEnv,
+	}
 	p.consume(LeftParen, "expecting '(' after 'for'")
 	// Initializer
 	var init Stmt
@@ -185,6 +220,7 @@ func (p *Parser) forStatement() Stmt {
 	if !p.check(RightParen) {
 		inc = p.expression()
 	}
+	p.loopEnv.inc = inc
 	p.consume(RightParen, "Expect ')' after loop increment")
 	// Build desugared statement.
 	body := p.statement()
@@ -195,7 +231,33 @@ func (p *Parser) forStatement() Stmt {
 	if init != nil {
 		body = BlockStmt{[]Stmt{init, body}}
 	}
+	p.loopEnv = p.loopEnv.enclosing
 	return body
+}
+
+func (p *Parser) breakStatement() BreakStmt {
+	token := p.previous()
+	if p.loopEnv == nil {
+		p.addError(parseError{token, "'break' can only be used within loops"})
+	}
+	p.consume(Semicolon, "expecting ';' after 'break'")
+	return BreakStmt{token}
+}
+
+func (p *Parser) continueStatement() Stmt {
+	token := p.previous()
+	if p.loopEnv == nil {
+		p.addError(parseError{token, "'continue' can only be used within loops"})
+	}
+	p.consume(Semicolon, "expecting ';' after 'continue'")
+	var stmt Stmt = ContinueStmt{token}
+	if p.loopEnv.inc != nil {
+		stmt = BlockStmt{[]Stmt{
+			ExpressionStmt{p.loopEnv.inc},
+			stmt,
+		}}
+	}
+	return stmt
 }
 
 func (p *Parser) expressionStatement() ExpressionStmt {

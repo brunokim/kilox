@@ -73,6 +73,51 @@ func TestInterpreter(t *testing.T) {
 610
 987
 `},
+		{`
+        var x = 0;
+        while (x < 10) {
+            var start = x;
+            while (true) {
+                x = x + 1;
+                print x;
+                if (x - start > 3) {
+                    break;
+                }
+            }
+            if (x > 6) {
+                continue;
+            }
+            x = x - 3;
+        }`, `1
+2
+3
+4
+2
+3
+4
+5
+3
+4
+5
+6
+4
+5
+6
+7
+8
+9
+10
+11
+`},
+		{`for (var i=0; i < 10; i = i+1) {
+		    if (i < 4) {
+		        continue;
+		    }
+		    print i;
+		    if (i > 6) {
+		        break;
+		    }
+		}`, "4\n5\n6\n7\n"},
 	}
 
 	for _, test := range tests {

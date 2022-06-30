@@ -10,6 +10,10 @@ type Interpreter struct {
 	env    *Environment
 	value  interface{}
 	stdout io.Writer
+
+	loopCount      int
+	shouldBreak    bool
+	shouldContinue bool
 }
 
 func NewInterpreter() *Interpreter {
@@ -30,6 +34,9 @@ func (i *Interpreter) Interpret(stmts []Stmt) (err error) {
 			if !ok {
 				panic(err_) // Rethrow
 			}
+			i.loopCount = 0
+			i.shouldBreak = false
+			i.shouldContinue = false
 			err = runtimeErr
 		}
 	}()
@@ -50,6 +57,9 @@ func (i *Interpreter) executeBlock(stmts []Stmt, env *Environment) {
 	i.env = env
 	for _, stmt := range stmts {
 		i.execute(stmt)
+		if i.shouldBreak || i.shouldContinue {
+			break
+		}
 	}
 }
 
@@ -87,9 +97,27 @@ func (i *Interpreter) visitBlockStmt(stmt BlockStmt) {
 }
 
 func (i *Interpreter) visitWhileStmt(stmt WhileStmt) {
-	for isTruthy(i.evaluate(stmt.Condition)) {
+	i.loopCount++
+	for isTruthy(i.evaluate(stmt.Condition)) && !i.shouldBreak {
+		i.shouldContinue = false
 		i.execute(stmt.Body)
 	}
+	i.shouldBreak = false
+	i.loopCount--
+}
+
+func (i *Interpreter) visitBreakStmt(stmt BreakStmt) {
+	if i.loopCount == 0 {
+		panic(runtimeError{stmt.Token, "'break' disallowed outside a loop"})
+	}
+	i.shouldBreak = true
+}
+
+func (i *Interpreter) visitContinueStmt(stmt ContinueStmt) {
+	if i.loopCount == 0 {
+		panic(runtimeError{stmt.Token, "'continue' disallowed outside a loop"})
+	}
+	i.shouldContinue = true
 }
 
 // ----

@@ -36,7 +36,9 @@ const (
 
 	// Keywords.
 	And
+	Break
 	Class
+	Continue
 	Else
 	False
 	Fun

@@ -31,27 +31,29 @@ func _() {
 	_ = x[String-20]
 	_ = x[Number-21]
 	_ = x[And-22]
-	_ = x[Class-23]
-	_ = x[Else-24]
-	_ = x[False-25]
-	_ = x[Fun-26]
-	_ = x[For-27]
-	_ = x[If-28]
-	_ = x[Nil-29]
-	_ = x[Or-30]
-	_ = x[Print-31]
-	_ = x[Return-32]
-	_ = x[Super-33]
-	_ = x[This-34]
-	_ = x[True-35]
-	_ = x[Var-36]
-	_ = x[While-37]
-	_ = x[EOF-38]
+	_ = x[Break-23]
+	_ = x[Class-24]
+	_ = x[Continue-25]
+	_ = x[Else-26]
+	_ = x[False-27]
+	_ = x[Fun-28]
+	_ = x[For-29]
+	_ = x[If-30]
+	_ = x[Nil-31]
+	_ = x[Or-32]
+	_ = x[Print-33]
+	_ = x[Return-34]
+	_ = x[Super-35]
+	_ = x[This-36]
+	_ = x[True-37]
+	_ = x[Var-38]
+	_ = x[While-39]
+	_ = x[EOF-40]
 }
 
-const _TokenType_name = "LeftParenRightParenLeftBraceRightBraceCommaDotMinusPlusSemicolonSlashStarBangBangEqualEqualEqualEqualGreaterGreaterEqualLessLessEqualIdentifierStringNumberAndClassElseFalseFunForIfNilOrPrintReturnSuperThisTrueVarWhileEOF"
+const _TokenType_name = "LeftParenRightParenLeftBraceRightBraceCommaDotMinusPlusSemicolonSlashStarBangBangEqualEqualEqualEqualGreaterGreaterEqualLessLessEqualIdentifierStringNumberAndBreakClassContinueElseFalseFunForIfNilOrPrintReturnSuperThisTrueVarWhileEOF"
 
-var _TokenType_index = [...]uint8{0, 9, 19, 28, 38, 43, 46, 51, 55, 64, 69, 73, 77, 86, 91, 101, 108, 120, 124, 133, 143, 149, 155, 158, 163, 167, 172, 175, 178, 180, 183, 185, 190, 196, 201, 205, 209, 212, 217, 220}
+var _TokenType_index = [...]uint8{0, 9, 19, 28, 38, 43, 46, 51, 55, 64, 69, 73, 77, 86, 91, 101, 108, 120, 124, 133, 143, 149, 155, 158, 163, 168, 176, 180, 185, 188, 191, 193, 196, 198, 203, 209, 214, 218, 222, 225, 230, 233}
 
 func (i TokenType) String() string {
 	if i < 0 || i >= TokenType(len(_TokenType_index)-1) {
