@@ -1,0 +1,9 @@
+var x = 0;
+while (true) {
+    if (x < 10) {
+        x = x + 1;
+        continue;
+    }
+    break;
+}
+print x; // Output: 10
