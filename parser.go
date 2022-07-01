@@ -5,9 +5,13 @@ import (
 )
 
 // program      ::= declaration* eof;
-// declaration  ::= varDecl
+// declaration  ::= funDecl
+//                | varDecl
 //                | statement
 //                ;
+// funDecl      ::= "fun" function ;
+// function     ::= identifier "(" parameters? ")" block ;
+// parameters   ::= identifier ("," identifier)* ;
 // varDecl      ::= "var" identifier ( "=" expression )? ";" ;
 // statement    ::= exprStmt
 //                | printStmt
@@ -120,6 +124,9 @@ func (p *Parser) declaration() Stmt {
 	if p.match(Var) {
 		return p.varDeclaration()
 	}
+	if p.match(Fun) {
+		return p.function("function")
+	}
 	return p.statement()
 }
 
@@ -131,6 +138,27 @@ func (p *Parser) varDeclaration() Stmt {
 	}
 	p.consume(Semicolon, "expecting ';' after variable declaration")
 	return VarStmt{name, init}
+}
+
+func (p *Parser) function(kind string) Stmt {
+	name := p.consume(Identifier, fmt.Sprintf("expecting %s name", kind))
+	// Parameter list
+	p.consume(LeftParen, fmt.Sprintf("expecting '(' after %s name", kind))
+	var params []Token
+	if !p.check(RightParen) {
+		params = append(params, p.consume(Identifier, "expecting parameter name"))
+		for p.match(Comma) {
+			if len(params) == maxCallArgs {
+				p.addError(parseError{p.peek(), fmt.Sprintf("can't have more than %d parameters", maxCallArgs)})
+			}
+			params = append(params, p.consume(Identifier, "expecting parameter name"))
+		}
+	}
+	p.consume(RightParen, "expecting ')' after params")
+	// Body
+	p.consume(LeftBrace, fmt.Sprintf("expecting '{' before %s body", kind))
+	body := p.block()
+	return FunctionStmt{name, params, body}
 }
 
 func (p *Parser) statement() Stmt {

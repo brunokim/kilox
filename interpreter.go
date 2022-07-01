@@ -143,6 +143,10 @@ func (i *Interpreter) visitContinueStmt(stmt ContinueStmt) {
 	i.loopState = continueLoop
 }
 
+func (i *Interpreter) visitFunctionStmt(stmt FunctionStmt) {
+	panic("lox.(*Interpreter).visitFunctionStmt is not implemented")
+}
+
 // ----
 
 func (i *Interpreter) evaluate(expr Expr) interface{} {
