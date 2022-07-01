@@ -1,0 +1,12 @@
+fun f() {
+    var a = 1;
+    return;
+}
+
+fun g() {
+    var b = 2;
+    return b;
+}
+
+print f(); // Output: nil
+print g(); // Output: 2

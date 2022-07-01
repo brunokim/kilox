@@ -30,6 +30,10 @@ func (f clockFunc) String() string { return "<native fn clock>" }
 
 // ----
 
+type returnResult struct {
+	value interface{}
+}
+
 type function struct {
 	declaration FunctionStmt
 }
@@ -38,11 +42,22 @@ func (f function) Arity() int {
 	return len(f.declaration.Params)
 }
 
-func (f function) Call(i *Interpreter, args []interface{}) interface{} {
+func (f function) Call(i *Interpreter, args []interface{}) (result interface{}) {
 	env := globals.Child()
 	for i, param := range f.declaration.Params {
 		env.Define(param.Lexeme, args[i])
 	}
+	defer func() {
+		r := recover()
+		if r == nil {
+			return
+		}
+		res, ok := r.(returnResult)
+		if !ok {
+			panic(r) // Rethrow
+		}
+		result = res.value
+	}()
 	i.executeBlock(f.declaration.Body, env)
 	return nil
 }
@@ -169,6 +184,14 @@ func (i *Interpreter) visitContinueStmt(stmt ContinueStmt) {
 func (i *Interpreter) visitFunctionStmt(stmt FunctionStmt) {
 	f := function{stmt}
 	i.env.Define(stmt.Name.Lexeme, f)
+}
+
+func (i *Interpreter) visitReturnStmt(stmt ReturnStmt) {
+	var value interface{}
+	if stmt.Result != nil {
+		value = i.evaluate(stmt.Result)
+	}
+	panic(returnResult{value})
 }
 
 // ----

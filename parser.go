@@ -21,6 +21,7 @@ import (
 //                | forStmt
 //                | breakStmt
 //                | continueStmt
+//                | returnStmt
 //                ;
 // exprStmt     ::= expression ";" ;
 // printStmt    ::= "print" expression ";" ;
@@ -30,6 +31,7 @@ import (
 // forStmt      ::= "for" "(" forInit expression? ";" expression? ")" statement ;
 // breakStmt    ::= "break" ";" ;
 // continueStmt ::= "continue" ";" ;
+// returnStmt   ::= "return" expression? ";"
 // forInit      ::= varDecl | exprStmt | ";" ;
 // expression   ::= assignment ;
 // assignment   ::= identifier "=" assignment ;
@@ -59,7 +61,9 @@ type Parser struct {
 	tokens  []Token
 	current int
 	errors  []parseError
-	loopEnv *loopEnvironment
+
+	loopEnv   *loopEnvironment
+	funcCount int
 }
 
 func NewParser(tokens []Token) *Parser {
@@ -141,6 +145,9 @@ func (p *Parser) varDeclaration() Stmt {
 }
 
 func (p *Parser) function(kind string) Stmt {
+	p.funcCount++
+	defer func() { p.funcCount-- }()
+
 	name := p.consume(Identifier, fmt.Sprintf("expecting %s name", kind))
 	// Parameter list
 	p.consume(LeftParen, fmt.Sprintf("expecting '(' after %s name", kind))
@@ -182,6 +189,9 @@ func (p *Parser) statement() Stmt {
 	}
 	if p.match(Continue) {
 		return p.continueStatement()
+	}
+	if p.match(Return) {
+		return p.returnStatement()
 	}
 	return p.expressionStatement()
 }
@@ -292,6 +302,19 @@ func (p *Parser) continueStatement() Stmt {
 		}}
 	}
 	return stmt
+}
+
+func (p *Parser) returnStatement() ReturnStmt {
+	token := p.previous()
+	if p.funcCount == 0 {
+		p.addError(parseError{token, "'return' can only be used within functions"})
+	}
+	if p.match(Semicolon) {
+		return ReturnStmt{Token: token}
+	}
+	expr := p.expression()
+	p.consume(Semicolon, "expecting ';' after return expression")
+	return ReturnStmt{Token: token, Result: expr}
 }
 
 func (p *Parser) expressionStatement() ExpressionStmt {

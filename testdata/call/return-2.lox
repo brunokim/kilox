@@ -1,0 +1,21 @@
+fun toStr(x) {
+    if (x == 0) {
+        return "zero";
+    }
+    if (x == 1) {
+        return "one";
+    }
+    if (x == 2) {
+        return "two";
+    }
+    if (x == 42) {
+        return "the answer to life, the universe and everything else";
+    }
+    return x;
+}
+
+print toStr(1); // Output: one
+print toStr(0); // Output: zero
+print toStr(41); // Output: 41
+print toStr(42); // Output: the answer to life, the universe and everything else
+print toStr(toStr(2)); // Output: two

@@ -10,6 +10,7 @@ type stmtVisitor interface {
 	visitBreakStmt(stmt BreakStmt)
 	visitContinueStmt(stmt ContinueStmt)
 	visitFunctionStmt(stmt FunctionStmt)
+	visitReturnStmt(stmt ReturnStmt)
 }
 
 type Stmt interface {
@@ -60,6 +61,11 @@ type FunctionStmt struct {
 	Body   []Stmt
 }
 
+type ReturnStmt struct {
+	Token  Token
+	Result Expr
+}
+
 // ----
 
 func (stmt ExpressionStmt) accept(v stmtVisitor) {
@@ -96,4 +102,8 @@ func (stmt ContinueStmt) accept(v stmtVisitor) {
 
 func (stmt FunctionStmt) accept(v stmtVisitor) {
 	v.visitFunctionStmt(stmt)
+}
+
+func (stmt ReturnStmt) accept(v stmtVisitor) {
+	v.visitReturnStmt(stmt)
 }
