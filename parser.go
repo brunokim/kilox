@@ -38,12 +38,18 @@ import (
 // term         ::= factor (("-"|"+") factor)* ;
 // factor       ::= unary (("/"|"*") unary)* ;
 // unary        ::= ("!"|"-") unary
-//                | primary
+//                | call
 //                ;
+// call         ::= primary ( "(" arguments? ")" )* ;
+// arguments    ::= expression ( "," expression )* ;
 // primary      ::= number | string | "true" | "false" | "nil"
 //                | "(" expression ")"
 //                | identifier
 //                ;
+
+const (
+	maxCallArgs = 255
+)
 
 type Parser struct {
 	tokens  []Token
@@ -354,7 +360,34 @@ func (p *Parser) unary() Expr {
 		right := p.unary()
 		return UnaryExpr{operator, right}
 	}
-	return p.primary()
+	return p.call()
+}
+
+func (p *Parser) call() Expr {
+	expr := p.primary()
+	for {
+		if p.match(LeftParen) {
+			expr = p.finishCall(expr)
+		} else {
+			break
+		}
+	}
+	return expr
+}
+
+func (p *Parser) finishCall(callee Expr) Expr {
+	var args []Expr
+	if !p.check(RightParen) {
+		args = append(args, p.expression())
+		for p.match(Comma) {
+			if len(args) == maxCallArgs {
+				p.addError(parseError{p.peek(), fmt.Sprintf("can't have more than %d arguments", maxCallArgs)})
+			}
+			args = append(args, p.expression())
+		}
+	}
+	paren := p.consume(RightParen, "expecting ')' after arguments")
+	return CallExpr{callee, paren, args}
 }
 
 func (p *Parser) primary() Expr {

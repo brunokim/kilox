@@ -49,6 +49,12 @@ func (p *ASTPrinter) visitLogicExpr(expr LogicExpr) {
 	p.parenthesize(expr.Operator.Lexeme, expr.Left, expr.Right)
 }
 
+func (p *ASTPrinter) visitCallExpr(expr CallExpr) {
+	exprs := []Expr{expr.Callee}
+	exprs = append(exprs, expr.Args...)
+	p.parenthesize("call", exprs...)
+}
+
 func (p *ASTPrinter) parenthesize(name string, exprs ...Expr) {
 	p.parts = append(p.parts, "(", name)
 	for _, expr := range exprs {

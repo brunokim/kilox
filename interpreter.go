@@ -4,7 +4,31 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"time"
 )
+
+type Callable interface {
+	Arity() int
+	Call(i *Interpreter, args []interface{}) interface{}
+}
+
+var globals = NewEnvironment()
+
+func init() {
+	globals.Define("clock", clockFunc{})
+}
+
+// ----
+
+type clockFunc struct{}
+
+func (f clockFunc) Arity() int { return 0 }
+func (f clockFunc) Call(i *Interpreter, args []interface{}) interface{} {
+	return float64(time.Now().UnixMicro()) / 1e6
+}
+func (f clockFunc) String() string { return "<fn clock>" }
+
+// ----
 
 type loopState int
 
@@ -13,6 +37,8 @@ const (
 	breakLoop
 	continueLoop
 )
+
+// ----
 
 type Interpreter struct {
 	env    *Environment
@@ -24,7 +50,7 @@ type Interpreter struct {
 
 func NewInterpreter() *Interpreter {
 	return &Interpreter{
-		env:       NewEnvironment(),
+		env:       globals.Child(),
 		stdout:    os.Stdout,
 		loopState: sequentialLoop,
 	}
@@ -166,6 +192,22 @@ func (i *Interpreter) visitLogicExpr(expr LogicExpr) {
 		return
 	}
 	i.evaluate(expr.Right)
+}
+
+func (i *Interpreter) visitCallExpr(expr CallExpr) {
+	callee := i.evaluate(expr.Callee)
+	args := make([]interface{}, len(expr.Args))
+	for index, arg := range expr.Args {
+		args[index] = i.evaluate(arg)
+	}
+	f, ok := callee.(Callable)
+	if !ok {
+		panic(runtimeError{expr.Paren, fmt.Sprintf("value %v (%T) is not callable", callee, callee)})
+	}
+	if f.Arity() != len(args) {
+		panic(runtimeError{expr.Paren, fmt.Sprintf("expecting %d arguments but got %d", f.Arity(), len(args))})
+	}
+	i.value = f.Call(i, args)
 }
 
 // ----

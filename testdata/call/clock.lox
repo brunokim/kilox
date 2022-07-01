@@ -1,0 +1,12 @@
+var now = clock();
+var calls_per_millisec = 0;
+for (var i = 0; ; i = i+1) {
+    if (clock() - now > 0.001) {
+        calls_per_millisec = i;
+        break;
+    }
+}
+
+// We can do between 500 and 3000 calls to clock() in 1ms.
+print calls_per_millisec > 500; // Output: true
+print calls_per_millisec < 3000; // Output: true
