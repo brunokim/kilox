@@ -26,7 +26,30 @@ func (f clockFunc) Arity() int { return 0 }
 func (f clockFunc) Call(i *Interpreter, args []interface{}) interface{} {
 	return float64(time.Now().UnixMicro()) / 1e6
 }
-func (f clockFunc) String() string { return "<fn clock>" }
+func (f clockFunc) String() string { return "<native fn clock>" }
+
+// ----
+
+type function struct {
+	declaration FunctionStmt
+}
+
+func (f function) Arity() int {
+	return len(f.declaration.Params)
+}
+
+func (f function) Call(i *Interpreter, args []interface{}) interface{} {
+	env := globals.Child()
+	for i, param := range f.declaration.Params {
+		env.Define(param.Lexeme, args[i])
+	}
+	i.executeBlock(f.declaration.Body, env)
+	return nil
+}
+
+func (f function) String() string {
+	return fmt.Sprintf("<fn %s>", f.declaration.Name.Lexeme)
+}
 
 // ----
 
@@ -144,7 +167,8 @@ func (i *Interpreter) visitContinueStmt(stmt ContinueStmt) {
 }
 
 func (i *Interpreter) visitFunctionStmt(stmt FunctionStmt) {
-	panic("lox.(*Interpreter).visitFunctionStmt is not implemented")
+	f := function{stmt}
+	i.env.Define(stmt.Name.Lexeme, f)
 }
 
 // ----
