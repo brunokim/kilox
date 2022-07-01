@@ -30,7 +30,7 @@ func (f clockFunc) String() string { return "<native fn clock>" }
 
 // ----
 
-type returnResult struct {
+type returnSignal struct {
 	value interface{}
 }
 
@@ -52,7 +52,7 @@ func (f function) Call(i *Interpreter, args []interface{}) (result interface{}) 
 		if r == nil {
 			return
 		}
-		res, ok := r.(returnResult)
+		res, ok := r.(returnSignal)
 		if !ok {
 			panic(r) // Rethrow
 		}
@@ -76,6 +76,10 @@ const (
 	continueLoop
 )
 
+type loopSignal struct {
+	state loopState
+}
+
 // ----
 
 type Interpreter struct {
@@ -83,17 +87,14 @@ type Interpreter struct {
 	env      *Environment
 	value    interface{}
 	stdout   io.Writer
-
-	loopState loopState
 }
 
 func NewInterpreter() *Interpreter {
 	env := globals.Child()
 	return &Interpreter{
-		topLevel:  env,
-		env:       env,
-		stdout:    os.Stdout,
-		loopState: sequentialLoop,
+		topLevel: env,
+		env:      env,
+		stdout:   os.Stdout,
 	}
 }
 
@@ -108,7 +109,6 @@ func (i *Interpreter) Interpret(stmts []Stmt) (err error) {
 			if !ok {
 				panic(err_) // Rethrow
 			}
-			i.loopState = sequentialLoop
 			err = runtimeErr
 		}
 	}()
@@ -129,9 +129,6 @@ func (i *Interpreter) executeBlock(stmts []Stmt, env *Environment) {
 	i.env = env
 	for _, stmt := range stmts {
 		i.execute(stmt)
-		if i.loopState == breakLoop || i.loopState == continueLoop {
-			break
-		}
 	}
 }
 
@@ -169,19 +166,36 @@ func (i *Interpreter) visitBlockStmt(stmt BlockStmt) {
 }
 
 func (i *Interpreter) visitWhileStmt(stmt WhileStmt) {
-	for isTruthy(i.evaluate(stmt.Condition)) && i.loopState != breakLoop {
-		i.loopState = sequentialLoop
-		i.execute(stmt.Body)
+	for isTruthy(i.evaluate(stmt.Condition)) {
+		state := i.runLoopBody(stmt.Body)
+		if state == breakLoop {
+			break
+		}
 	}
-	i.loopState = sequentialLoop
+}
+
+func (i *Interpreter) runLoopBody(stmt Stmt) (s loopState) {
+	defer func() {
+		r := recover()
+		if r == nil {
+			return
+		}
+		signal, ok := r.(loopSignal)
+		if !ok {
+			panic(r) // Rethrow
+		}
+		s = signal.state
+	}()
+	i.execute(stmt)
+	return sequentialLoop
 }
 
 func (i *Interpreter) visitBreakStmt(stmt BreakStmt) {
-	i.loopState = breakLoop
+	panic(loopSignal{breakLoop})
 }
 
 func (i *Interpreter) visitContinueStmt(stmt ContinueStmt) {
-	i.loopState = continueLoop
+	panic(loopSignal{continueLoop})
 }
 
 func (i *Interpreter) visitFunctionStmt(stmt FunctionStmt) {
@@ -194,7 +208,7 @@ func (i *Interpreter) visitReturnStmt(stmt ReturnStmt) {
 	if stmt.Result != nil {
 		value = i.evaluate(stmt.Result)
 	}
-	panic(returnResult{value})
+	panic(returnSignal{value})
 }
 
 // ----
