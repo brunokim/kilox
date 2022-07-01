@@ -1,0 +1,30 @@
+fun fib(n) {
+    if (n <= 1) return n;
+    return fib(n-2) + fib(n-1);
+}
+
+for (var i = 0; i < 20; i = i + 1) {
+    print fib(i);
+}
+
+// Output: 0
+// Output: 1
+// Output: 1
+// Output: 2
+// Output: 3
+// Output: 5
+// Output: 8
+// Output: 13
+// Output: 21
+// Output: 34
+// Output: 55
+// Output: 89
+// Output: 144
+// Output: 233
+// Output: 377
+// Output: 610
+// Output: 987
+// Output: 1597
+// Output: 2584
+// Output: 4181
+

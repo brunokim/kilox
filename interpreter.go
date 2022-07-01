@@ -43,7 +43,7 @@ func (f function) Arity() int {
 }
 
 func (f function) Call(i *Interpreter, args []interface{}) (result interface{}) {
-	env := globals.Child()
+	env := i.topLevel.Child()
 	for i, param := range f.declaration.Params {
 		env.Define(param.Lexeme, args[i])
 	}
@@ -79,16 +79,19 @@ const (
 // ----
 
 type Interpreter struct {
-	env    *Environment
-	value  interface{}
-	stdout io.Writer
+	topLevel *Environment
+	env      *Environment
+	value    interface{}
+	stdout   io.Writer
 
 	loopState loopState
 }
 
 func NewInterpreter() *Interpreter {
+	env := globals.Child()
 	return &Interpreter{
-		env:       globals.Child(),
+		topLevel:  env,
+		env:       env,
 		stdout:    os.Stdout,
 		loopState: sequentialLoop,
 	}

@@ -372,6 +372,8 @@ func TestParserError(t *testing.T) {
             pf0, pf1, pf2, pf3, pf4, pf5, pf6, pf7, pf8, pf9, pfa, pfb, pfc, pfd, pfe, pff,
             after, limits){}`,
 			"line 17 at 'pff': can't have more than 255 parameters"},
+		{"return;", "line 1 at 'return': 'return' can only be used within functions"},
+		{"if (true)\n  return false;", "line 2 at 'return': 'return' can only be used within functions"},
 	}
 
 	for _, test := range tests {
