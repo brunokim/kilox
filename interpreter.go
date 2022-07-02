@@ -35,17 +35,19 @@ type returnSignal struct {
 }
 
 type function struct {
-	declaration FunctionStmt
-	closure     *Environment
+	name    string
+	params  []Token
+	body    []Stmt
+	closure *Environment
 }
 
 func (f function) Arity() int {
-	return len(f.declaration.Params)
+	return len(f.params)
 }
 
 func (f function) Call(i *Interpreter, args []interface{}) (result interface{}) {
 	env := f.closure.Child()
-	for i, param := range f.declaration.Params {
+	for i, param := range f.params {
 		env.Define(param.Lexeme, args[i])
 	}
 	defer func() {
@@ -57,12 +59,12 @@ func (f function) Call(i *Interpreter, args []interface{}) (result interface{}) 
 			}
 		}
 	}()
-	i.executeBlock(f.declaration.Body, env)
+	i.executeBlock(f.body, env)
 	return nil
 }
 
 func (f function) String() string {
-	return fmt.Sprintf("<fn %s>", f.declaration.Name.Lexeme)
+	return fmt.Sprintf("<fn %s>", f.name)
 }
 
 // ----
@@ -199,8 +201,9 @@ func (i *Interpreter) visitContinueStmt(stmt ContinueStmt) {
 }
 
 func (i *Interpreter) visitFunctionStmt(stmt FunctionStmt) {
-	f := function{stmt, i.env}
-	i.env.Define(stmt.Name.Lexeme, f)
+	name := stmt.Name.Lexeme
+	f := function{name, stmt.Params, stmt.Body, i.env}
+	i.env.Define(name, f)
 }
 
 func (i *Interpreter) visitReturnStmt(stmt ReturnStmt) {
@@ -276,6 +279,10 @@ func (i *Interpreter) visitCallExpr(expr CallExpr) {
 		panic(runtimeError{expr.Paren, fmt.Sprintf("expecting %d arguments but got %d", f.Arity(), len(args))})
 	}
 	i.value = f.Call(i, args)
+}
+
+func (i *Interpreter) visitFunctionExpr(expr FunctionExpr) {
+	i.value = function{"anonymous", expr.Params, expr.Body, i.env}
 }
 
 // ----

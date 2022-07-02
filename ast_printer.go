@@ -55,6 +55,10 @@ func (p *ASTPrinter) visitCallExpr(expr CallExpr) {
 	p.parenthesize("call", exprs...)
 }
 
+func (p *ASTPrinter) visitFunctionExpr(expr FunctionExpr) {
+	p.parenthesize("fun", LiteralExpr{len(expr.Params)})
+}
+
 func (p *ASTPrinter) parenthesize(name string, exprs ...Expr) {
 	p.parts = append(p.parts, "(", name)
 	for _, expr := range exprs {

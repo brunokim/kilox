@@ -50,8 +50,10 @@ import (
 // arguments    ::= expression ( "," expression )* ;
 // primary      ::= number | string | "true" | "false" | "nil"
 //                | "(" expression ")"
+//                | anonFunction
 //                | identifier
 //                ;
+// anonFunction ::= "fun" "(" parameters? ")" block;
 
 const (
 	maxCallArgs = 255
@@ -112,7 +114,8 @@ func (p *Parser) declaration() Stmt {
 	if p.match(Var) {
 		return p.varDeclaration()
 	}
-	if p.match(Fun) {
+	if p.check(Fun) && !p.checkNext(LeftParen) {
+		p.match(Fun)
 		return p.function("function")
 	}
 	return p.statement()
@@ -133,7 +136,12 @@ func (p *Parser) function(kind string) Stmt {
 	defer func() { p.funcCount-- }()
 
 	name := p.consume(Identifier, fmt.Sprintf("expecting %s name", kind))
-	// Parameter list
+	params := p.functionParams(kind)
+	body := p.functionBody(kind)
+	return FunctionStmt{name, params, body}
+}
+
+func (p *Parser) functionParams(kind string) []Token {
 	p.consume(LeftParen, fmt.Sprintf("expecting '(' after %s name", kind))
 	var params []Token
 	if !p.check(RightParen) {
@@ -146,10 +154,12 @@ func (p *Parser) function(kind string) Stmt {
 		}
 	}
 	p.consume(RightParen, "expecting ')' after params")
-	// Body
+	return params
+}
+
+func (p *Parser) functionBody(kind string) []Stmt {
 	p.consume(LeftBrace, fmt.Sprintf("expecting '{' before %s body", kind))
-	body := p.block()
-	return FunctionStmt{name, params, body}
+	return p.block()
 }
 
 func (p *Parser) statement() Stmt {
@@ -433,7 +443,21 @@ func (p *Parser) primary() Expr {
 		p.consume(RightParen, "expecting ')' after expression")
 		return GroupingExpr{expr}
 	}
+	if p.match(Fun) {
+		return p.anonymousFunction()
+	}
 	panic(parseError{p.peek(), "expecting expression"})
+}
+
+func (p *Parser) anonymousFunction() FunctionExpr {
+	p.funcCount++
+	defer func() { p.funcCount-- }()
+
+	kind := "anonymous function"
+	params := p.functionParams(kind)
+	body := p.functionBody(kind)
+
+	return FunctionExpr{params, body}
 }
 
 // ----
@@ -494,6 +518,13 @@ func (p *Parser) check(t TokenType) bool {
 	return p.peek().TokenType == t
 }
 
+func (p *Parser) checkNext(t TokenType) bool {
+	if p.isAtEnd() {
+		return false
+	}
+	return p.peekNext().TokenType == t
+}
+
 func (p *Parser) advance() Token {
 	if !p.isAtEnd() {
 		p.current++
@@ -507,6 +538,13 @@ func (p *Parser) isAtEnd() bool {
 
 func (p *Parser) peek() Token {
 	return p.tokens[p.current]
+}
+
+func (p *Parser) peekNext() Token {
+	if p.current+1 >= len(p.tokens) {
+		return Token{}
+	}
+	return p.tokens[p.current+1]
 }
 
 func (p *Parser) previous() Token {

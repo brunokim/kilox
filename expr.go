@@ -9,6 +9,7 @@ type exprVisitor interface {
 	visitAssignmentExpr(expr AssignmentExpr)
 	visitLogicExpr(expr LogicExpr)
 	visitCallExpr(expr CallExpr)
+	visitFunctionExpr(expr FunctionExpr)
 }
 
 type Expr interface {
@@ -57,6 +58,11 @@ type CallExpr struct {
 	Args   []Expr
 }
 
+type FunctionExpr struct {
+	Params []Token
+	Body   []Stmt
+}
+
 // ----
 
 func (expr BinaryExpr) accept(v exprVisitor) {
@@ -89,4 +95,8 @@ func (expr LogicExpr) accept(v exprVisitor) {
 
 func (expr CallExpr) accept(v exprVisitor) {
 	v.visitCallExpr(expr)
+}
+
+func (expr FunctionExpr) accept(v exprVisitor) {
+	v.visitFunctionExpr(expr)
 }
