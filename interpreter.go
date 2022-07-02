@@ -36,6 +36,7 @@ type returnSignal struct {
 
 type function struct {
 	declaration FunctionStmt
+	closure     *Environment
 }
 
 func (f function) Arity() int {
@@ -43,7 +44,7 @@ func (f function) Arity() int {
 }
 
 func (f function) Call(i *Interpreter, args []interface{}) (result interface{}) {
-	env := i.topLevel.Child()
+	env := f.closure.Child()
 	for i, param := range f.declaration.Params {
 		env.Define(param.Lexeme, args[i])
 	}
@@ -198,7 +199,7 @@ func (i *Interpreter) visitContinueStmt(stmt ContinueStmt) {
 }
 
 func (i *Interpreter) visitFunctionStmt(stmt FunctionStmt) {
-	f := function{stmt}
+	f := function{stmt, i.env}
 	i.env.Define(stmt.Name.Lexeme, f)
 }
 
