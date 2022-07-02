@@ -48,15 +48,13 @@ func (f function) Call(i *Interpreter, args []interface{}) (result interface{}) 
 		env.Define(param.Lexeme, args[i])
 	}
 	defer func() {
-		r := recover()
-		if r == nil {
-			return
+		if r := recover(); r != nil {
+			if res, ok := r.(returnSignal); ok {
+				result = res.value
+			} else {
+				panic(r)
+			}
 		}
-		res, ok := r.(returnSignal)
-		if !ok {
-			panic(r) // Rethrow
-		}
-		result = res.value
 	}()
 	i.executeBlock(f.declaration.Body, env)
 	return nil
@@ -105,11 +103,11 @@ func (i *Interpreter) SetStdout(w io.Writer) {
 func (i *Interpreter) Interpret(stmts []Stmt) (err error) {
 	defer func() {
 		if err_ := recover(); err_ != nil {
-			runtimeErr, ok := err_.(runtimeError)
-			if !ok {
-				panic(err_) // Rethrow
+			if runtimeErr, ok := err_.(runtimeError); ok {
+				err = runtimeErr
+			} else {
+				panic(err_)
 			}
-			err = runtimeErr
 		}
 	}()
 	for _, stmt := range stmts {
@@ -179,15 +177,13 @@ func (i *Interpreter) visitLoopStmt(stmt LoopStmt) {
 
 func (i *Interpreter) runLoopBody(stmt Stmt) (s loopState) {
 	defer func() {
-		r := recover()
-		if r == nil {
-			return
+		if r := recover(); r != nil {
+			if signal, ok := r.(loopSignal); ok {
+				s = signal.state
+			} else {
+				panic(r)
+			}
 		}
-		signal, ok := r.(loopSignal)
-		if !ok {
-			panic(r) // Rethrow
-		}
-		s = signal.state
 	}()
 	i.execute(stmt)
 	return sequentialLoop

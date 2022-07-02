@@ -86,12 +86,11 @@ func (p *Parser) Parse() ([]Stmt, error) {
 func (p *Parser) ParseExpression() (expr Expr, err error) {
 	defer func() {
 		if err_ := recover(); err_ != nil {
-			parseErr, ok := err_.(parseError)
-			if !ok {
-				panic(err_) // Rethrow
+			if parseErr, ok := err_.(parseError); ok {
+				expr, err = nil, parseErr
+			} else {
+				panic(err_)
 			}
-			expr = nil
-			err = parseErr
 		}
 	}()
 	return p.expression(), nil
@@ -102,12 +101,12 @@ func (p *Parser) ParseExpression() (expr Expr, err error) {
 func (p *Parser) declaration() Stmt {
 	defer func() {
 		if err := recover(); err != nil {
-			parseErr, ok := err.(parseError)
-			if !ok {
+			if parseErr, ok := err.(parseError); ok {
+				p.addError(parseErr)
+				p.synchronize()
+			} else {
 				panic(err) // Rethrow
 			}
-			p.addError(parseErr)
-			p.synchronize()
 		}
 	}()
 	if p.match(Var) {
