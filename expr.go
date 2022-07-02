@@ -42,8 +42,8 @@ type VariableExpr struct {
 }
 
 type AssignmentExpr struct {
-	Target Expr
-	Value  Expr
+	Name  Token
+	Value Expr
 }
 
 type LogicExpr struct {

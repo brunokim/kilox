@@ -42,7 +42,9 @@ func (p *ASTPrinter) visitVariableExpr(expr VariableExpr) {
 }
 
 func (p *ASTPrinter) visitAssignmentExpr(expr AssignmentExpr) {
-	p.parenthesize("set", expr.Target, expr.Value)
+	p.parts = append(p.parts, "(set ", expr.Name.Lexeme)
+	expr.Value.accept(p)
+	p.parts = append(p.parts, ")")
 }
 
 func (p *ASTPrinter) visitLogicExpr(expr LogicExpr) {

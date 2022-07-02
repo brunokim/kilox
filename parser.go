@@ -315,7 +315,7 @@ func (p *Parser) assignment() Expr {
 	if !p.match(Equal) {
 		return expr
 	}
-	_, isVar := expr.(VariableExpr)
+	name, isVar := expr.(VariableExpr)
 	if !isVar {
 		msg := fmt.Sprintf("invalid target for assignment: want variable, got %T", expr)
 		p.addError(parseError{p.previous(), msg})
@@ -323,7 +323,7 @@ func (p *Parser) assignment() Expr {
 		return nil
 	}
 	value := p.assignment()
-	return AssignmentExpr{expr, value}
+	return AssignmentExpr{name.Name, value}
 }
 
 func (p *Parser) or() Expr {

@@ -246,12 +246,7 @@ func (i *Interpreter) visitVariableExpr(expr VariableExpr) {
 
 func (i *Interpreter) visitAssignmentExpr(expr AssignmentExpr) {
 	i.evaluate(expr.Value)
-	switch e := expr.Target.(type) {
-	case VariableExpr:
-		i.env.Set(e.Name, i.value)
-	default:
-		panic(fmt.Errorf("compiler error: unhandled assignment to %T (%v)", expr.Target, expr.Target))
-	}
+	i.env.Set(expr.Name, i.value)
 }
 
 func (i *Interpreter) visitLogicExpr(expr LogicExpr) {

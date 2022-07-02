@@ -114,14 +114,14 @@ func TestParserExpression(t *testing.T) {
 			},
 		}},
 		{"a = 1", lox.AssignmentExpr{
-			Target: variableExpr("a"),
-			Value:  literal(1.0),
+			Name:  token(lox.Identifier, "a"),
+			Value: literal(1.0),
 		}},
 		{"a = b = 10", lox.AssignmentExpr{
-			Target: variableExpr("a"),
+			Name: token(lox.Identifier, "a"),
 			Value: lox.AssignmentExpr{
-				Target: variableExpr("b"),
-				Value:  literal(10.0),
+				Name:  token(lox.Identifier, "b"),
+				Value: literal(10.0),
 			},
 		}},
 		{"a and b or c or d and e", lox.LogicExpr{
@@ -174,8 +174,8 @@ func TestParserStatements(t *testing.T) {
 			lox.IfStmt{
 				Condition: variableExpr("a"),
 				Then: lox.ExpressionStmt{lox.AssignmentExpr{
-					Target: variableExpr("b"),
-					Value:  literal(10.0),
+					Name:  token(lox.Identifier, "b"),
+					Value: literal(10.0),
 				}},
 			},
 		}},
@@ -183,12 +183,12 @@ func TestParserStatements(t *testing.T) {
 			lox.IfStmt{
 				Condition: variableExpr("a"),
 				Then: lox.ExpressionStmt{lox.AssignmentExpr{
-					Target: variableExpr("b"),
-					Value:  literal(10.0),
+					Name:  token(lox.Identifier, "b"),
+					Value: literal(10.0),
 				}},
 				Else: lox.ExpressionStmt{lox.AssignmentExpr{
-					Target: variableExpr("a"),
-					Value:  literal(5.0),
+					Name:  token(lox.Identifier, "a"),
+					Value: literal(5.0),
 				}},
 			},
 		}},
@@ -211,7 +211,7 @@ func TestParserStatements(t *testing.T) {
 			lox.LoopStmt{
 				Condition: variableExpr("a"),
 				Body: lox.ExpressionStmt{lox.AssignmentExpr{
-					Target: variableExpr("a"),
+					Name: token(lox.Identifier, "a"),
 					Value: lox.BinaryExpr{
 						Left:     variableExpr("a"),
 						Operator: token(lox.Minus, "-"),
@@ -250,7 +250,7 @@ func TestParserStatements(t *testing.T) {
 				Condition: literal(true),
 				Body:      lox.PrintStmt{variableExpr("i")},
 				OnLoop: lox.AssignmentExpr{
-					Target: variableExpr("i"),
+					Name: token(lox.Identifier, "i"),
 					Value: lox.BinaryExpr{
 						Left:     variableExpr("i"),
 						Operator: token(lox.Plus, "+"),
