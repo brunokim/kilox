@@ -6,7 +6,7 @@ type stmtVisitor interface {
 	visitVarStmt(stmt VarStmt)
 	visitIfStmt(stmt IfStmt)
 	visitBlockStmt(stmt BlockStmt)
-	visitWhileStmt(stmt WhileStmt)
+	visitLoopStmt(stmt LoopStmt)
 	visitBreakStmt(stmt BreakStmt)
 	visitContinueStmt(stmt ContinueStmt)
 	visitFunctionStmt(stmt FunctionStmt)
@@ -42,9 +42,10 @@ type BlockStmt struct {
 	Statements []Stmt
 }
 
-type WhileStmt struct {
+type LoopStmt struct {
 	Condition Expr
 	Body      Stmt
+	OnLoop    Expr
 }
 
 type BreakStmt struct {
@@ -88,8 +89,8 @@ func (stmt BlockStmt) accept(v stmtVisitor) {
 	v.visitBlockStmt(stmt)
 }
 
-func (stmt WhileStmt) accept(v stmtVisitor) {
-	v.visitWhileStmt(stmt)
+func (stmt LoopStmt) accept(v stmtVisitor) {
+	v.visitLoopStmt(stmt)
 }
 
 func (stmt BreakStmt) accept(v stmtVisitor) {

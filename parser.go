@@ -62,7 +62,7 @@ type Parser struct {
 	current int
 	errors  []parseError
 
-	loopEnv   *loopEnvironment
+	loopCount int
 	funcCount int
 }
 
@@ -95,21 +95,6 @@ func (p *Parser) ParseExpression() (expr Expr, err error) {
 		}
 	}()
 	return p.expression(), nil
-}
-
-// ----
-
-type loopType int
-
-const (
-	whileLoop loopType = iota
-	forLoop
-)
-
-type loopEnvironment struct {
-	enclosing *loopEnvironment
-	loopType  loopType
-	inc       Expr
 }
 
 // ----
@@ -223,24 +208,19 @@ func (p *Parser) block() []Stmt {
 	return stmts
 }
 
-func (p *Parser) whileStatement() WhileStmt {
-	p.loopEnv = &loopEnvironment{
-		loopType:  whileLoop,
-		enclosing: p.loopEnv,
-	}
+func (p *Parser) whileStatement() LoopStmt {
+	p.loopCount++
+	defer func() { p.loopCount-- }()
 	p.consume(LeftParen, "expecting '(' after 'while'")
 	cond := p.expression()
 	p.consume(RightParen, "expecting ')' after condition")
 	stmt := p.statement()
-	p.loopEnv = p.loopEnv.enclosing
-	return WhileStmt{Condition: cond, Body: stmt}
+	return LoopStmt{Condition: cond, Body: stmt}
 }
 
 func (p *Parser) forStatement() Stmt {
-	p.loopEnv = &loopEnvironment{
-		loopType:  forLoop,
-		enclosing: p.loopEnv,
-	}
+	p.loopCount++
+	defer func() { p.loopCount-- }()
 	p.consume(LeftParen, "expecting '(' after 'for'")
 	// Initializer
 	var init Stmt
@@ -264,24 +244,23 @@ func (p *Parser) forStatement() Stmt {
 	if !p.check(RightParen) {
 		inc = p.expression()
 	}
-	p.loopEnv.inc = inc
 	p.consume(RightParen, "Expect ')' after loop increment")
 	// Build desugared statement.
-	body := p.statement()
-	if inc != nil {
-		body = BlockStmt{[]Stmt{body, ExpressionStmt{inc}}}
+	var body Stmt
+	body = LoopStmt{
+		Condition: cond,
+		Body:      p.statement(),
+		OnLoop:    inc,
 	}
-	body = WhileStmt{cond, body}
 	if init != nil {
 		body = BlockStmt{[]Stmt{init, body}}
 	}
-	p.loopEnv = p.loopEnv.enclosing
 	return body
 }
 
 func (p *Parser) breakStatement() BreakStmt {
 	token := p.previous()
-	if p.loopEnv == nil {
+	if p.loopCount == 0 {
 		p.addError(parseError{token, "'break' can only be used within loops"})
 	}
 	p.consume(Semicolon, "expecting ';' after 'break'")
@@ -290,18 +269,11 @@ func (p *Parser) breakStatement() BreakStmt {
 
 func (p *Parser) continueStatement() Stmt {
 	token := p.previous()
-	if p.loopEnv == nil {
+	if p.loopCount == 0 {
 		p.addError(parseError{token, "'continue' can only be used within loops"})
 	}
 	p.consume(Semicolon, "expecting ';' after 'continue'")
-	var stmt Stmt = ContinueStmt{token}
-	if p.loopEnv != nil && p.loopEnv.inc != nil {
-		stmt = BlockStmt{[]Stmt{
-			ExpressionStmt{p.loopEnv.inc},
-			stmt,
-		}}
-	}
-	return stmt
+	return ContinueStmt{token}
 }
 
 func (p *Parser) returnStatement() ReturnStmt {

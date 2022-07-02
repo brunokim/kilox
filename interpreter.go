@@ -165,11 +165,14 @@ func (i *Interpreter) visitBlockStmt(stmt BlockStmt) {
 	i.executeBlock(stmt.Statements, i.env.Child())
 }
 
-func (i *Interpreter) visitWhileStmt(stmt WhileStmt) {
+func (i *Interpreter) visitLoopStmt(stmt LoopStmt) {
 	for isTruthy(i.evaluate(stmt.Condition)) {
 		state := i.runLoopBody(stmt.Body)
 		if state == breakLoop {
 			break
+		}
+		if stmt.OnLoop != nil {
+			i.evaluate(stmt.OnLoop)
 		}
 	}
 }

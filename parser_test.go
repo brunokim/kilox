@@ -208,7 +208,7 @@ func TestParserStatements(t *testing.T) {
 			}},
 		}},
 		{"while (a) a = a - 1;", []lox.Stmt{
-			lox.WhileStmt{
+			lox.LoopStmt{
 				Condition: variableExpr("a"),
 				Body: lox.ExpressionStmt{lox.AssignmentExpr{
 					Target: variableExpr("a"),
@@ -221,7 +221,7 @@ func TestParserStatements(t *testing.T) {
 			},
 		}},
 		{"for (;;) print 42;", []lox.Stmt{
-			lox.WhileStmt{
+			lox.LoopStmt{
 				Condition: literal(true),
 				Body:      lox.PrintStmt{literal(42.0)},
 			},
@@ -229,14 +229,14 @@ func TestParserStatements(t *testing.T) {
 		{"for (var i = 0;;) print i;", []lox.Stmt{
 			lox.BlockStmt{[]lox.Stmt{
 				lox.VarStmt{Name: token(lox.Identifier, "i"), Init: literal(0.0)},
-				lox.WhileStmt{
+				lox.LoopStmt{
 					Condition: literal(true),
 					Body:      lox.PrintStmt{variableExpr("i")},
 				},
 			}},
 		}},
 		{"for (; i > 0;) print i;", []lox.Stmt{
-			lox.WhileStmt{
+			lox.LoopStmt{
 				Condition: lox.BinaryExpr{
 					Left:     variableExpr("i"),
 					Operator: token(lox.Greater, ">"),
@@ -246,40 +246,30 @@ func TestParserStatements(t *testing.T) {
 			},
 		}},
 		{"for (;; i = i+1) print i;", []lox.Stmt{
-			lox.WhileStmt{
+			lox.LoopStmt{
 				Condition: literal(true),
-				Body: lox.BlockStmt{[]lox.Stmt{
-					lox.PrintStmt{variableExpr("i")},
-					lox.ExpressionStmt{lox.AssignmentExpr{
-						Target: variableExpr("i"),
-						Value: lox.BinaryExpr{
-							Left:     variableExpr("i"),
-							Operator: token(lox.Plus, "+"),
-							Right:    literal(1.0),
-						},
-					}},
-				}},
+				Body:      lox.PrintStmt{variableExpr("i")},
+				OnLoop: lox.AssignmentExpr{
+					Target: variableExpr("i"),
+					Value: lox.BinaryExpr{
+						Left:     variableExpr("i"),
+						Operator: token(lox.Plus, "+"),
+						Right:    literal(1.0),
+					},
+				},
 			},
 		}},
 		{"for (;; inc) { if (a) continue; continue; }", []lox.Stmt{
-			lox.WhileStmt{
+			lox.LoopStmt{
 				Condition: literal(true),
 				Body: lox.BlockStmt{[]lox.Stmt{
-					lox.BlockStmt{[]lox.Stmt{
-						lox.IfStmt{
-							Condition: variableExpr("a"),
-							Then: lox.BlockStmt{[]lox.Stmt{
-								lox.ExpressionStmt{variableExpr("inc")},
-								lox.ContinueStmt{token(lox.Continue, "continue")},
-							}},
-						},
-						lox.BlockStmt{[]lox.Stmt{
-							lox.ExpressionStmt{variableExpr("inc")},
-							lox.ContinueStmt{token(lox.Continue, "continue")},
-						}},
-					}},
-					lox.ExpressionStmt{variableExpr("inc")},
+					lox.IfStmt{
+						Condition: variableExpr("a"),
+						Then:      lox.ContinueStmt{token(lox.Continue, "continue")},
+					},
+					lox.ContinueStmt{token(lox.Continue, "continue")},
 				}},
+				OnLoop: variableExpr("inc"),
 			},
 		}},
 	}
