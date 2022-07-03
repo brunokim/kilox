@@ -1,0 +1,6 @@
+fun scope(a) {
+    var a = a + " local"; // error: line 2 at 'a': can't read local variable in its own initializer
+    print a;
+}
+
+scope("outer");

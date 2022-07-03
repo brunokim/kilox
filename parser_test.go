@@ -298,10 +298,9 @@ func TestParserError(t *testing.T) {
 		{`var a == 2
           print 1, !false ;
           (a + b
-          print "fin";`, `multiple errors:
-  line 1 at '==': expecting ';' after variable declaration
-  line 2 at ',': expecting ';' after expression
-  line 4 at 'print': expecting ')' after expression`},
+          print "fin";`, `line 1 at '==': expecting ';' after variable declaration
+line 2 at ',': expecting ';' after expression
+line 4 at 'print': expecting ')' after expression`},
 		{"(a) = 1;", "line 1 at '=': invalid target for assignment: want variable, got lox.GroupingExpr"},
 		{"if a then b = 10;", "line 1 at 'a': expecting '(' after 'if'"},
 		{"if (a then b = 10;", "line 1 at 'then': expecting ')' after condition"},

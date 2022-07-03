@@ -1,6 +1,0 @@
-fun scope(a) {
-    var a = a + " local";
-    print a;
-}
-
-scope("outer"); // output: outer local

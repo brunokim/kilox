@@ -80,10 +80,9 @@ func TestScannerError(t *testing.T) {
 		{`"invalid \n escape"`, "line 1: invalid escaped character 'n' in string"},
 		{`a ^ b
          "str\b
-         `, `multiple errors:
-  line 1: unexpected character: ^
-  line 2: invalid escaped character 'b' in string
-  line 3: unterminated string`},
+         `, `line 1: unexpected character: ^
+line 2: invalid escaped character 'b' in string
+line 3: unterminated string`},
 	}
 
 	for _, test := range tests {

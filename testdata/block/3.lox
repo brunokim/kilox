@@ -1,0 +1,5 @@
+var a = 1;
+{
+    var a = a + 2; // error: line 3 at 'a': can't read local variable in its own initializer
+    print a;
+}

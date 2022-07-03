@@ -1,0 +1,10 @@
+a % b                      // error: line 1: unexpected character: %
+
+s = "abc \"
+     def \\
+     ghi \b                // error: line 5: invalid escaped character 'b' in string
+    "
+
+a = "unterminated string
+...
+...                        // error: line 11: unterminated string

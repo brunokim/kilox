@@ -23,38 +23,55 @@ func TestInterpreter(t *testing.T) {
 			t.Fatal(err)
 		}
 		text := string(bs)
-		output, err := runLox(t, text)
+		wantOutput, wantErr := extractExpected(text)
+		output, err := runLox(text)
+		errMsg := ""
 		if err != nil {
-			t.Errorf("%s: %v", filename, err)
-			continue
+			errMsg = err.Error() + "\n"
 		}
-		want := extractOutput(text)
-		if diff := cmp.Diff(want, output); diff != "" {
+		if diff := cmp.Diff(wantErr, errMsg); diff != "" {
+			t.Errorf("%s: errors: (-want, +got)%s", filename, diff)
+		}
+		if diff := cmp.Diff(wantOutput, output); diff != "" {
 			t.Errorf("%s: (-want, +got)%s", filename, diff)
 		}
 	}
 }
 
-func runLox(t *testing.T, text string) (string, error) {
-	var b strings.Builder
-	i := lox.NewInterpreter()
-	i.SetStdout(&b)
-
-	stmts := parseStmts(t, text)
-	r := lox.NewResolver(i)
-	err := r.Resolve(stmts)
+func runLox(text string) (string, error) {
+	s := lox.NewScanner(text)
+	tokens, err := s.ScanTokens()
 	if err != nil {
-		t.Fatal(err)
+		return "", err
 	}
+	p := lox.NewParser(tokens)
+	stmts, err := p.Parse()
+	if err != nil {
+		return "", err
+	}
+	i := lox.NewInterpreter()
+	r := lox.NewResolver(i)
+	err = r.Resolve(stmts)
+	if err != nil {
+		return "", err
+	}
+	var b strings.Builder
+	i.SetStdout(&b)
 	err = i.Interpret(stmts)
 	return b.String(), err
 }
 
-func extractOutput(text string) string {
-	outputRE := regexp.MustCompile("(?im)// Output:(.*)$")
+func extractExpected(text string) (string, string) {
+	wantOutput := extractComment(text, "output")
+	wantError := extractComment(text, "error")
+	return wantOutput, wantError
+}
+
+func extractComment(text, pattern string) string {
+	commentRE := regexp.MustCompile("(?im)// " + pattern + ":(.*)$")
 
 	var b strings.Builder
-	matches := outputRE.FindAllStringSubmatch(text, -1)
+	matches := commentRE.FindAllStringSubmatch(text, -1)
 	for _, match := range matches {
 		b.WriteString(strings.TrimPrefix(match[1], " "))
 		b.WriteRune('\n')

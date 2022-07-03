@@ -1,7 +1,6 @@
 package lox
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -13,7 +12,7 @@ func (errs errors[T]) Error() string {
 	}
 	msgs := make([]string, len(errs))
 	for i, err := range errs {
-		msgs[i] = "  " + err.Error()
+		msgs[i] = err.Error()
 	}
-	return fmt.Sprintf("multiple errors:\n%s", strings.Join(msgs, "\n"))
+	return strings.Join(msgs, "\n")
 }
