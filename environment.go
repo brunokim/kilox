@@ -25,6 +25,8 @@ func (env *Environment) Define(name string, value interface{}) {
 	env.values[name] = value
 }
 
+// ----
+
 func (env *Environment) Get(name Token) interface{} {
 	v, ok := env.values[name.Lexeme]
 	if ok {
@@ -46,4 +48,19 @@ func (env *Environment) Set(name Token, value interface{}) {
 		return
 	}
 	panic(runtimeError{name, fmt.Sprintf("undefined variable %q", name.Lexeme)})
+}
+
+func (env *Environment) ancestor(distance int) *Environment {
+	for i := 0; i < distance; i++ {
+		env = env.enclosing
+	}
+	return env
+}
+
+func (env *Environment) GetAt(distance int, name string) interface{} {
+	return env.ancestor(distance).values[name]
+}
+
+func (env *Environment) SetAt(distance int, name Token, value interface{}) {
+	env.ancestor(distance).values[name.Lexeme] = value
 }

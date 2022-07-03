@@ -88,6 +88,8 @@ type Interpreter struct {
 	env      *Environment
 	value    interface{}
 	stdout   io.Writer
+
+	locals map[Expr]int
 }
 
 func NewInterpreter() *Interpreter {
@@ -96,6 +98,7 @@ func NewInterpreter() *Interpreter {
 		topLevel: env,
 		env:      env,
 		stdout:   os.Stdout,
+		locals:   make(map[Expr]int),
 	}
 }
 
@@ -117,6 +120,18 @@ func (i *Interpreter) Interpret(stmts []Stmt) (err error) {
 		i.execute(stmt)
 	}
 	return nil
+}
+
+func (i *Interpreter) resolve(expr Expr, depth int) {
+	i.locals[expr] = depth
+}
+
+func (i *Interpreter) lookupVariable(name Token, expr Expr) interface{} {
+	distance, ok := i.locals[expr]
+	if ok {
+		return i.env.GetAt(distance, name.Lexeme)
+	}
+	return i.topLevel.Get(name)
 }
 
 // ----
@@ -241,12 +256,19 @@ func (i *Interpreter) visitUnaryExpr(expr UnaryExpr) {
 }
 
 func (i *Interpreter) visitVariableExpr(expr VariableExpr) {
-	i.value = i.env.Get(expr.Name)
+	//i.value = i.env.Get(expr.Name)
+	i.value = i.lookupVariable(expr.Name, expr)
 }
 
 func (i *Interpreter) visitAssignmentExpr(expr AssignmentExpr) {
-	i.evaluate(expr.Value)
-	i.env.Set(expr.Name, i.value)
+	value := i.evaluate(expr.Value)
+	//i.env.Set(expr.Name, value)
+	distance, ok := i.locals[expr]
+	if ok {
+		i.env.SetAt(distance, expr.Name, value)
+	} else {
+		i.topLevel.Set(expr.Name, value)
+	}
 }
 
 func (i *Interpreter) visitLogicExpr(expr LogicExpr) {

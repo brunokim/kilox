@@ -41,7 +41,12 @@ func runLox(t *testing.T, text string) (string, error) {
 	i.SetStdout(&b)
 
 	stmts := parseStmts(t, text)
-	err := i.Interpret(stmts)
+	r := lox.NewResolver(i)
+	err := r.Resolve(stmts)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = i.Interpret(stmts)
 	return b.String(), err
 }
 
