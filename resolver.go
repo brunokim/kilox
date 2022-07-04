@@ -4,15 +4,26 @@ import (
 	"fmt"
 )
 
+type funcType int
+
+const (
+	noFunc funcType = iota
+	namedFunc
+	anonymousFunc
+)
+
 type Resolver struct {
 	i      *Interpreter
 	scopes []map[string]bool
 	errors []resolveError
+
+	currFunc funcType
 }
 
 func NewResolver(interpreter *Interpreter) *Resolver {
 	return &Resolver{
-		i: interpreter,
+		i:        interpreter,
+		currFunc: noFunc,
 	}
 }
 
@@ -98,7 +109,10 @@ func (r *Resolver) resolveLocal(expr Expr, name Token) {
 	}
 }
 
-func (r *Resolver) resolveFunction(params []Token, body []Stmt) {
+func (r *Resolver) resolveFunction(params []Token, body []Stmt, t funcType) {
+	defer func(oldType funcType) { r.currFunc = oldType }(r.currFunc)
+	r.currFunc = t
+
 	r.beginScope()
 	for _, param := range params {
 		r.declare(param)
@@ -155,10 +169,13 @@ func (r *Resolver) visitFunctionStmt(stmt FunctionStmt) {
 	r.declare(stmt.Name)
 	r.define(stmt.Name)
 
-	r.resolveFunction(stmt.Params, stmt.Body)
+	r.resolveFunction(stmt.Params, stmt.Body, namedFunc)
 }
 
 func (r *Resolver) visitReturnStmt(stmt ReturnStmt) {
+	if r.currFunc == noFunc {
+		r.addError(resolveError{stmt.Token, "'return' can only be used within functions"})
+	}
 	if stmt.Result != nil {
 		r.resolveExpr(stmt.Result)
 	}
@@ -210,5 +227,5 @@ func (r *Resolver) visitCallExpr(expr CallExpr) {
 }
 
 func (r *Resolver) visitFunctionExpr(expr FunctionExpr) {
-	r.resolveFunction(expr.Params, expr.Body)
+	r.resolveFunction(expr.Params, expr.Body, anonymousFunc)
 }

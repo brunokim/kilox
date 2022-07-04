@@ -65,7 +65,6 @@ type Parser struct {
 	errors  []parseError
 
 	loopCount int
-	funcCount int
 }
 
 func NewParser(tokens []Token) *Parser {
@@ -132,9 +131,6 @@ func (p *Parser) varDeclaration() Stmt {
 }
 
 func (p *Parser) function(kind string) Stmt {
-	p.funcCount++
-	defer func() { p.funcCount-- }()
-
 	name := p.consume(Identifier, fmt.Sprintf("expecting %s name", kind))
 	params := p.functionParams(kind)
 	body := p.functionBody(kind)
@@ -287,9 +283,6 @@ func (p *Parser) continueStatement() Stmt {
 
 func (p *Parser) returnStatement() ReturnStmt {
 	token := p.previous()
-	if p.funcCount == 0 {
-		p.addError(parseError{token, "'return' can only be used within functions"})
-	}
 	if p.match(Semicolon) {
 		return ReturnStmt{Token: token}
 	}
@@ -450,9 +443,6 @@ func (p *Parser) primary() Expr {
 }
 
 func (p *Parser) anonymousFunction() FunctionExpr {
-	p.funcCount++
-	defer func() { p.funcCount-- }()
-
 	kind := "anonymous function"
 	params := p.functionParams(kind)
 	body := p.functionBody(kind)
