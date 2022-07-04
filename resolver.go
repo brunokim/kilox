@@ -28,9 +28,14 @@ type variableState struct {
 	isRead    bool
 }
 
+type scope struct {
+	vars  []*variableState
+	index map[string]int
+}
+
 type Resolver struct {
 	i      *Interpreter
-	scopes []map[string]*variableState
+	scopes []*scope
 	errors []resolveError
 
 	currFunc funcType
@@ -72,8 +77,32 @@ func (r *Resolver) addError(err resolveError) {
 
 // ----
 
+func newScope() *scope {
+	return &scope{
+		index: make(map[string]int),
+	}
+}
+
+func (s *scope) get(name string) (*variableState, bool) {
+	i, ok := s.index[name]
+	if !ok {
+		return nil, false
+	}
+	return s.vars[i], true
+}
+
+func (s *scope) put(name Token, t varType) {
+	s.index[name.Lexeme] = len(s.vars)
+	s.vars = append(s.vars, &variableState{
+		name:      name,
+		varType:   t,
+		isDefined: false,
+		isRead:    false,
+	})
+}
+
 func (r *Resolver) beginScope() {
-	r.scopes = append(r.scopes, make(map[string]*variableState))
+	r.scopes = append(r.scopes, newScope())
 }
 
 func (r *Resolver) endScope() {
@@ -87,15 +116,11 @@ func (r *Resolver) declare(name Token, t varType) {
 		return
 	}
 	scope := r.scopes[len(r.scopes)-1]
-	if _, ok := scope[name.Lexeme]; ok {
+	if _, ok := scope.index[name.Lexeme]; ok {
 		r.addError(resolveError{name, "already a variable with this name in scope"})
+		return
 	}
-	scope[name.Lexeme] = &variableState{
-		name:      name,
-		varType:   t,
-		isDefined: false,
-		isRead:    false,
-	}
+	scope.put(name, t)
 }
 
 func (r *Resolver) define(name Token) {
@@ -103,7 +128,7 @@ func (r *Resolver) define(name Token) {
 		return
 	}
 	scope := r.scopes[len(r.scopes)-1]
-	state := scope[name.Lexeme]
+	state, _ := scope.get(name.Lexeme)
 	state.isDefined = true
 }
 
@@ -127,7 +152,7 @@ func (r *Resolver) resolveLocal(expr Expr, name Token) {
 	n := len(r.scopes)
 	for i := 0; i < n; i++ {
 		scope := r.scopes[n-i-1]
-		if state, ok := scope[name.Lexeme]; ok {
+		if state, ok := scope.get(name.Lexeme); ok {
 			state.isRead = true
 			r.i.resolve(expr, i)
 			return
@@ -151,9 +176,9 @@ func (r *Resolver) resolveFunction(params []Token, body []Stmt, t funcType) {
 // TODO: the error output order is weird, because scopes are resolved in pre-order.
 // This means that 'unused(x) {}' reports first for 'x', and then for 'unused'.
 // Figure out how to execute this (or at least sort it) in post-order.
-func (r *Resolver) checkVariables(scope map[string]*variableState) {
-	for name, state := range scope {
-		if !state.isRead && !strings.HasSuffix(name, "_") {
+func (r *Resolver) checkVariables(scope *scope) {
+	for _, state := range scope.vars {
+		if !state.isRead && !strings.HasSuffix(state.name.Lexeme, "_") {
 			switch state.varType {
 			case local:
 				r.addError(resolveError{state.name, "local variable is never read"})
@@ -258,7 +283,7 @@ func (r *Resolver) visitVariableExpr(expr VariableExpr) {
 		return
 	}
 	scope := r.scopes[len(r.scopes)-1]
-	state, ok := scope[expr.Name.Lexeme]
+	state, ok := scope.get(expr.Name.Lexeme)
 	if ok && !state.isDefined {
 		r.addError(resolveError{expr.Name, "can't read local variable in its own initializer"})
 	}
