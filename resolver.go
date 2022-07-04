@@ -18,6 +18,7 @@ type Resolver struct {
 	errors []resolveError
 
 	currFunc funcType
+	isInLoop bool
 }
 
 func NewResolver(interpreter *Interpreter) *Resolver {
@@ -155,6 +156,8 @@ func (r *Resolver) visitBlockStmt(stmt BlockStmt) {
 }
 
 func (r *Resolver) visitLoopStmt(stmt LoopStmt) {
+	defer func(old bool) { r.isInLoop = old }(r.isInLoop)
+	r.isInLoop = true
 	r.resolveExpr(stmt.Condition)
 	r.resolveStmt(stmt.Body)
 	if stmt.OnLoop != nil {
@@ -162,8 +165,17 @@ func (r *Resolver) visitLoopStmt(stmt LoopStmt) {
 	}
 }
 
-func (r *Resolver) visitBreakStmt(stmt BreakStmt)       {}
-func (r *Resolver) visitContinueStmt(stmt ContinueStmt) {}
+func (r *Resolver) visitBreakStmt(stmt BreakStmt) {
+	if !r.isInLoop {
+		r.addError(resolveError{stmt.Token, "'break' can only be used within loops"})
+	}
+}
+
+func (r *Resolver) visitContinueStmt(stmt ContinueStmt) {
+	if !r.isInLoop {
+		r.addError(resolveError{stmt.Token, "'continue' can only be used within loops"})
+	}
+}
 
 func (r *Resolver) visitFunctionStmt(stmt FunctionStmt) {
 	r.declare(stmt.Name)

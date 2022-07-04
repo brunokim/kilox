@@ -1,0 +1,2 @@
+var a; break;      // error: line 1 at 'break': 'break' can only be used within loops
+{var a; continue;} // error: line 2 at 'continue': 'continue' can only be used within loops

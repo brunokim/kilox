@@ -63,8 +63,6 @@ type Parser struct {
 	tokens  []Token
 	current int
 	errors  []parseError
-
-	loopCount int
 }
 
 func NewParser(tokens []Token) *Parser {
@@ -214,8 +212,6 @@ func (p *Parser) block() []Stmt {
 }
 
 func (p *Parser) whileStatement() LoopStmt {
-	p.loopCount++
-	defer func() { p.loopCount-- }()
 	p.consume(LeftParen, "expecting '(' after 'while'")
 	cond := p.expression()
 	p.consume(RightParen, "expecting ')' after condition")
@@ -224,8 +220,6 @@ func (p *Parser) whileStatement() LoopStmt {
 }
 
 func (p *Parser) forStatement() Stmt {
-	p.loopCount++
-	defer func() { p.loopCount-- }()
 	p.consume(LeftParen, "expecting '(' after 'for'")
 	// Initializer
 	var init Stmt
@@ -265,18 +259,12 @@ func (p *Parser) forStatement() Stmt {
 
 func (p *Parser) breakStatement() BreakStmt {
 	token := p.previous()
-	if p.loopCount == 0 {
-		p.addError(parseError{token, "'break' can only be used within loops"})
-	}
 	p.consume(Semicolon, "expecting ';' after 'break'")
 	return BreakStmt{token}
 }
 
 func (p *Parser) continueStatement() Stmt {
 	token := p.previous()
-	if p.loopCount == 0 {
-		p.addError(parseError{token, "'continue' can only be used within loops"})
-	}
 	p.consume(Semicolon, "expecting ';' after 'continue'")
 	return ContinueStmt{token}
 }
