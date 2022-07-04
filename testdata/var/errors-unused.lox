@@ -1,0 +1,25 @@
+{
+                      // error: line 4 at 'x': function param is never read
+    var a;            // error: line 3 at 'a': local variable is never read
+    fun unused(x) {}  // error: line 4 at 'unused': function is never read or called
+    var b;
+    var c;
+
+    b = c;
+
+    print b;
+}
+
+// Functions and variables in the top-level may be unused.
+var a;
+fun unused(x) {}  // error: line 15 at 'x': function param is never read
+
+
+// Variables with '_' suffix are not reported.
+{
+    var a_;
+    fun foo_(){}
+    fun bar_(unused_x_, y, z) {
+        return y + z;
+    }
+}

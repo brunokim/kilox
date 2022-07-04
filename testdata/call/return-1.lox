@@ -1,5 +1,5 @@
 fun f() {
-    var a = 1;
+    var a_ = 1;
     return;
 }
 

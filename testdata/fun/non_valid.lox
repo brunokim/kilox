@@ -1,4 +1,4 @@
-fun scope(x) {
+fun scope(x_) {
     var a = a + " local"; // error: line 2 at 'a': can't read local variable in its own initializer
     print a;
 }
@@ -11,6 +11,6 @@ fun dale(x) {
 }
 
 {
-    fun foo(){}
-    fun foo(){}  // error: line 15 at 'foo': already a variable with this name in scope
+    fun foo_(){}
+    fun foo_(){}  // error: line 15 at 'foo_': already a variable with this name in scope
 }

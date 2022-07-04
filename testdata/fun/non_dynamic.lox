@@ -7,4 +7,5 @@ var a = "global";
     showA(); // output: global
     var a = "block";
     showA(); // output: global
+    var _ = a;
 }

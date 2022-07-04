@@ -2,6 +2,7 @@ package lox
 
 import (
 	"fmt"
+	"strings"
 )
 
 type funcType int
@@ -12,9 +13,24 @@ const (
 	anonymousFunc
 )
 
+type varType int
+
+const (
+	local varType = iota
+	funcName
+	funcParam
+)
+
+type variableState struct {
+	name      Token
+	varType   varType
+	isDefined bool
+	isRead    bool
+}
+
 type Resolver struct {
 	i      *Interpreter
-	scopes []map[string]bool
+	scopes []map[string]*variableState
 	errors []resolveError
 
 	currFunc funcType
@@ -57,14 +73,16 @@ func (r *Resolver) addError(err resolveError) {
 // ----
 
 func (r *Resolver) beginScope() {
-	r.scopes = append(r.scopes, make(map[string]bool))
+	r.scopes = append(r.scopes, make(map[string]*variableState))
 }
 
 func (r *Resolver) endScope() {
-	r.scopes = r.scopes[:len(r.scopes)-1]
+	n := len(r.scopes)
+	r.checkVariables(r.scopes[n-1])
+	r.scopes = r.scopes[:n-1]
 }
 
-func (r *Resolver) declare(name Token) {
+func (r *Resolver) declare(name Token, t varType) {
 	if len(r.scopes) == 0 {
 		return
 	}
@@ -72,7 +90,12 @@ func (r *Resolver) declare(name Token) {
 	if _, ok := scope[name.Lexeme]; ok {
 		r.addError(resolveError{name, "already a variable with this name in scope"})
 	}
-	scope[name.Lexeme] = false
+	scope[name.Lexeme] = &variableState{
+		name:      name,
+		varType:   t,
+		isDefined: false,
+		isRead:    false,
+	}
 }
 
 func (r *Resolver) define(name Token) {
@@ -80,7 +103,8 @@ func (r *Resolver) define(name Token) {
 		return
 	}
 	scope := r.scopes[len(r.scopes)-1]
-	scope[name.Lexeme] = true
+	state := scope[name.Lexeme]
+	state.isDefined = true
 }
 
 // ----
@@ -103,7 +127,8 @@ func (r *Resolver) resolveLocal(expr Expr, name Token) {
 	n := len(r.scopes)
 	for i := 0; i < n; i++ {
 		scope := r.scopes[n-i-1]
-		if _, ok := scope[name.Lexeme]; ok {
+		if state, ok := scope[name.Lexeme]; ok {
+			state.isRead = true
 			r.i.resolve(expr, i)
 			return
 		}
@@ -116,11 +141,29 @@ func (r *Resolver) resolveFunction(params []Token, body []Stmt, t funcType) {
 
 	r.beginScope()
 	for _, param := range params {
-		r.declare(param)
+		r.declare(param, funcParam)
 		r.define(param)
 	}
 	r.resolveStmts(body)
 	r.endScope()
+}
+
+// TODO: the error output order is weird, because scopes are resolved in pre-order.
+// This means that 'unused(x) {}' reports first for 'x', and then for 'unused'.
+// Figure out how to execute this (or at least sort it) in post-order.
+func (r *Resolver) checkVariables(scope map[string]*variableState) {
+	for name, state := range scope {
+		if !state.isRead && !strings.HasSuffix(name, "_") {
+			switch state.varType {
+			case local:
+				r.addError(resolveError{state.name, "local variable is never read"})
+			case funcName:
+				r.addError(resolveError{state.name, "function is never read or called"})
+			case funcParam:
+				r.addError(resolveError{state.name, "function param is never read"})
+			}
+		}
+	}
 }
 
 // ----
@@ -134,7 +177,7 @@ func (r *Resolver) visitPrintStmt(stmt PrintStmt) {
 }
 
 func (r *Resolver) visitVarStmt(stmt VarStmt) {
-	r.declare(stmt.Name)
+	r.declare(stmt.Name, local)
 	if stmt.Init != nil {
 		r.resolveExpr(stmt.Init)
 	}
@@ -178,7 +221,7 @@ func (r *Resolver) visitContinueStmt(stmt ContinueStmt) {
 }
 
 func (r *Resolver) visitFunctionStmt(stmt FunctionStmt) {
-	r.declare(stmt.Name)
+	r.declare(stmt.Name, funcName)
 	r.define(stmt.Name)
 
 	r.resolveFunction(stmt.Params, stmt.Body, namedFunc)
@@ -215,7 +258,8 @@ func (r *Resolver) visitVariableExpr(expr VariableExpr) {
 		return
 	}
 	scope := r.scopes[len(r.scopes)-1]
-	if isDefined, ok := scope[expr.Name.Lexeme]; ok && !isDefined {
+	state, ok := scope[expr.Name.Lexeme]
+	if ok && !state.isDefined {
 		r.addError(resolveError{expr.Name, "can't read local variable in its own initializer"})
 	}
 	r.resolveLocal(expr, expr.Name)
