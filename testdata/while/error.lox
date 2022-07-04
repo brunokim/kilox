@@ -1,0 +1,5 @@
+while a do a = a - 1;   // error: line 1 at 'a': expecting '(' after 'while'
+while (a do a = a - 1;  // error: line 2 at 'do': expecting ')' after condition
+while (a) do a = a - 1; // error: line 3 at 'a': expecting ';' after expression
+var a; break;           // error: line 4 at 'break': 'break' can only be used within loops
+{var a; continue;}      // error: line 5 at 'continue': 'continue' can only be used within loops

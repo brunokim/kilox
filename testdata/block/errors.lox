@@ -1,0 +1,2 @@
+{1;}; 2; // error: line 1 at ';': expecting expression
+{1; 2;   // error: line 3 at end: expecting '}' after block

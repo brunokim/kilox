@@ -1,0 +1,5 @@
+return;  // error: line 1 at 'return': 'return' can only be used within functions
+
+if (true) {
+    return false;  // error: line 4 at 'return': 'return' can only be used within functions
+}

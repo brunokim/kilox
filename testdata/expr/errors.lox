@@ -1,0 +1,6 @@
+1 + 2
+print 1 + 2;  // error: line 2 at 'print': expecting ';' after expression
+
+!) // error: line 4 at ')': expecting expression
+;
+(1 // error: line 7 at end: expecting ')' after expression

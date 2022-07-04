@@ -1,0 +1,7 @@
+var 1 = 2;       // error: line 1 at '1': expecting variable name
+var a
+var a = 1        // error: line 3 at 'var': expecting ';' after variable declaration
+var a == 2       // error: line 4 at '==': expecting ';' after variable declaration
+print 1, !false; // error: line 5 at ',': expecting ';' after expression
+(a + b
+print "fin";     // error: line 7 at 'print': expecting ')' after expression

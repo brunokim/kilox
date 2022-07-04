@@ -1,0 +1,6 @@
+if a then b = 10;    // error: line 1 at 'a': expecting '(' after 'if'
+if (a then b = 10;   // error: line 2 at 'then': expecting ')' after condition
+if (a) then b = 10;  // error: line 3 at 'b': expecting ';' after expression
+if (a) b = 10; else; // error: line 4 at ';': expecting expression
+if (a) var b = 10;   // error: line 5 at 'var': expecting expression
+
