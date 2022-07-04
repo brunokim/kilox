@@ -174,7 +174,7 @@ func (r *Resolver) resolveFunction(params []Token, body []Stmt, t funcType) {
 }
 
 // TODO: the error output order is weird, because scopes are resolved in pre-order.
-// This means that 'unused(x) {}' reports first for 'x', and then for 'unused'.
+// This means that 'fun unused(x) {}' reports first for 'x', and then for 'unused'.
 // Figure out how to execute this (or at least sort it) in post-order.
 func (r *Resolver) checkVariables(scope *scope) {
 	for _, state := range scope.vars {
