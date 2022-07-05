@@ -12,7 +12,7 @@ func token(tokenType lox.TokenType, text string) lox.Token {
 	return literalToken(tokenType, text, nil)
 }
 
-func literalToken(tokenType lox.TokenType, text string, literal interface{}) lox.Token {
+func literalToken(tokenType lox.TokenType, text string, literal any) lox.Token {
 	return lox.Token{
 		TokenType: tokenType,
 		Lexeme:    text,

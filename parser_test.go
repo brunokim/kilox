@@ -8,7 +8,7 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
-func literal(v interface{}) lox.LiteralExpr {
+func literal(v any) lox.LiteralExpr {
 	return lox.LiteralExpr{Value: v}
 }
 

@@ -29,7 +29,7 @@ type GroupingExpr struct {
 }
 
 type LiteralExpr struct {
-	Value interface{}
+	Value any
 }
 
 type UnaryExpr struct {

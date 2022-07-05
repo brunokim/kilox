@@ -9,7 +9,7 @@ import (
 
 type Callable interface {
 	Arity() int
-	Call(i *Interpreter, args []interface{}) interface{}
+	Call(i *Interpreter, args []any) any
 }
 
 var builtin = NewEnvironment(dynamicEnvironment)
@@ -23,7 +23,7 @@ func init() {
 type clockFunc struct{}
 
 func (f clockFunc) Arity() int { return 0 }
-func (f clockFunc) Call(i *Interpreter, args []interface{}) interface{} {
+func (f clockFunc) Call(i *Interpreter, args []any) any {
 	return float64(time.Now().UnixMicro()) / 1e6
 }
 func (f clockFunc) String() string { return "<native fn clock>" }
@@ -31,7 +31,7 @@ func (f clockFunc) String() string { return "<native fn clock>" }
 // ----
 
 type returnSignal struct {
-	value interface{}
+	value any
 }
 
 type function struct {
@@ -45,7 +45,7 @@ func (f function) Arity() int {
 	return len(f.params)
 }
 
-func (f function) Call(i *Interpreter, args []interface{}) (result interface{}) {
+func (f function) Call(i *Interpreter, args []any) (result any) {
 	env := f.closure.Child(staticEnvironment)
 	for i, param := range f.params {
 		env.Define(param.Lexeme, args[i])
@@ -91,7 +91,7 @@ type localPosition struct {
 type Interpreter struct {
 	globals *Environment
 	env     *Environment
-	value   interface{}
+	value   any
 	stdout  io.Writer
 
 	locals map[Expr]localPosition
@@ -131,7 +131,7 @@ func (i *Interpreter) resolve(expr Expr, depth int, index int) {
 	i.locals[expr] = localPosition{depth, index}
 }
 
-func (i *Interpreter) lookupVariable(name Token, expr Expr) interface{} {
+func (i *Interpreter) lookupVariable(name Token, expr Expr) any {
 	pos, ok := i.locals[expr]
 	if ok {
 		return i.env.GetStatic(pos.distance, pos.index)
@@ -166,7 +166,7 @@ func (i *Interpreter) visitPrintStmt(stmt PrintStmt) {
 }
 
 func (i *Interpreter) visitVarStmt(stmt VarStmt) {
-	var value interface{}
+	var value any
 	if stmt.Init != nil {
 		value = i.evaluate(stmt.Init)
 	}
@@ -227,7 +227,7 @@ func (i *Interpreter) visitFunctionStmt(stmt FunctionStmt) {
 }
 
 func (i *Interpreter) visitReturnStmt(stmt ReturnStmt) {
-	var value interface{}
+	var value any
 	if stmt.Result != nil {
 		value = i.evaluate(stmt.Result)
 	}
@@ -236,7 +236,7 @@ func (i *Interpreter) visitReturnStmt(stmt ReturnStmt) {
 
 // ----
 
-func (i *Interpreter) evaluate(expr Expr) interface{} {
+func (i *Interpreter) evaluate(expr Expr) any {
 	expr.accept(i)
 	return i.value
 }
@@ -287,7 +287,7 @@ func (i *Interpreter) visitLogicExpr(expr LogicExpr) {
 
 func (i *Interpreter) visitCallExpr(expr CallExpr) {
 	callee := i.evaluate(expr.Callee)
-	args := make([]interface{}, len(expr.Args))
+	args := make([]any, len(expr.Args))
 	for index, arg := range expr.Args {
 		args[index] = i.evaluate(arg)
 	}
@@ -307,7 +307,7 @@ func (i *Interpreter) visitFunctionExpr(expr FunctionExpr) {
 
 // ----
 
-func operate2(token Token, left, right interface{}) interface{} {
+func operate2(token Token, left, right any) any {
 	switch token.TokenType {
 	case BangEqual:
 		return left != right
@@ -350,7 +350,7 @@ func operate2(token Token, left, right interface{}) interface{} {
 	panic(fmt.Errorf("compiler error: unimplemented binary operator %s", token.TokenType))
 }
 
-func operate1(token Token, right interface{}) interface{} {
+func operate1(token Token, right any) any {
 	switch token.TokenType {
 	case Bang:
 		return !isTruthy(right)
@@ -361,7 +361,7 @@ func operate1(token Token, right interface{}) interface{} {
 	panic(fmt.Errorf("compiler error: unimplemented unary operator %s", token.TokenType))
 }
 
-func isTruthy(v interface{}) bool {
+func isTruthy(v any) bool {
 	if v == nil {
 		return false
 	}
@@ -382,7 +382,7 @@ func (err runtimeError) Error() string {
 	return fmt.Sprintf("operator %s in line %d: %s", err.token.Lexeme, err.token.Line, err.msg)
 }
 
-func checkNumberOperand(token Token, right interface{}) float64 {
+func checkNumberOperand(token Token, right any) float64 {
 	b, ok := right.(float64)
 	if ok {
 		return b
@@ -390,7 +390,7 @@ func checkNumberOperand(token Token, right interface{}) float64 {
 	panic(runtimeError{token, "operand must be number"})
 }
 
-func checkNumberOperands(token Token, left, right interface{}) (float64, float64) {
+func checkNumberOperands(token Token, left, right any) (float64, float64) {
 	a, ok1 := left.(float64)
 	b, ok2 := right.(float64)
 	if ok1 && ok2 {

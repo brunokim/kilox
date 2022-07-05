@@ -13,14 +13,14 @@ const (
 
 type Environment struct {
 	enclosing *Environment
-	locals    []interface{}
-	dynamics  map[string]interface{}
+	locals    []any
+	dynamics  map[string]any
 }
 
 func NewEnvironment(t dynType) *Environment {
 	if t == dynamicEnvironment {
 		return &Environment{
-			dynamics: make(map[string]interface{}),
+			dynamics: make(map[string]any),
 		}
 	}
 	return &Environment{}
@@ -39,7 +39,7 @@ func (env *Environment) Child(t dynType) *Environment {
 	return child
 }
 
-func (env *Environment) Define(name string, value interface{}) {
+func (env *Environment) Define(name string, value any) {
 	if env.isDynamic() {
 		env.dynamics[name] = value
 	} else {
@@ -47,7 +47,7 @@ func (env *Environment) Define(name string, value interface{}) {
 	}
 }
 
-func (env *Environment) Get(name Token) interface{} {
+func (env *Environment) Get(name Token) any {
 	for env != nil {
 		v, ok := env.dynamics[name.Lexeme]
 		if ok {
@@ -58,7 +58,7 @@ func (env *Environment) Get(name Token) interface{} {
 	panic(runtimeError{name, fmt.Sprintf("undefined variable %q", name.Lexeme)})
 }
 
-func (env *Environment) Set(name Token, value interface{}) {
+func (env *Environment) Set(name Token, value any) {
 	for env != nil {
 		_, ok := env.dynamics[name.Lexeme]
 		if ok {
@@ -82,10 +82,10 @@ func (env *Environment) ancestor(distance int) *Environment {
 	return env
 }
 
-func (env *Environment) GetStatic(distance int, index int) interface{} {
+func (env *Environment) GetStatic(distance int, index int) any {
 	return env.ancestor(distance).locals[index]
 }
 
-func (env *Environment) SetStatic(distance int, index int, value interface{}) {
+func (env *Environment) SetStatic(distance int, index int, value any) {
 	env.ancestor(distance).locals[index] = value
 }

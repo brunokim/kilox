@@ -75,13 +75,13 @@ func (p *ASTPrinter) visitLogicExpr(expr LogicExpr) {
 }
 
 func (p *ASTPrinter) visitCallExpr(expr CallExpr) {
-	parts := []interface{}{expr.Callee}
+	parts := []any{expr.Callee}
 	parts = append(parts, moveArray[Expr](expr.Args...)...)
 	p.parenthesize(multiLine, parts...)
 }
 
 func (p *ASTPrinter) visitFunctionExpr(expr FunctionExpr) {
-	parts := []interface{}{"fun", expr.Params}
+	parts := []any{"fun", expr.Params}
 	parts = append(parts, moveArray[Stmt](expr.Body...)...)
 	p.parenthesize(multiLine, parts...)
 }
@@ -113,7 +113,7 @@ func (p *ASTPrinter) visitIfStmt(stmt IfStmt) {
 }
 
 func (p *ASTPrinter) visitBlockStmt(stmt BlockStmt) {
-	parts := []interface{}{"block"}
+	parts := []any{"block"}
 	parts = append(parts, moveArray[Stmt](stmt.Statements...)...)
 	p.parenthesize(multiLine, parts...)
 }
@@ -135,7 +135,7 @@ func (p *ASTPrinter) visitContinueStmt(stmt ContinueStmt) {
 }
 
 func (p *ASTPrinter) visitFunctionStmt(stmt FunctionStmt) {
-	parts := []interface{}{"defun", stmt.Name, stmt.Params}
+	parts := []any{"defun", stmt.Name, stmt.Params}
 	parts = append(parts, moveArray[Stmt](stmt.Body...)...)
 	p.parenthesize(multiLine, parts...)
 }
@@ -146,7 +146,7 @@ func (p *ASTPrinter) visitReturnStmt(stmt ReturnStmt) {
 
 // ----
 
-func (p *ASTPrinter) parenthesize(style writeStyle, parts ...interface{}) {
+func (p *ASTPrinter) parenthesize(style writeStyle, parts ...any) {
 	if len(parts) <= 2 {
 		style = singleLine
 	}
@@ -174,7 +174,7 @@ func (p *ASTPrinter) parenthesize(style writeStyle, parts ...interface{}) {
 	p.str.WriteRune(')')
 }
 
-func (p *ASTPrinter) printStuff(x interface{}) {
+func (p *ASTPrinter) printStuff(x any) {
 	switch stuff := x.(type) {
 	case Expr:
 		stuff.accept(p)
@@ -190,8 +190,8 @@ func (p *ASTPrinter) printStuff(x interface{}) {
 	}
 }
 
-func moveArray[T any](objs ...T) []interface{} {
-	arr := make([]interface{}, len(objs))
+func moveArray[T any](objs ...T) []any {
+	arr := make([]any, len(objs))
 	for i, obj := range objs {
 		arr[i] = obj
 	}
