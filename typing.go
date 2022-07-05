@@ -73,6 +73,24 @@ func deref(t LoxType) LoxType {
 	return t
 }
 
+func unionTypes(ts ...LoxType) LoxType {
+	if len(ts) == 0 {
+		return LoxNil{}
+	}
+	if len(ts) == 1 {
+		return ts[0]
+	}
+	u := new(Union)
+	seen := make(map[LoxType]struct{})
+	for _, t := range ts {
+		if _, ok := seen[t]; !ok {
+			seen[t] = struct{}{}
+			u.Types = append(u.Types, t)
+		}
+	}
+	return u
+}
+
 // ----
 
 type typeError struct {
@@ -91,8 +109,30 @@ func (c *TypeChecker) addError(err typeError) {
 
 type typeScope map[string]LoxType
 
+var (
+	t  = &Ref{}
+	t1 = &Ref{}
+	t2 = &Ref{}
+)
+
 var builtinTypes = typeScope{
+	// Arithmetic operators
 	"+": LoxFunction{[]LoxType{LoxNumber{}, LoxNumber{}}, LoxNumber{}},
+	"-": LoxFunction{[]LoxType{LoxNumber{}, LoxNumber{}}, LoxNumber{}},
+	"*": LoxFunction{[]LoxType{LoxNumber{}, LoxNumber{}}, LoxNumber{}},
+	"/": LoxFunction{[]LoxType{LoxNumber{}, LoxNumber{}}, LoxNumber{}},
+	// Logic operators
+	"<":  LoxFunction{[]LoxType{LoxNumber{}, LoxNumber{}}, LoxBool{}},
+	"<=": LoxFunction{[]LoxType{LoxNumber{}, LoxNumber{}}, LoxBool{}},
+	">":  LoxFunction{[]LoxType{LoxNumber{}, LoxNumber{}}, LoxBool{}},
+	">=": LoxFunction{[]LoxType{LoxNumber{}, LoxNumber{}}, LoxBool{}},
+	"==": LoxFunction{[]LoxType{t1, t2}, LoxBool{}},
+	"!=": LoxFunction{[]LoxType{t1, t2}, LoxBool{}},
+	// Logic control
+	"and": LoxFunction{[]LoxType{t1, t2}, unionTypes(t1, t2)},
+	"or":  LoxFunction{[]LoxType{t1, t2}, unionTypes(t1, t2)},
+	// Builtin
+	"clock": LoxFunction{[]LoxType{}, LoxNumber{}},
 }
 
 type TypeChecker struct {
