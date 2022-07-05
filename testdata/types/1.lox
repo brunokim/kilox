@@ -1,0 +1,6 @@
+// experiments: typing
+
+print 1 + 2; // output: 3
+
+// TODO: requires union of types
+//print "a" + "b";

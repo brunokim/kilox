@@ -24,7 +24,8 @@ func TestInterpreter(t *testing.T) {
 		}
 		text := string(bs)
 		wantOutput, wantErr := extractExpected(text)
-		output, err := runLox(text)
+		experiments := extractExperiments(text)
+		output, err := runLox(text, experiments...)
 		errMsg := ""
 		if err != nil {
 			errMsg = err.Error() + "\n"
@@ -38,7 +39,11 @@ func TestInterpreter(t *testing.T) {
 	}
 }
 
-func runLox(text string) (string, error) {
+func runLox(text string, experiments ...string) (string, error) {
+	enabled := make(map[string]bool)
+	for _, exp := range experiments {
+		enabled[exp] = true
+	}
 	s := lox.NewScanner(text)
 	tokens, err := s.ScanTokens()
 	if err != nil {
@@ -54,6 +59,13 @@ func runLox(text string) (string, error) {
 	err = r.Resolve(stmts)
 	if err != nil {
 		return "", err
+	}
+	if enabled["typing"] {
+		c := lox.NewTypeChecker(i)
+		err := c.Check(stmts)
+		if err != nil {
+			return "", err
+		}
 	}
 	var b strings.Builder
 	i.SetStdout(&b)
@@ -77,4 +89,13 @@ func extractComment(text, pattern string) string {
 		b.WriteRune('\n')
 	}
 	return b.String()
+}
+
+func extractExperiments(text string) []string {
+	expStr := extractComment(text, "experiments")
+	exps := strings.Split(expStr, ",")
+	for i, exp := range exps {
+		exps[i] = strings.TrimSpace(exp)
+	}
+	return exps
 }
