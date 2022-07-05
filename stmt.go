@@ -1,4 +1,10 @@
+// Generated file, do not modify
+// Invocation: gen_ast -spec ./cmd/gen_ast/stmt.spec -dest stmt.go
 package lox
+
+type Stmt interface {
+	accept(visitor stmtVisitor)
+}
 
 type stmtVisitor interface {
 	visitExpressionStmt(stmt ExpressionStmt)
@@ -12,12 +18,6 @@ type stmtVisitor interface {
 	visitFunctionStmt(stmt FunctionStmt)
 	visitReturnStmt(stmt ReturnStmt)
 }
-
-type Stmt interface {
-	accept(visitor stmtVisitor)
-}
-
-// ----
 
 type ExpressionStmt struct {
 	Expression Expr
@@ -66,8 +66,6 @@ type ReturnStmt struct {
 	Token  Token
 	Result Expr
 }
-
-// ----
 
 func (stmt ExpressionStmt) accept(v stmtVisitor) {
 	v.visitExpressionStmt(stmt)
