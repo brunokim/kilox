@@ -75,6 +75,9 @@ func (env *Environment) Set(name Token, value interface{}) {
 func (env *Environment) ancestor(distance int) *Environment {
 	for i := 0; i < distance; i++ {
 		env = env.enclosing
+		if env == nil || env.isDynamic() {
+			panic("compiler error: invalid or dynamic environment reached when looking for static ancestor")
+		}
 	}
 	return env
 }
