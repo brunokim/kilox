@@ -12,10 +12,10 @@ type Callable interface {
 	Call(i *Interpreter, args []interface{}) interface{}
 }
 
-var globals = NewEnvironment()
+var builtin = NewEnvironment(dynamicEnvironment)
 
 func init() {
-	globals.Define("clock", clockFunc{})
+	builtin.Define("clock", clockFunc{})
 }
 
 // ----
@@ -46,7 +46,7 @@ func (f function) Arity() int {
 }
 
 func (f function) Call(i *Interpreter, args []interface{}) (result interface{}) {
-	env := f.closure.Child()
+	env := f.closure.Child(staticEnvironment)
 	for i, param := range f.params {
 		env.Define(param.Lexeme, args[i])
 	}
@@ -89,21 +89,21 @@ type localPosition struct {
 }
 
 type Interpreter struct {
-	topLevel *Environment
-	env      *Environment
-	value    interface{}
-	stdout   io.Writer
+	globals *Environment
+	env     *Environment
+	value   interface{}
+	stdout  io.Writer
 
 	locals map[Expr]localPosition
 }
 
 func NewInterpreter() *Interpreter {
-	env := globals.Child()
+	env := builtin.Child(dynamicEnvironment)
 	return &Interpreter{
-		topLevel: env,
-		env:      env,
-		stdout:   os.Stdout,
-		locals:   make(map[Expr]localPosition),
+		globals: env,
+		env:     env,
+		stdout:  os.Stdout,
+		locals:  make(map[Expr]localPosition),
 	}
 }
 
@@ -134,9 +134,9 @@ func (i *Interpreter) resolve(expr Expr, depth int, index int) {
 func (i *Interpreter) lookupVariable(name Token, expr Expr) interface{} {
 	pos, ok := i.locals[expr]
 	if ok {
-		return i.env.GetAt(pos.distance, pos.index)
+		return i.env.GetStatic(pos.distance, pos.index)
 	}
-	return i.topLevel.Get(name)
+	return i.globals.Get(name)
 }
 
 // ----
@@ -183,7 +183,7 @@ func (i *Interpreter) visitIfStmt(stmt IfStmt) {
 }
 
 func (i *Interpreter) visitBlockStmt(stmt BlockStmt) {
-	i.executeBlock(stmt.Statements, i.env.Child())
+	i.executeBlock(stmt.Statements, i.env.Child(staticEnvironment))
 }
 
 func (i *Interpreter) visitLoopStmt(stmt LoopStmt) {
@@ -268,9 +268,9 @@ func (i *Interpreter) visitAssignmentExpr(expr AssignmentExpr) {
 	value := i.evaluate(expr.Value)
 	pos, ok := i.locals[expr]
 	if ok {
-		i.env.SetAt(pos.distance, pos.index, value)
+		i.env.SetStatic(pos.distance, pos.index, value)
 	} else {
-		i.topLevel.Set(expr.Name, value)
+		i.globals.Set(expr.Name, value)
 	}
 }
 

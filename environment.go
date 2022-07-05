@@ -4,53 +4,73 @@ import (
 	"fmt"
 )
 
+type dynType int
+
+const (
+	staticEnvironment dynType = iota
+	dynamicEnvironment
+)
+
 type Environment struct {
 	enclosing *Environment
-	values    map[string]interface{}
-	values2   []interface{}
+	locals    []interface{}
+	dynamics  map[string]interface{}
 }
 
-func NewEnvironment() *Environment {
-	env := new(Environment)
-	env.values = make(map[string]interface{})
-	return env
+func NewEnvironment(t dynType) *Environment {
+	if t == dynamicEnvironment {
+		return &Environment{
+			dynamics: make(map[string]interface{}),
+		}
+	}
+	return &Environment{}
 }
 
-func (env *Environment) Child() *Environment {
-	child := NewEnvironment()
+func (env *Environment) isDynamic() bool {
+	return env.dynamics != nil
+}
+
+func (env *Environment) Child(t dynType) *Environment {
+	if t == dynamicEnvironment && !env.isDynamic() {
+		panic("compiler error: dynamic environment can't be child of a static one")
+	}
+	child := NewEnvironment(t)
 	child.enclosing = env
 	return child
 }
 
 func (env *Environment) Define(name string, value interface{}) {
-	env.values[name] = value
-	env.values2 = append(env.values2, value)
+	if env.isDynamic() {
+		env.dynamics[name] = value
+	} else {
+		env.locals = append(env.locals, value)
+	}
 }
 
-// ----
-
 func (env *Environment) Get(name Token) interface{} {
-	v, ok := env.values[name.Lexeme]
-	if ok {
-		return v
-	}
-	if env.enclosing != nil {
-		return env.enclosing.Get(name)
+	for env != nil {
+		v, ok := env.dynamics[name.Lexeme]
+		if ok {
+			return v
+		}
+		env = env.enclosing
 	}
 	panic(runtimeError{name, fmt.Sprintf("undefined variable %q", name.Lexeme)})
 }
 
 func (env *Environment) Set(name Token, value interface{}) {
-	if _, ok := env.values[name.Lexeme]; ok {
-		env.values[name.Lexeme] = value
-		return
-	}
-	if env.enclosing != nil {
-		env.enclosing.Set(name, value)
-		return
+	for env != nil {
+		_, ok := env.dynamics[name.Lexeme]
+		if ok {
+			env.dynamics[name.Lexeme] = value
+			return
+		}
+		env = env.enclosing
 	}
 	panic(runtimeError{name, fmt.Sprintf("undefined variable %q", name.Lexeme)})
 }
+
+// ----
 
 func (env *Environment) ancestor(distance int) *Environment {
 	for i := 0; i < distance; i++ {
@@ -59,10 +79,10 @@ func (env *Environment) ancestor(distance int) *Environment {
 	return env
 }
 
-func (env *Environment) GetAt(distance int, index int) interface{} {
-	return env.ancestor(distance).values2[index]
+func (env *Environment) GetStatic(distance int, index int) interface{} {
+	return env.ancestor(distance).locals[index]
 }
 
-func (env *Environment) SetAt(distance int, index int, value interface{}) {
-	env.ancestor(distance).values2[index] = value
+func (env *Environment) SetStatic(distance int, index int, value interface{}) {
+	env.ancestor(distance).locals[index] = value
 }
