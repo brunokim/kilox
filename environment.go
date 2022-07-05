@@ -7,6 +7,7 @@ import (
 type Environment struct {
 	enclosing *Environment
 	values    map[string]interface{}
+	values2   []interface{}
 }
 
 func NewEnvironment() *Environment {
@@ -23,6 +24,7 @@ func (env *Environment) Child() *Environment {
 
 func (env *Environment) Define(name string, value interface{}) {
 	env.values[name] = value
+	env.values2 = append(env.values2, value)
 }
 
 // ----
@@ -57,10 +59,10 @@ func (env *Environment) ancestor(distance int) *Environment {
 	return env
 }
 
-func (env *Environment) GetAt(distance int, name string) interface{} {
-	return env.ancestor(distance).values[name]
+func (env *Environment) GetAt(distance int, index int) interface{} {
+	return env.ancestor(distance).values2[index]
 }
 
-func (env *Environment) SetAt(distance int, name Token, value interface{}) {
-	env.ancestor(distance).values[name.Lexeme] = value
+func (env *Environment) SetAt(distance int, index int, value interface{}) {
+	env.ancestor(distance).values2[index] = value
 }

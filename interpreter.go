@@ -83,13 +83,18 @@ type loopSignal struct {
 
 // ----
 
+type localPosition struct {
+	distance int
+	index    int
+}
+
 type Interpreter struct {
 	topLevel *Environment
 	env      *Environment
 	value    interface{}
 	stdout   io.Writer
 
-	locals map[Expr]int
+	locals map[Expr]localPosition
 }
 
 func NewInterpreter() *Interpreter {
@@ -98,7 +103,7 @@ func NewInterpreter() *Interpreter {
 		topLevel: env,
 		env:      env,
 		stdout:   os.Stdout,
-		locals:   make(map[Expr]int),
+		locals:   make(map[Expr]localPosition),
 	}
 }
 
@@ -122,14 +127,14 @@ func (i *Interpreter) Interpret(stmts []Stmt) (err error) {
 	return nil
 }
 
-func (i *Interpreter) resolve(expr Expr, depth int) {
-	i.locals[expr] = depth
+func (i *Interpreter) resolve(expr Expr, depth int, index int) {
+	i.locals[expr] = localPosition{depth, index}
 }
 
 func (i *Interpreter) lookupVariable(name Token, expr Expr) interface{} {
-	distance, ok := i.locals[expr]
+	pos, ok := i.locals[expr]
 	if ok {
-		return i.env.GetAt(distance, name.Lexeme)
+		return i.env.GetAt(pos.distance, pos.index)
 	}
 	return i.topLevel.Get(name)
 }
@@ -256,16 +261,14 @@ func (i *Interpreter) visitUnaryExpr(expr UnaryExpr) {
 }
 
 func (i *Interpreter) visitVariableExpr(expr VariableExpr) {
-	//i.value = i.env.Get(expr.Name)
 	i.value = i.lookupVariable(expr.Name, expr)
 }
 
 func (i *Interpreter) visitAssignmentExpr(expr AssignmentExpr) {
 	value := i.evaluate(expr.Value)
-	//i.env.Set(expr.Name, value)
-	distance, ok := i.locals[expr]
+	pos, ok := i.locals[expr]
 	if ok {
-		i.env.SetAt(distance, expr.Name, value)
+		i.env.SetAt(pos.distance, pos.index, value)
 	} else {
 		i.topLevel.Set(expr.Name, value)
 	}

@@ -24,6 +24,7 @@ const (
 type variableState struct {
 	name      Token
 	varType   varType
+	index     int
 	isDefined bool
 	isRead    bool
 }
@@ -92,13 +93,15 @@ func (s *scope) get(name string) (*variableState, bool) {
 }
 
 func (s *scope) put(name Token, t varType) {
-	s.index[name.Lexeme] = len(s.vars)
+	i := len(s.vars)
 	s.vars = append(s.vars, &variableState{
 		name:      name,
 		varType:   t,
+		index:     i,
 		isDefined: false,
 		isRead:    false,
 	})
+	s.index[name.Lexeme] = i
 }
 
 func (r *Resolver) beginScope() {
@@ -150,11 +153,11 @@ func (r *Resolver) resolveExpr(expr Expr) {
 
 func (r *Resolver) resolveLocal(expr Expr, name Token) {
 	n := len(r.scopes)
-	for i := 0; i < n; i++ {
-		scope := r.scopes[n-i-1]
+	for dist := 0; dist < n; dist++ {
+		scope := r.scopes[(n-1)-dist]
 		if state, ok := scope.get(name.Lexeme); ok {
 			state.isRead = true
-			r.i.resolve(expr, i)
+			r.i.resolve(expr, dist, state.index)
 			return
 		}
 	}
