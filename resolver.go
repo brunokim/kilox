@@ -13,17 +13,17 @@ const (
 	anonymousFunc
 )
 
-type varType int
+type declType int
 
 const (
-	local varType = iota
+	local declType = iota
 	funcName
 	funcParam
 )
 
 type variableState struct {
 	name      Token
-	varType   varType
+	decl      declType
 	index     int
 	isDefined bool
 	isRead    bool
@@ -92,11 +92,11 @@ func (s *scope) get(name string) (*variableState, bool) {
 	return s.vars[i], true
 }
 
-func (s *scope) put(name Token, t varType) {
+func (s *scope) put(name Token, decl declType) {
 	i := len(s.vars)
 	s.vars = append(s.vars, &variableState{
 		name:      name,
-		varType:   t,
+		decl:      decl,
 		index:     i,
 		isDefined: false,
 		isRead:    false,
@@ -114,7 +114,7 @@ func (r *Resolver) endScope() {
 	r.scopes = r.scopes[:n-1]
 }
 
-func (r *Resolver) declare(name Token, t varType) {
+func (r *Resolver) declare(name Token, decl declType) {
 	if len(r.scopes) == 0 {
 		return
 	}
@@ -123,7 +123,7 @@ func (r *Resolver) declare(name Token, t varType) {
 		r.addError(resolveError{name, "already a variable with this name in scope"})
 		return
 	}
-	scope.put(name, t)
+	scope.put(name, decl)
 }
 
 func (r *Resolver) define(name Token) {
@@ -182,7 +182,7 @@ func (r *Resolver) resolveFunction(params []Token, body []Stmt, t funcType) {
 func (r *Resolver) checkVariables(scope *scope) {
 	for _, state := range scope.vars {
 		if !state.isRead && !strings.HasSuffix(state.name.Lexeme, "_") {
-			switch state.varType {
+			switch state.decl {
 			case local:
 				r.addError(resolveError{state.name, "local variable is never read"})
 			case funcName:
