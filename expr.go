@@ -1,4 +1,10 @@
+// Generated file, do not modify
+// Invocation: gen_ast -spec ./cmd/gen_ast/expr.spec -dest expr.go
 package lox
+
+type Expr interface {
+	accept(visitor exprVisitor)
+}
 
 type exprVisitor interface {
 	visitBinaryExpr(expr BinaryExpr)
@@ -11,12 +17,6 @@ type exprVisitor interface {
 	visitCallExpr(expr CallExpr)
 	visitFunctionExpr(expr FunctionExpr)
 }
-
-type Expr interface {
-	accept(visitor exprVisitor)
-}
-
-// ----
 
 type BinaryExpr struct {
 	Left     Expr
@@ -62,8 +62,6 @@ type FunctionExpr struct {
 	Params []Token
 	Body   []Stmt
 }
-
-// ----
 
 func (expr BinaryExpr) accept(v exprVisitor) {
 	v.visitBinaryExpr(expr)
