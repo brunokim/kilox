@@ -158,6 +158,9 @@ func (c *TypeChecker) visitPrintStmt(stmt PrintStmt) {
 	c.checkExpr(stmt.Expression)
 }
 
+// If var is not initialized, we let its type to be initialized on first assignment.
+// TODO: handle case where an uninitialized variable is read/returned before first
+// assignment, in which case it should be nil.
 func (c *TypeChecker) visitVarStmt(stmt VarStmt) {
 	var t Type
 	if stmt.Init != nil {
@@ -170,6 +173,7 @@ func (c *TypeChecker) visitVarStmt(stmt VarStmt) {
 
 func (c *TypeChecker) visitIfStmt(stmt IfStmt) {
 	// stmt.Condition is always valid.
+	c.checkExpr(stmt.Condition)
 	c.checkStmt(stmt.Then)
 	if stmt.Else != nil {
 		c.checkStmt(stmt.Else)
@@ -186,6 +190,7 @@ func (c *TypeChecker) visitBlockStmt(stmt BlockStmt) {
 
 func (c *TypeChecker) visitLoopStmt(stmt LoopStmt) {
 	// stmt.Condition is always valid.
+	c.checkExpr(stmt.Condition)
 	c.checkStmt(stmt.Body)
 	if stmt.OnLoop != nil {
 		c.checkExpr(stmt.OnLoop)

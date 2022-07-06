@@ -22,7 +22,6 @@ func (u *unifier) err(t1, t2 Type) {
 }
 
 func (u *unifier) match(t1, t2 Type) {
-	fmt.Println("match", t1, t2)
 	u.t2 = t2
 	t1.accept(u)
 }
@@ -30,7 +29,6 @@ func (u *unifier) match(t1, t2 Type) {
 func (u *unifier) unify(t1, t2 Type) {
 	u.stack = []typePair{{t1, t2}}
 	for len(u.stack) > 0 {
-		fmt.Println(u.stack)
 		n := len(u.stack)
 		var top typePair
 		top, u.stack = u.stack[n-1], u.stack[:n-1]
