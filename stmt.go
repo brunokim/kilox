@@ -3,20 +3,20 @@
 package lox
 
 type Stmt interface {
-	accept(visitor stmtVisitor)
+	accept(v stmtVisitor)
 }
 
 type stmtVisitor interface {
-	visitExpressionStmt(stmt ExpressionStmt)
-	visitPrintStmt(stmt PrintStmt)
-	visitVarStmt(stmt VarStmt)
-	visitIfStmt(stmt IfStmt)
-	visitBlockStmt(stmt BlockStmt)
-	visitLoopStmt(stmt LoopStmt)
-	visitBreakStmt(stmt BreakStmt)
-	visitContinueStmt(stmt ContinueStmt)
-	visitFunctionStmt(stmt FunctionStmt)
-	visitReturnStmt(stmt ReturnStmt)
+	visitExpressionStmt(s ExpressionStmt)
+	visitPrintStmt(s PrintStmt)
+	visitVarStmt(s VarStmt)
+	visitIfStmt(s IfStmt)
+	visitBlockStmt(s BlockStmt)
+	visitLoopStmt(s LoopStmt)
+	visitBreakStmt(s BreakStmt)
+	visitContinueStmt(s ContinueStmt)
+	visitFunctionStmt(s FunctionStmt)
+	visitReturnStmt(s ReturnStmt)
 }
 
 type ExpressionStmt struct {
@@ -67,42 +67,42 @@ type ReturnStmt struct {
 	Result Expr
 }
 
-func (stmt ExpressionStmt) accept(v stmtVisitor) {
-	v.visitExpressionStmt(stmt)
+func (s ExpressionStmt) accept(v stmtVisitor) {
+	v.visitExpressionStmt(s)
 }
 
-func (stmt PrintStmt) accept(v stmtVisitor) {
-	v.visitPrintStmt(stmt)
+func (s PrintStmt) accept(v stmtVisitor) {
+	v.visitPrintStmt(s)
 }
 
-func (stmt VarStmt) accept(v stmtVisitor) {
-	v.visitVarStmt(stmt)
+func (s VarStmt) accept(v stmtVisitor) {
+	v.visitVarStmt(s)
 }
 
-func (stmt IfStmt) accept(v stmtVisitor) {
-	v.visitIfStmt(stmt)
+func (s IfStmt) accept(v stmtVisitor) {
+	v.visitIfStmt(s)
 }
 
-func (stmt BlockStmt) accept(v stmtVisitor) {
-	v.visitBlockStmt(stmt)
+func (s BlockStmt) accept(v stmtVisitor) {
+	v.visitBlockStmt(s)
 }
 
-func (stmt LoopStmt) accept(v stmtVisitor) {
-	v.visitLoopStmt(stmt)
+func (s LoopStmt) accept(v stmtVisitor) {
+	v.visitLoopStmt(s)
 }
 
-func (stmt BreakStmt) accept(v stmtVisitor) {
-	v.visitBreakStmt(stmt)
+func (s BreakStmt) accept(v stmtVisitor) {
+	v.visitBreakStmt(s)
 }
 
-func (stmt ContinueStmt) accept(v stmtVisitor) {
-	v.visitContinueStmt(stmt)
+func (s ContinueStmt) accept(v stmtVisitor) {
+	v.visitContinueStmt(s)
 }
 
-func (stmt FunctionStmt) accept(v stmtVisitor) {
-	v.visitFunctionStmt(stmt)
+func (s FunctionStmt) accept(v stmtVisitor) {
+	v.visitFunctionStmt(s)
 }
 
-func (stmt ReturnStmt) accept(v stmtVisitor) {
-	v.visitReturnStmt(stmt)
+func (s ReturnStmt) accept(v stmtVisitor) {
+	v.visitReturnStmt(s)
 }

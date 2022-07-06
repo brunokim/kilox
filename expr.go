@@ -3,19 +3,19 @@
 package lox
 
 type Expr interface {
-	accept(visitor exprVisitor)
+	accept(v exprVisitor)
 }
 
 type exprVisitor interface {
-	visitBinaryExpr(expr BinaryExpr)
-	visitGroupingExpr(expr GroupingExpr)
-	visitLiteralExpr(expr LiteralExpr)
-	visitUnaryExpr(expr UnaryExpr)
-	visitVariableExpr(expr VariableExpr)
-	visitAssignmentExpr(expr AssignmentExpr)
-	visitLogicExpr(expr LogicExpr)
-	visitCallExpr(expr CallExpr)
-	visitFunctionExpr(expr FunctionExpr)
+	visitBinaryExpr(e BinaryExpr)
+	visitGroupingExpr(e GroupingExpr)
+	visitLiteralExpr(e LiteralExpr)
+	visitUnaryExpr(e UnaryExpr)
+	visitVariableExpr(e VariableExpr)
+	visitAssignmentExpr(e AssignmentExpr)
+	visitLogicExpr(e LogicExpr)
+	visitCallExpr(e CallExpr)
+	visitFunctionExpr(e FunctionExpr)
 }
 
 type BinaryExpr struct {
@@ -63,38 +63,38 @@ type FunctionExpr struct {
 	Body   []Stmt
 }
 
-func (expr BinaryExpr) accept(v exprVisitor) {
-	v.visitBinaryExpr(expr)
+func (e BinaryExpr) accept(v exprVisitor) {
+	v.visitBinaryExpr(e)
 }
 
-func (expr GroupingExpr) accept(v exprVisitor) {
-	v.visitGroupingExpr(expr)
+func (e GroupingExpr) accept(v exprVisitor) {
+	v.visitGroupingExpr(e)
 }
 
-func (expr LiteralExpr) accept(v exprVisitor) {
-	v.visitLiteralExpr(expr)
+func (e LiteralExpr) accept(v exprVisitor) {
+	v.visitLiteralExpr(e)
 }
 
-func (expr UnaryExpr) accept(v exprVisitor) {
-	v.visitUnaryExpr(expr)
+func (e UnaryExpr) accept(v exprVisitor) {
+	v.visitUnaryExpr(e)
 }
 
-func (expr VariableExpr) accept(v exprVisitor) {
-	v.visitVariableExpr(expr)
+func (e VariableExpr) accept(v exprVisitor) {
+	v.visitVariableExpr(e)
 }
 
-func (expr AssignmentExpr) accept(v exprVisitor) {
-	v.visitAssignmentExpr(expr)
+func (e AssignmentExpr) accept(v exprVisitor) {
+	v.visitAssignmentExpr(e)
 }
 
-func (expr LogicExpr) accept(v exprVisitor) {
-	v.visitLogicExpr(expr)
+func (e LogicExpr) accept(v exprVisitor) {
+	v.visitLogicExpr(e)
 }
 
-func (expr CallExpr) accept(v exprVisitor) {
-	v.visitCallExpr(expr)
+func (e CallExpr) accept(v exprVisitor) {
+	v.visitCallExpr(e)
 }
 
-func (expr FunctionExpr) accept(v exprVisitor) {
-	v.visitFunctionExpr(expr)
+func (e FunctionExpr) accept(v exprVisitor) {
+	v.visitFunctionExpr(e)
 }

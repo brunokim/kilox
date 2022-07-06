@@ -2,86 +2,30 @@ package lox
 
 import (
 	"fmt"
-	"strings"
 )
 
-type LoxType interface {
-	fmt.Stringer
-	isLoxType()
-}
-
-type LoxNil struct{}
-type LoxBool struct{}
-type LoxNumber struct{}
-type LoxString struct{}
-
-type LoxFunction struct {
-	Params []LoxType
-	Return LoxType
-}
-
-type Ref struct {
-	Value LoxType
-	id    int
-}
-
-type Union struct {
-	Types []LoxType
-}
-
-func (LoxNil) isLoxType()      {}
-func (LoxBool) isLoxType()     {}
-func (LoxNumber) isLoxType()   {}
-func (LoxString) isLoxType()   {}
-func (LoxFunction) isLoxType() {}
-func (*Ref) isLoxType()        {}
-func (*Union) isLoxType()      {}
-
-func (LoxNil) String() string    { return "Nil" }
-func (LoxBool) String() string   { return "Bool" }
-func (LoxNumber) String() string { return "Number" }
-func (LoxString) String() string { return "String" }
-
-func (fn LoxFunction) String() string {
-	params := make([]string, len(fn.Params))
-	for i, param := range fn.Params {
-		params[i] = param.String()
+func deref(t Type) Type {
+	for {
+		x, ok := t.(*RefType)
+		if !ok {
+			return t
+		}
+		if x.Value == nil {
+			return x
+		}
+		t = x.Value
 	}
-	return fmt.Sprintf("(%s) -> %v", strings.Join(params, ", "), fn.Return)
 }
 
-func (x *Ref) String() string {
-	if x.Value == nil {
-		return fmt.Sprintf("_%d", x.id)
-	}
-	return fmt.Sprintf("&%v", x.Value)
-}
-
-func (u *Union) String() string {
-	types := make([]string, len(u.Types))
-	for i, t := range u.Types {
-		types[i] = t.String()
-	}
-	return strings.Join(types, "|")
-}
-
-func deref(t LoxType) LoxType {
-	x, ok := t.(*Ref)
-	for ok && x.Value != nil {
-		x, ok = x.Value.(*Ref)
-	}
-	return t
-}
-
-func unionTypes(ts ...LoxType) LoxType {
+func unionTypes(ts ...Type) Type {
 	if len(ts) == 0 {
-		return LoxNil{}
+		return NilType{}
 	}
 	if len(ts) == 1 {
 		return ts[0]
 	}
-	u := new(Union)
-	seen := make(map[LoxType]struct{})
+	u := new(UnionType)
+	seen := make(map[Type]struct{})
 	for _, t := range ts {
 		if _, ok := seen[t]; !ok {
 			seen[t] = struct{}{}
@@ -94,7 +38,7 @@ func unionTypes(ts ...LoxType) LoxType {
 // ----
 
 type typeError struct {
-	t1, t2 LoxType
+	t1, t2 Type
 }
 
 func (err typeError) Error() string {
@@ -107,32 +51,32 @@ func (c *TypeChecker) addError(err typeError) {
 
 // ----
 
-type typeScope map[string]LoxType
+type typeScope map[string]Type
 
 var (
-	t  = &Ref{}
-	t1 = &Ref{}
-	t2 = &Ref{}
+	t  = &RefType{}
+	t1 = &RefType{}
+	t2 = &RefType{}
 )
 
 var builtinTypes = typeScope{
 	// Arithmetic operators
-	"+": LoxFunction{[]LoxType{LoxNumber{}, LoxNumber{}}, LoxNumber{}},
-	"-": LoxFunction{[]LoxType{LoxNumber{}, LoxNumber{}}, LoxNumber{}},
-	"*": LoxFunction{[]LoxType{LoxNumber{}, LoxNumber{}}, LoxNumber{}},
-	"/": LoxFunction{[]LoxType{LoxNumber{}, LoxNumber{}}, LoxNumber{}},
+	"+": FunctionType{[]Type{NumberType{}, NumberType{}}, NumberType{}},
+	"-": FunctionType{[]Type{NumberType{}, NumberType{}}, NumberType{}},
+	"*": FunctionType{[]Type{NumberType{}, NumberType{}}, NumberType{}},
+	"/": FunctionType{[]Type{NumberType{}, NumberType{}}, NumberType{}},
 	// Logic operators
-	"<":  LoxFunction{[]LoxType{LoxNumber{}, LoxNumber{}}, LoxBool{}},
-	"<=": LoxFunction{[]LoxType{LoxNumber{}, LoxNumber{}}, LoxBool{}},
-	">":  LoxFunction{[]LoxType{LoxNumber{}, LoxNumber{}}, LoxBool{}},
-	">=": LoxFunction{[]LoxType{LoxNumber{}, LoxNumber{}}, LoxBool{}},
-	"==": LoxFunction{[]LoxType{t1, t2}, LoxBool{}},
-	"!=": LoxFunction{[]LoxType{t1, t2}, LoxBool{}},
+	"<":  FunctionType{[]Type{NumberType{}, NumberType{}}, BoolType{}},
+	"<=": FunctionType{[]Type{NumberType{}, NumberType{}}, BoolType{}},
+	">":  FunctionType{[]Type{NumberType{}, NumberType{}}, BoolType{}},
+	">=": FunctionType{[]Type{NumberType{}, NumberType{}}, BoolType{}},
+	"==": FunctionType{[]Type{t1, t2}, BoolType{}},
+	"!=": FunctionType{[]Type{t1, t2}, BoolType{}},
 	// Logic control
-	"and": LoxFunction{[]LoxType{t1, t2}, unionTypes(t1, t2)},
-	"or":  LoxFunction{[]LoxType{t1, t2}, unionTypes(t1, t2)},
+	"and": FunctionType{[]Type{t1, t2}, unionTypes(t1, t2)},
+	"or":  FunctionType{[]Type{t1, t2}, unionTypes(t1, t2)},
 	// Builtin
-	"clock": LoxFunction{[]LoxType{}, LoxNumber{}},
+	"clock": FunctionType{[]Type{}, NumberType{}},
 }
 
 type TypeChecker struct {
@@ -140,8 +84,8 @@ type TypeChecker struct {
 	errors []typeError
 	scopes []typeScope
 
-	currType   LoxType
-	returnType LoxType
+	currType   Type
+	returnType Type
 
 	refID int
 }
@@ -161,9 +105,9 @@ func (c *TypeChecker) Check(stmts []Stmt) error {
 	return nil
 }
 
-func (c *TypeChecker) newRef() *Ref {
+func (c *TypeChecker) newRefType() *RefType {
 	c.refID++
-	return &Ref{id: c.refID}
+	return &RefType{id: c.refID}
 }
 
 // ----
@@ -176,7 +120,7 @@ func (c *TypeChecker) endScope() {
 	c.scopes = c.scopes[:len(c.scopes)-1]
 }
 
-func (c *TypeChecker) bind(name string, type_ LoxType) {
+func (c *TypeChecker) bind(name string, type_ Type) {
 	scope := c.scopes[len(c.scopes)-1]
 	if prevType, ok := scope[name]; ok {
 		c.unify(prevType, type_)
@@ -184,78 +128,12 @@ func (c *TypeChecker) bind(name string, type_ LoxType) {
 	scope[name] = type_
 }
 
-type typePair [2]LoxType
-
-func (c *TypeChecker) unify(t1, t2 LoxType) {
-	t1, t2 = deref(t1), deref(t2)
-	stack := []typePair{{t1, t2}}
-	for len(stack) > 0 {
-		n := len(stack)
-		var top typePair
-		top, stack = stack[n-1], stack[:n-1]
-		t1, t2 = deref(top[0]), deref(top[1])
-		// Handle case where one or both of the types is a *Ref.
-		x1, isRef1 := t1.(*Ref)
-		x2, isRef2 := t2.(*Ref)
-		if isRef1 || isRef2 {
-			if isRef1 && !isRef2 {
-				x1.Value = t2
-			} else if !isRef1 && isRef2 {
-				x2.Value = t1
-			} else if x1.id < x2.id {
-				x2.Value = x1
-			} else {
-				x1.Value = x2
-			}
-			continue
-		}
-		// Handle "atomic" types: nil, bool, number, string.
-		_, isNil1 := t1.(LoxNil)
-		_, isNil2 := t2.(LoxNil)
-		_, isBool1 := t1.(LoxBool)
-		_, isBool2 := t2.(LoxBool)
-		_, isNumber1 := t1.(LoxNumber)
-		_, isNumber2 := t2.(LoxNumber)
-		_, isString1 := t1.(LoxString)
-		_, isString2 := t2.(LoxString)
-		if (isNil1 && isNil2) ||
-			(isBool1 && isBool2) ||
-			(isNumber1 && isNumber2) ||
-			(isString1 && isString2) {
-			continue
-		}
-		isAtomic1 := isNil1 || isBool1 || isNumber1 || isString1
-		isAtomic2 := isNil2 || isBool2 || isNumber2 || isString2
-		if isAtomic1 || isAtomic2 {
-			c.addError(typeError{t1, t2})
-			continue
-		}
-		// Handle function types
-		fn1, isFn1 := t1.(LoxFunction)
-		fn2, isFn2 := t2.(LoxFunction)
-		if isFn1 && isFn2 {
-			if len(fn1.Params) != len(fn2.Params) {
-				c.addError(typeError{t1, t2})
-				continue
-			}
-			// Include in reverse order so that after pop'ping traversal happens in-order.
-			stack = append(stack, typePair{fn1.Return, fn2.Return})
-			for i := len(fn1.Params) - 1; i >= 0; i-- {
-				a1, a2 := fn1.Params[i], fn2.Params[i]
-				stack = append(stack, typePair{a1, a2})
-			}
-			continue
-		}
-		if isFn1 || isFn2 {
-			c.addError(typeError{t1, t2})
-			continue
-		}
-		// Unhandled type
-		c.addError(typeError{t1, t2})
-	}
+func (c *TypeChecker) unify(t1, t2 Type) {
+	u := &unifier{c: c}
+	u.unify(t1, t2)
 }
 
-func (c *TypeChecker) getBinding(name string) LoxType {
+func (c *TypeChecker) getBinding(name string) Type {
 	for i := len(c.scopes) - 1; i >= 0; i-- {
 		scope := c.scopes[i]
 		if t, ok := scope[name]; ok {
@@ -267,7 +145,7 @@ func (c *TypeChecker) getBinding(name string) LoxType {
 
 // ----
 
-func (c *TypeChecker) checkExpr(expr Expr) LoxType {
+func (c *TypeChecker) checkExpr(expr Expr) Type {
 	expr.accept(c)
 	return c.currType
 }
@@ -282,20 +160,20 @@ func (c *TypeChecker) checkStmt(stmt Stmt) {
 	stmt.accept(c)
 }
 
-func (c *TypeChecker) checkFunction(params []Token, body []Stmt) LoxType {
-	defer func(old LoxType) { c.returnType = old }(c.returnType)
-	c.returnType = c.newRef()
+func (c *TypeChecker) checkFunctionType(params []Token, body []Stmt) Type {
+	defer func(old Type) { c.returnType = old }(c.returnType)
+	c.returnType = c.newRefType()
 
 	c.beginScope()
-	refs := make([]LoxType, len(params))
+	refs := make([]Type, len(params))
 	for i, param := range params {
-		refs[i] = c.newRef()
+		refs[i] = c.newRefType()
 		c.bind(param.Lexeme, refs[i])
 	}
 	c.checkStmts(body)
 	c.endScope()
 
-	t := LoxFunction{
+	t := FunctionType{
 		Params: refs,
 		Return: c.returnType,
 	}
@@ -303,9 +181,9 @@ func (c *TypeChecker) checkFunction(params []Token, body []Stmt) LoxType {
 	return t
 }
 
-func (c *TypeChecker) checkCall(callee LoxType, args ...LoxType) LoxType {
-	result := c.newRef()
-	callType := LoxFunction{
+func (c *TypeChecker) checkCall(callee Type, args ...Type) Type {
+	result := c.newRefType()
+	callType := FunctionType{
 		Params: args,
 		Return: result,
 	}
@@ -325,11 +203,11 @@ func (c *TypeChecker) visitPrintStmt(stmt PrintStmt) {
 }
 
 func (c *TypeChecker) visitVarStmt(stmt VarStmt) {
-	var t LoxType
+	var t Type
 	if stmt.Init != nil {
 		t = c.checkExpr(stmt.Init)
 	} else {
-		t = c.newRef()
+		t = c.newRefType()
 	}
 	c.bind(stmt.Name.Lexeme, t)
 }
@@ -367,13 +245,13 @@ func (c *TypeChecker) visitContinueStmt(stmt ContinueStmt) {
 }
 
 func (c *TypeChecker) visitFunctionStmt(stmt FunctionStmt) {
-	funcType := c.checkFunction(stmt.Params, stmt.Body)
+	funcType := c.checkFunctionType(stmt.Params, stmt.Body)
 	c.bind(stmt.Name.Lexeme, funcType)
 }
 
 func (c *TypeChecker) visitReturnStmt(stmt ReturnStmt) {
 	if stmt.Result == nil {
-		c.returnType = LoxNil{}
+		c.returnType = NilType{}
 		return
 	}
 	c.returnType = c.checkExpr(stmt.Result)
@@ -395,14 +273,14 @@ func (c *TypeChecker) visitGroupingExpr(expr GroupingExpr) {
 func (c *TypeChecker) visitLiteralExpr(expr LiteralExpr) {
 	switch expr.Value.(type) {
 	case bool:
-		c.currType = LoxBool{}
+		c.currType = BoolType{}
 	case float64:
-		c.currType = LoxNumber{}
+		c.currType = NumberType{}
 	case string:
-		c.currType = LoxString{}
+		c.currType = StringType{}
 	default:
 		if expr.Value == nil {
-			c.currType = LoxNil{}
+			c.currType = NilType{}
 		} else {
 			panic(fmt.Sprintf("unhandled literal type %[1]T (%[1]v)", expr.Value))
 		}
@@ -434,7 +312,7 @@ func (c *TypeChecker) visitLogicExpr(expr LogicExpr) {
 
 func (c *TypeChecker) visitCallExpr(expr CallExpr) {
 	t := c.checkExpr(expr.Callee)
-	args := make([]LoxType, len(expr.Args))
+	args := make([]Type, len(expr.Args))
 	for i, arg := range expr.Args {
 		args[i] = c.checkExpr(arg)
 	}
@@ -442,5 +320,5 @@ func (c *TypeChecker) visitCallExpr(expr CallExpr) {
 }
 
 func (c *TypeChecker) visitFunctionExpr(expr FunctionExpr) {
-	c.checkFunction(expr.Params, expr.Body)
+	c.checkFunctionType(expr.Params, expr.Body)
 }

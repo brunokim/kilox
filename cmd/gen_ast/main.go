@@ -25,6 +25,7 @@ type field struct {
 type schema struct {
 	name   string
 	fields []field
+	isPtr  bool
 }
 
 func main() {
@@ -49,7 +50,8 @@ func main() {
 	src := writeSource(iName, schemas)
 	bs, err = format.Source([]byte(src))
 	if err != nil {
-		log.Fatal(err)
+		log.Print(src)
+		log.Fatal("gofmt:", err)
 	}
 	err = ioutil.WriteFile(*dest, bs, 0664)
 	if err != nil {
@@ -64,37 +66,55 @@ func writeSource(iName string, schemas []schema) string {
 	fmt.Fprintf(&b, "// Invocation: gen_ast %s\n", strings.Join(os.Args[1:], " "))
 	fmt.Fprintf(&b, "package %s\n\n", *pkg)
 
+	// Interface declaration.
 	fmt.Fprintf(&b, `type %[1]s interface {
-        accept(visitor %[2]sVisitor)
+        accept(v %[2]sVisitor)
     }
     
     `, title, lower)
+
+	// Visitor declaration.
 	fmt.Fprintf(&b, "type %sVisitor interface{\n", lower)
 	for _, schema := range schemas {
-		t := schemaType(schema.name, iName)
-		fmt.Fprintf(&b, "\tvisit%s(%s %s)\n", t, lower, t)
+		name := schemaName(schema, iName)
+		t := schemaType(schema, iName)
+		fmt.Fprintf(&b, "\tvisit%s(%c %s)\n", name, lower[0], t)
 	}
 	fmt.Fprintf(&b, "}\n\n")
+
+	// Interface instances declaration.
 	for _, schema := range schemas {
-		t := schemaType(schema.name, iName)
-		fmt.Fprintf(&b, "type %s struct{\n", t)
+		name := schemaName(schema, iName)
+		fmt.Fprintf(&b, "type %s struct{\n", name)
 		for _, field := range schema.fields {
 			fmt.Fprintf(&b, "\t%s %s\n", field.name, field.type_)
 		}
 		fmt.Fprintf(&b, "}\n\n")
 	}
+
+	// Instances implementation of accept.
 	for _, schema := range schemas {
-		fmt.Fprintf(&b, `func (%[1]s %[2]s) accept(v %[1]sVisitor) {
-            v.visit%[2]s(%[1]s)
+		name := schemaName(schema, iName)
+		t := schemaType(schema, iName)
+		fmt.Fprintf(&b, `func (%[1]c %[2]s) accept(v %[3]sVisitor) {
+            v.visit%[4]s(%[1]c)
         }
 
-        `, lower, schemaType(schema.name, iName))
+        `, lower[0], t, lower, name)
 	}
 	return b.String()
 }
 
-func schemaType(sName, iName string) string {
-	return sName + strings.Title(iName)
+func schemaName(s schema, iName string) string {
+	return s.name + strings.Title(iName)
+}
+
+func schemaType(s schema, iName string) string {
+	name := schemaName(s, iName)
+	if s.isPtr {
+		return "*" + name
+	}
+	return name
 }
 
 // ----
@@ -102,29 +122,43 @@ func schemaType(sName, iName string) string {
 func interfaceName(filename string) string {
 	filenameRE := regexp.MustCompile(`^.*/([^/]*).spec$`)
 	groups := filenameRE.FindStringSubmatch(filename)
+	if groups == nil {
+		panic(fmt.Sprintf("spec name %q doesn't end with '.spec'", filename))
+	}
 	return groups[1]
 }
 
 func structSchema(line string) schema {
-	lineRE := regexp.MustCompile(`^(.*)\((.*)\)$`)
+	lineRE := regexp.MustCompile(`^\s*(\*)?(.*)\((.*)\)$`)
 	parts := lineRE.FindStringSubmatch(line)
+	if parts == nil {
+		panic(fmt.Sprintf("line %q doesn't match pattern 'Struct(Field1: Type1, Field2: Type2)'", line))
+	}
 	return schema{
-		name:   parts[1],
-		fields: structFields(parts[2]),
+		name:   parts[2],
+		fields: structFields(parts[3]),
+		isPtr:  parts[1] == "*",
 	}
 }
 
 func structFields(list string) []field {
 	params := strings.Split(list, ",")
-	fields := make([]field, len(params))
-	for i, param := range params {
-		fields[i] = structField(strings.TrimSpace(param))
+	var fields []field
+	for _, param := range params {
+		param = strings.TrimSpace(param)
+		if param == "" {
+			continue
+		}
+		fields = append(fields, structField(param))
 	}
 	return fields
 }
 
 func structField(decl string) field {
 	parts := strings.Split(decl, ":")
+	if len(parts) != 2 {
+		panic(fmt.Sprintf("decl %q doesn't match with 'Name: Type' pattern", decl))
+	}
 	return field{
 		name:  strings.TrimSpace(parts[0]),
 		type_: strings.TrimSpace(parts[1]),

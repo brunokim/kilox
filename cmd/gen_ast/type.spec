@@ -1,0 +1,7 @@
+Nil()
+Bool()
+Number()
+String()
+Function(Params: []Type, Return: Type)
+*Ref(Value: Type, id: int)
+*Union(Types: []Type)
