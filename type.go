@@ -1,5 +1,5 @@
 // Generated file, do not modify
-// Invocation: gen_ast -spec ./cmd/gen_ast/type.spec -dest types.go
+// Invocation: gen_ast -spec ./cmd/gen_ast/type.spec -dest type.go
 package lox
 
 type Type interface {
