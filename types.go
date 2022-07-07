@@ -54,38 +54,37 @@ func (c *TypeChecker) addError(err typeError) {
 // ----
 
 func Ground(t Type) (Type, bool) {
-    isGround := true
-    t = mapUnboundRefs(t, func(x *RefType) Type {
-        isGround = false
-        return x
-    })
-    return t, isGround
+	isGround := true
+	t = mapUnboundRefs(t, func(x *RefType) Type {
+		isGround = false
+		return x
+	})
+	return t, isGround
 }
 
-func ReplaceVars(t Type, nextID func()int) Type {
-    table := make(map[*RefType]*RefType)
-    return mapUnboundRefs(t, func(x *RefType) Type {
-        y, ok := table[x]
-        if !ok {
-            y = &RefType{id: nextID()}
-            table[x] = y
-        }
-        return y
-    })
+func Copy(t Type, newRef func() *RefType) Type {
+	table := make(map[*RefType]*RefType)
+	return mapUnboundRefs(t, func(x *RefType) Type {
+		y, ok := table[x]
+		if !ok {
+			y = newRef()
+			table[x] = y
+		}
+		return y
+	})
 }
-
 
 // ----
 
 func mapUnboundRefs(t Type, f func(x *RefType) Type) Type {
-    m := refMapper{transform: f}
-    m.visit(t)
-    return m.state
+	m := refMapper{transform: f}
+	m.visit(t)
+	return m.state
 }
 
 type refMapper struct {
-    transform func(x *RefType) Type
-    state     Type
+	transform func(x *RefType) Type
+	state     Type
 }
 
 func (m *refMapper) visit(t Type) Type {
@@ -111,7 +110,7 @@ func (m *refMapper) visitRefType(t *RefType) {
 	if t.Value != nil {
 		m.visit(t.Value)
 	} else {
-        m.state = m.transform(t)
+		m.state = m.transform(t)
 	}
 }
 

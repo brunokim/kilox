@@ -93,7 +93,7 @@ func (c *TypeChecker) getBinding(name string) Type {
 	for i := len(c.scopes) - 1; i >= 0; i-- {
 		scope := c.scopes[i]
 		if t, ok := scope[name]; ok {
-			return t
+			return Copy(t, c.newRefType)
 		}
 	}
 	panic(fmt.Sprintf("compiler error: variable %q not found, shouldn't happen after resolver", name))
@@ -158,7 +158,7 @@ func (c *TypeChecker) visitPrintStmt(stmt PrintStmt) {
 	c.checkExpr(stmt.Expression)
 }
 
-// If var is not initialized, we let its type to be initialized on first assignment.
+// If var is not initialized, its type may be initialized on first assignment.
 // TODO: handle case where an uninitialized variable is read/returned before first
 // assignment, in which case it should be nil.
 func (c *TypeChecker) visitVarStmt(stmt VarStmt) {

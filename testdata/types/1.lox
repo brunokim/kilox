@@ -34,13 +34,14 @@ var b = a;
 var c = a * b;
 print c;       // output: 100
 
+print 1 == 2;       // output: false
+print 1 == "1";     // output: false
+print nil != false; // output: true
+print 1/3 == 0.333; // output: false
+
 // TODO: requires union of types
 //print -1;
 //print "a" + "b";
 
-// TODO: requires handling of generic types.
-//print 1 == 2;
-//print 1 == "1";
-//print nil != false;
-//print 1/3 == 0.333;
+
 
