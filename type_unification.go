@@ -59,6 +59,11 @@ func (u *unifier) unify(t1, t2 Type) {
 			u.match(x2, t1)
 			continue
 		}
+		if _, ok := t2.(NilType); ok {
+			// Nil matches with anything.
+			// The case for t1.(NilType) is handled in its visitNilType method.
+			continue
+		}
 		u.match(t1, t2)
 	}
 }
@@ -144,9 +149,7 @@ func (u *unifier) unwindTrail() {
 // ----
 
 func (u *unifier) visitNilType(t1 NilType) {
-	if _, ok := u.t2.(NilType); !ok {
-		u.err(t1, u.t2)
-	}
+	// Nil unifies with anything.
 }
 
 func (u *unifier) visitBoolType(t1 BoolType) {

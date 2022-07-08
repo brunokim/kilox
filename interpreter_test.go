@@ -25,6 +25,7 @@ func TestInterpreter(t *testing.T) {
 		text := string(bs)
 		wantOutput, wantErr := extractExpected(text)
 		experiments := extractExperiments(text)
+		experiments = append(experiments, "typing") // Enable typing for everything.
 		output, err := runLox(text, experiments...)
 		errMsg := ""
 		if err != nil {

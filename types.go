@@ -18,6 +18,21 @@ func deref(t Type) Type {
 	}
 }
 
+// Splice union types into list.
+func flattenTypes(ts []Type) []Type {
+	result := make([]Type, 0, len(ts))
+	for _, t := range ts {
+		t = deref(t)
+		u, ok := t.(*UnionType)
+		if !ok {
+			result = append(result, t)
+		} else {
+			result = append(result, flattenTypes(u.Types)...)
+		}
+	}
+	return result
+}
+
 // Construct a union of distinct types.
 func unionTypes(ts ...Type) Type {
 	if len(ts) == 0 {
@@ -28,7 +43,7 @@ func unionTypes(ts ...Type) Type {
 	}
 	u := new(UnionType)
 	seen := make(map[string]struct{})
-	for _, t := range ts {
+	for _, t := range flattenTypes(ts) {
 		key := TypePrint(t)
 		if _, ok := seen[key]; !ok {
 			seen[key] = struct{}{}

@@ -29,9 +29,10 @@ var builtinTypes = typeScope{
 	">=": FunctionType{[]Type{NumberType{}, NumberType{}}, BoolType{}},
 	"==": FunctionType{[]Type{t1, t2}, BoolType{}},
 	"!=": FunctionType{[]Type{t1, t2}, BoolType{}},
+	"!":  FunctionType{[]Type{t}, BoolType{}},
 	// Logic control
-	"and": FunctionType{[]Type{t, t}, t},
-	"or":  FunctionType{[]Type{t, t}, t},
+	"and": FunctionType{[]Type{t1, t2}, unionTypes(t1, t2)},
+	"or":  FunctionType{[]Type{t1, t2}, unionTypes(t1, t2)},
 	// Builtin
 	"clock": FunctionType{[]Type{}, NumberType{}},
 }
@@ -120,23 +121,27 @@ func (c *TypeChecker) checkStmt(stmt Stmt) {
 	stmt.accept(c)
 }
 
-func (c *TypeChecker) checkFunctionType(params []Token, body []Stmt) Type {
+func (c *TypeChecker) checkFunctionType(name string, params []Token, body []Stmt) Type {
 	defer func(old Type) { c.returnType = old }(c.returnType)
 	c.returnType = c.newRefType()
-
-	c.beginScope()
 	refs := make([]Type, len(params))
-	for i, param := range params {
+	for i := 0; i < len(refs); i++ {
 		refs[i] = c.newRefType()
-		c.bind(param.Lexeme, refs[i])
 	}
-	c.checkStmts(body)
-	c.endScope()
-
 	t := FunctionType{
 		Params: refs,
 		Return: c.returnType,
 	}
+	if name != "" {
+		// Binds function name so it can be referred from inside the function.
+		c.bind(name, t)
+	}
+	c.beginScope()
+	for i, param := range params {
+		c.bind(param.Lexeme, refs[i])
+	}
+	c.checkStmts(body)
+	c.endScope()
 	c.currType = t
 	return t
 }
@@ -210,8 +215,8 @@ func (c *TypeChecker) visitContinueStmt(stmt ContinueStmt) {
 }
 
 func (c *TypeChecker) visitFunctionStmt(stmt FunctionStmt) {
-	funcType := c.checkFunctionType(stmt.Params, stmt.Body)
-	c.bind(stmt.Name.Lexeme, funcType)
+	name := stmt.Name.Lexeme
+	c.checkFunctionType(name, stmt.Params, stmt.Body)
 }
 
 func (c *TypeChecker) visitReturnStmt(stmt ReturnStmt) {
@@ -285,5 +290,5 @@ func (c *TypeChecker) visitCallExpr(expr CallExpr) {
 }
 
 func (c *TypeChecker) visitFunctionExpr(expr FunctionExpr) {
-	c.checkFunctionType(expr.Params, expr.Body)
+	c.checkFunctionType("", expr.Params, expr.Body)
 }

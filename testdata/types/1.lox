@@ -46,10 +46,16 @@ print 1/3 == 0.333; // output: false
 print "a" + "b";  // output: ab
 print -1;         // output: -1
 
-// Testing functions with type (T, T) -> T.
+// Testing functions with type (T1, T2) -> (T1|T2).
 print "abc" or "def" and "ghi"; // output: abc
 print 123 and 456 or 789;       // output: 456
 print true and false or true;   // output: true
+
+//TODO: solve typechecking of union types.
+//var v1 = "abc" and 456 or true;
+//var v2 = false
+//print v1 = false;
+//print v2 = "abc" and 456 or true;
 
 // Ensure that id's type '(T) -> T' does not change with different instantiations.
 fun id(x) {
