@@ -16,13 +16,24 @@ type choicePoint struct {
 	stack     []typePair
 }
 
+// Interface to decouple unifier from type checker.
+type unificationCtx interface {
+	addErrors(errs ...typeError)
+	getRefID() int
+	setRefID(id int)
+}
+
 type unifier struct {
-	c       *TypeChecker
+	ctx     unificationCtx
 	stack   []typePair
 	choices []*choicePoint
 	errors  []typeError
 
 	t2 Type
+}
+
+func newUnifier(ctx unificationCtx) *unifier {
+	return &unifier{ctx: ctx}
 }
 
 func (u *unifier) push(t1, t2 Type) {
@@ -34,7 +45,7 @@ func (u *unifier) err(t1, t2 Type) {
 	if len(u.choices) > 0 {
 		u.backtrack()
 	} else {
-		u.c.errors = append(u.c.errors, u.errors...)
+		u.ctx.addErrors(u.errors...)
 		u.errors = nil
 	}
 }
@@ -75,7 +86,7 @@ func (u *unifier) pushChoicePoint(options []Type) {
 
 	choice := &choicePoint{
 		options:  options,
-		topRefID: u.c.refID,
+		topRefID: u.ctx.getRefID(),
 		stack:    stack,
 		t2:       u.t2,
 	}
@@ -95,9 +106,7 @@ func (u *unifier) backtrack() {
 		u.choices = u.choices[:n-1]
 	}
 	option := choice.options[choice.optionIdx]
-	// Reset state.
-	// TODO: remove this coupling between unifier and type checker.
-	u.c.refID = choice.topRefID
+	u.ctx.setRefID(choice.topRefID)
 	// Reset stack.
 	l1, l2 := len(u.stack), len(choice.stack)
 	copy(u.stack, choice.stack)

@@ -66,10 +66,17 @@ func (c *TypeChecker) Check(stmts []Stmt) error {
 	return nil
 }
 
+func (c *TypeChecker) addErrors(errs ...typeError) {
+	c.errors = append(c.errors, errs...)
+}
+
 func (c *TypeChecker) newRefType() *RefType {
 	c.refID++
 	return &RefType{id: c.refID}
 }
+
+func (c *TypeChecker) getRefID() int   { return c.refID }
+func (c *TypeChecker) setRefID(id int) { c.refID = id }
 
 // ----
 
@@ -90,7 +97,7 @@ func (c *TypeChecker) bind(name string, type_ Type) {
 }
 
 func (c *TypeChecker) unify(t1, t2 Type) {
-	u := &unifier{c: c}
+	u := newUnifier(c)
 	u.unify(t1, t2)
 }
 
