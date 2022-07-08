@@ -14,8 +14,12 @@ var (
 
 var builtinTypes = typeScope{
 	// Arithmetic operators
-	"+": FunctionType{[]Type{NumberType{}, NumberType{}}, NumberType{}},
-	"-": FunctionType{[]Type{NumberType{}, NumberType{}}, NumberType{}},
+	"+": unionTypes(
+		FunctionType{[]Type{NumberType{}, NumberType{}}, NumberType{}},
+		FunctionType{[]Type{StringType{}, StringType{}}, StringType{}}),
+	"-": unionTypes(
+		FunctionType{[]Type{NumberType{}, NumberType{}}, NumberType{}},
+		FunctionType{[]Type{NumberType{}}, NumberType{}}),
 	"*": FunctionType{[]Type{NumberType{}, NumberType{}}, NumberType{}},
 	"/": FunctionType{[]Type{NumberType{}, NumberType{}}, NumberType{}},
 	// Logic operators
@@ -26,8 +30,8 @@ var builtinTypes = typeScope{
 	"==": FunctionType{[]Type{t1, t2}, BoolType{}},
 	"!=": FunctionType{[]Type{t1, t2}, BoolType{}},
 	// Logic control
-	"and": FunctionType{[]Type{t1, t2}, unionTypes(t1, t2)},
-	"or":  FunctionType{[]Type{t1, t2}, unionTypes(t1, t2)},
+	"and": FunctionType{[]Type{t, t}, t},
+	"or":  FunctionType{[]Type{t, t}, t},
 	// Builtin
 	"clock": FunctionType{[]Type{}, NumberType{}},
 }

@@ -34,14 +34,29 @@ var b = a;
 var c = a * b;
 print c;       // output: 100
 
+// Testing functions with type (T1, T2) -> bool.
 print 1 == 2;       // output: false
 print 1 == "1";     // output: false
 print nil != false; // output: true
 print 1/3 == 0.333; // output: false
 
-// TODO: requires union of types
-//print -1;
-//print "a" + "b";
+// Testing functions with union types.
+// "+": ((Number, Number) -> Number|(String, String) -> String)
+// "-": ((Number, Number) -> Number|(Number) -> Number)
+print "a" + "b";  // output: ab
+print -1;         // output: -1
 
+// Testing functions with type (T, T) -> T.
+print "abc" or "def" and "ghi"; // output: abc
+print 123 and 456 or 789;       // output: 456
+print true and false or true;   // output: true
+
+// Ensure that id's type '(T) -> T' does not change with different instantiations.
+fun id(x) {
+    return x;
+}
+
+print id("str") + "str";  // output: strstr
+print id(123) + 456;      // output: 579
 
 

@@ -27,10 +27,11 @@ func unionTypes(ts ...Type) Type {
 		return ts[0]
 	}
 	u := new(UnionType)
-	seen := make(map[Type]struct{})
+	seen := make(map[string]struct{})
 	for _, t := range ts {
-		if _, ok := seen[t]; !ok {
-			seen[t] = struct{}{}
+		key := TypePrint(t)
+		if _, ok := seen[key]; !ok {
+			seen[key] = struct{}{}
 			u.Types = append(u.Types, t)
 		}
 	}
