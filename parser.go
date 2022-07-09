@@ -4,56 +4,61 @@ import (
 	"fmt"
 )
 
-// program      ::= declaration* eof;
-// declaration  ::= funDecl
-//                | varDecl
-//                | statement
-//                ;
-// funDecl      ::= "fun" function ;
-// function     ::= identifier "(" parameters? ")" block ;
-// parameters   ::= identifier ("," identifier)* ;
-// varDecl      ::= "var" identifier ( "=" expression )? ";" ;
-// statement    ::= exprStmt
-//                | printStmt
-//                | ifStmt
-//                | block
-//                | whileStmt
-//                | forStmt
-//                | breakStmt
-//                | continueStmt
-//                | returnStmt
-//                ;
-// exprStmt     ::= expression ";" ;
-// printStmt    ::= "print" expression ";" ;
-// ifStmt       ::= "if" "(" expression ")" statement ("else" statement)? ;
-// block        ::= "{" declaration* "}" ;
-// whileStmt    ::= "while" "(" expression ")" statement ;
-// forStmt      ::= "for" "(" forInit expression? ";" expression? ")" statement ;
+// program     ::= declaration* eof;
+// declaration ::= funDecl
+//               | varDecl
+//               | statement
+//               ;
+//
+// funDecl   ::= "fun" identifier function ;
+// varDecl   ::= "var" identifier ( "=" expression )? ";" ;
+// statement ::= exprStmt
+//             | printStmt
+//             | ifStmt
+//             | block
+//             | whileStmt
+//             | forStmt
+//             | breakStmt
+//             | continueStmt
+//             | returnStmt
+//             ;
+//
+// exprStmt  ::= expression ";" ;
+// printStmt ::= "print" expression ";" ;
+// ifStmt    ::= "if" "(" expression ")" statement ("else" statement)? ;
+// block     ::= "{" declaration* "}" ;
+// whileStmt ::= "while" "(" expression ")" statement ;
+// forStmt   ::= "for" "(" forInit expression? ";" expression? ")" statement ;
+// forInit   ::= varDecl | exprStmt | ";" ;
+//
 // breakStmt    ::= "break" ";" ;
 // continueStmt ::= "continue" ";" ;
 // returnStmt   ::= "return" expression? ";"
-// forInit      ::= varDecl | exprStmt | ";" ;
-// expression   ::= assignment ;
-// assignment   ::= identifier "=" assignment ;
-//                | logic_or
-//                ;
-// logic_or     ::= logic_and ("or" logic_and)* ;
-// logic_and    ::= equality ("and" equality)* ;
-// equality     ::= comparison (("!="|"==") comparison)* ;
-// comparison   ::= term ((">"|"<"|">="|"<=") term)* ;
-// term         ::= factor (("-"|"+") factor)* ;
-// factor       ::= unary (("/"|"*") unary)* ;
-// unary        ::= ("!"|"-") unary
-//                | call
-//                ;
-// call         ::= primary ( "(" arguments? ")" )* ;
-// arguments    ::= expression ( "," expression )* ;
-// primary      ::= number | string | "true" | "false" | "nil"
-//                | "(" expression ")"
-//                | anonFunction
-//                | identifier
-//                ;
-// anonFunction ::= "fun" "(" parameters? ")" block;
+//
+// expression ::= assignment ;
+// assignment ::= identifier "=" assignment ;
+//              | logic_or
+//              ;
+// logic_or   ::= logic_and ("or" logic_and)* ;
+// logic_and  ::= equality ("and" equality)* ;
+// equality   ::= comparison (("!="|"==") comparison)* ;
+// comparison ::= term ((">"|"<"|">="|"<=") term)* ;
+// term       ::= factor (("-"|"+") factor)* ;
+// factor     ::= unary (("/"|"*") unary)* ;
+// unary      ::= ("!"|"-") unary
+//              | call
+//              ;
+// call       ::= primary ( "(" arguments? ")" )* ;
+// arguments  ::= expression ( "," expression )* ;
+// primary    ::= number | string | "true" | "false" | "nil"
+//              | "(" expression ")"
+//              | anonFunction
+//              | identifier
+//              ;
+//
+// anonFunction ::= "fun" function ;
+// function     ::= "(" parameters? ")" block ;
+// parameters   ::= identifier ("," identifier)* ;
 
 const (
 	maxCallArgs = 255
