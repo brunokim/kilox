@@ -214,23 +214,23 @@ func (p *Parser) forStatement() Stmt {
 func (p *Parser) breakStatement() BreakStmt {
 	token := p.previous()
 	p.consume(Semicolon, "expecting ';' after 'break'")
-	return BreakStmt{token}
+	return BreakStmt{Keyword: token}
 }
 
 func (p *Parser) continueStatement() Stmt {
 	token := p.previous()
 	p.consume(Semicolon, "expecting ';' after 'continue'")
-	return ContinueStmt{token}
+	return ContinueStmt{Keyword: token}
 }
 
 func (p *Parser) returnStatement() ReturnStmt {
 	token := p.previous()
 	if p.match(Semicolon) {
-		return ReturnStmt{Token: token}
+		return ReturnStmt{Keyword: token}
 	}
 	expr := p.expression()
 	p.consume(Semicolon, "expecting ';' after return expression")
-	return ReturnStmt{Token: token, Result: expr}
+	return ReturnStmt{Keyword: token, Result: expr}
 }
 
 func (p *Parser) expressionStatement() ExpressionStmt {
@@ -386,10 +386,15 @@ func (p *Parser) primary() Expr {
 
 func (p *Parser) anonymousFunction() FunctionExpr {
 	kind := "anonymous function"
+	keyword := p.previous()
 	params := p.functionParams(kind)
 	body := p.functionBody(kind)
 
-	return FunctionExpr{params, body}
+	return FunctionExpr{
+		Keyword: keyword,
+		Params:  params,
+		Body:    body,
+	}
 }
 
 // ----

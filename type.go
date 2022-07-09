@@ -17,15 +17,19 @@ type typeVisitor interface {
 }
 
 type NilType struct {
+	Token Token
 }
 
 type BoolType struct {
+	Token Token
 }
 
 type NumberType struct {
+	Token Token
 }
 
 type StringType struct {
+	Token Token
 }
 
 type FunctionType struct {

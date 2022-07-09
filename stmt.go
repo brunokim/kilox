@@ -49,11 +49,11 @@ type LoopStmt struct {
 }
 
 type BreakStmt struct {
-	Token Token
+	Keyword Token
 }
 
 type ContinueStmt struct {
-	Token Token
+	Keyword Token
 }
 
 type FunctionStmt struct {
@@ -63,8 +63,8 @@ type FunctionStmt struct {
 }
 
 type ReturnStmt struct {
-	Token  Token
-	Result Expr
+	Keyword Token
+	Result  Expr
 }
 
 func (s ExpressionStmt) accept(v stmtVisitor) {

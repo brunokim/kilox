@@ -238,13 +238,13 @@ func (r *Resolver) visitLoopStmt(stmt LoopStmt) {
 
 func (r *Resolver) visitBreakStmt(stmt BreakStmt) {
 	if !r.isInLoop {
-		r.addError(resolveError{stmt.Token, "'break' can only be used within loops"})
+		r.addError(resolveError{stmt.Keyword, "'break' can only be used within loops"})
 	}
 }
 
 func (r *Resolver) visitContinueStmt(stmt ContinueStmt) {
 	if !r.isInLoop {
-		r.addError(resolveError{stmt.Token, "'continue' can only be used within loops"})
+		r.addError(resolveError{stmt.Keyword, "'continue' can only be used within loops"})
 	}
 }
 
@@ -257,7 +257,7 @@ func (r *Resolver) visitFunctionStmt(stmt FunctionStmt) {
 
 func (r *Resolver) visitReturnStmt(stmt ReturnStmt) {
 	if r.currFunc == noFunc {
-		r.addError(resolveError{stmt.Token, "'return' can only be used within functions"})
+		r.addError(resolveError{stmt.Keyword, "'return' can only be used within functions"})
 	}
 	if stmt.Result != nil {
 		r.resolveExpr(stmt.Result)

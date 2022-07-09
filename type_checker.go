@@ -250,14 +250,14 @@ func (c *TypeChecker) visitGroupingExpr(expr GroupingExpr) {
 func (c *TypeChecker) visitLiteralExpr(expr LiteralExpr) {
 	switch expr.Value.(type) {
 	case bool:
-		c.currType = BoolType{}
+		c.currType = BoolType{expr.Token}
 	case float64:
-		c.currType = NumberType{}
+		c.currType = NumberType{expr.Token}
 	case string:
-		c.currType = StringType{}
+		c.currType = StringType{expr.Token}
 	default:
 		if expr.Value == nil {
-			c.currType = NilType{}
+			c.currType = NilType{expr.Token}
 		} else {
 			panic(fmt.Sprintf("unhandled literal type %[1]T (%[1]v)", expr.Value))
 		}

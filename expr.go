@@ -60,8 +60,9 @@ type CallExpr struct {
 }
 
 type FunctionExpr struct {
-	Params []Token
-	Body   []Stmt
+	Keyword Token
+	Params  []Token
+	Body    []Stmt
 }
 
 func (e BinaryExpr) accept(v exprVisitor) {
