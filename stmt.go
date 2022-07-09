@@ -17,6 +17,7 @@ type stmtVisitor interface {
 	visitContinueStmt(s ContinueStmt)
 	visitFunctionStmt(s FunctionStmt)
 	visitReturnStmt(s ReturnStmt)
+	visitClassStmt(s ClassStmt)
 }
 
 type ExpressionStmt struct {
@@ -67,6 +68,11 @@ type ReturnStmt struct {
 	Result  Expr
 }
 
+type ClassStmt struct {
+	Name    Token
+	Methods []FunctionStmt
+}
+
 func (s ExpressionStmt) accept(v stmtVisitor) {
 	v.visitExpressionStmt(s)
 }
@@ -105,4 +111,8 @@ func (s FunctionStmt) accept(v stmtVisitor) {
 
 func (s ReturnStmt) accept(v stmtVisitor) {
 	v.visitReturnStmt(s)
+}
+
+func (s ClassStmt) accept(v stmtVisitor) {
+	v.visitClassStmt(s)
 }

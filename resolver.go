@@ -264,6 +264,10 @@ func (r *Resolver) visitReturnStmt(stmt ReturnStmt) {
 	}
 }
 
+func (r *Resolver) visitClassStmt(stmt ClassStmt) {
+	panic("lox.(*Resolver).visitClassStmt is not implemented")
+}
+
 // ----
 
 func (r *Resolver) visitBinaryExpr(expr BinaryExpr) {

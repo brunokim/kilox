@@ -234,6 +234,10 @@ func (i *Interpreter) visitReturnStmt(stmt ReturnStmt) {
 	panic(returnSignal{value})
 }
 
+func (i *Interpreter) visitClassStmt(stmt ClassStmt) {
+	panic("lox.(*Interpreter).visitClassStmt is not implemented")
+}
+
 // ----
 
 func (i *Interpreter) evaluate(expr Expr) any {

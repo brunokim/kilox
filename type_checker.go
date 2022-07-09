@@ -234,6 +234,10 @@ func (c *TypeChecker) visitReturnStmt(stmt ReturnStmt) {
 	c.returnType = c.checkExpr(stmt.Result)
 }
 
+func (c *TypeChecker) visitClassStmt(stmt ClassStmt) {
+	panic("lox.(*TypeChecker).visitClassStmt is not implemented")
+}
+
 // ----
 
 func (c *TypeChecker) visitBinaryExpr(expr BinaryExpr) {

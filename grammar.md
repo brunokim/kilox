@@ -3,13 +3,15 @@
 Top-level
 
     program     ::= declaration* eof;
-    declaration ::= funDecl
+    declaration ::= classDecl
+                  | funDecl
                   | varDecl
                   | statement
                   ;
 
 Declaration
-
+    
+    classDecl ::= "class" identifier "{" method* "}" ;
     funDecl   ::= "fun" identifier function ;
     varDecl   ::= "var" identifier ( "=" expression )? ";" ;
     statement ::= exprStmt
@@ -65,6 +67,7 @@ Expressions
 Functions
 
     anonFunction ::= "fun" function ;
+    method       ::= identifier function ;
     function     ::= "(" parameters? ")" block ;
     parameters   ::= identifier ("," identifier)* ;
 

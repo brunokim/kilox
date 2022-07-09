@@ -286,6 +286,42 @@ func TestParserStatements(t *testing.T) {
 				OnLoop: variableExpr("inc"),
 			},
 		}},
+		{"class Empty {}", []lox.Stmt{
+			lox.ClassStmt{
+				Name: token(lox.Identifier, "Empty"),
+			},
+		}},
+		{"class BigThinker { answer() {print 42;} }", []lox.Stmt{
+			lox.ClassStmt{
+				Name: token(lox.Identifier, "BigThinker"),
+				Methods: []lox.FunctionStmt{
+					{
+						Name: token(lox.Identifier, "answer"),
+						Body: []lox.Stmt{
+							lox.PrintStmt{number(42)},
+						},
+					},
+				},
+			},
+		}},
+		{"class Foo { bar(x){} baz(y, z){} }", []lox.Stmt{
+			lox.ClassStmt{
+				Name: token(lox.Identifier, "Foo"),
+				Methods: []lox.FunctionStmt{
+					{
+						Name:   token(lox.Identifier, "bar"),
+						Params: []lox.Token{token(lox.Identifier, "x")},
+					},
+					{
+						Name: token(lox.Identifier, "baz"),
+						Params: []lox.Token{
+							token(lox.Identifier, "y"),
+							token(lox.Identifier, "z"),
+						},
+					},
+				},
+			},
+		}},
 	}
 
 	for _, test := range tests {

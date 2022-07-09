@@ -144,6 +144,10 @@ func (p *ASTPrinter) visitReturnStmt(stmt ReturnStmt) {
 	p.parenthesize(singleLine, "return", stmt.Result)
 }
 
+func (p *ASTPrinter) visitClassStmt(stmt ClassStmt) {
+	panic("lox.(*ASTPrinter).visitClassStmt is not implemented")
+}
+
 // ----
 
 func (p *ASTPrinter) parenthesize(style writeStyle, parts ...any) {

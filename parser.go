@@ -60,6 +60,9 @@ func (p *Parser) declaration() Stmt {
 	if p.match(Var) {
 		return p.varDeclaration()
 	}
+	if p.match(Class) {
+		return p.classDeclaration()
+	}
 	if p.check(Fun) && !p.checkNext(LeftParen) {
 		p.match(Fun)
 		return p.function("function")
@@ -77,7 +80,21 @@ func (p *Parser) varDeclaration() Stmt {
 	return VarStmt{name, init}
 }
 
-func (p *Parser) function(kind string) Stmt {
+func (p *Parser) classDeclaration() Stmt {
+	name := p.consume(Identifier, "expecting class name")
+	p.consume(LeftBrace, "expecting '{' before class body")
+	var methods []FunctionStmt
+	for !p.isAtEnd() && !p.check(RightBrace) {
+		methods = append(methods, p.function("method"))
+	}
+	p.consume(RightBrace, "expecting '}' after class body")
+	return ClassStmt{
+		Name:    name,
+		Methods: methods,
+	}
+}
+
+func (p *Parser) function(kind string) FunctionStmt {
 	name := p.consume(Identifier, fmt.Sprintf("expecting %s name", kind))
 	params := p.functionParams(kind)
 	body := p.functionBody(kind)
