@@ -235,7 +235,12 @@ func (p *Parser) forStatement() Stmt {
 	if !p.check(Semicolon) {
 		cond = p.expression()
 	} else {
-		cond = LiteralExpr{true}
+		// This is a bit weird: an empty condition in a for statement produces a 'true'
+		// condition in the while statement. However, there's no token where to hang the empty literal,
+		// so we use the preceding semicolon.
+		// It shouldn't matter much because the token is used only to report type error messages, and I
+		// don't expect typing issues with a truthy/falsey condition.
+		cond = LiteralExpr{p.previous(), true}
 	}
 	p.consume(Semicolon, "Expect ';' after loop condition")
 	// Increment
@@ -405,16 +410,16 @@ func (p *Parser) finishCall(callee Expr) Expr {
 
 func (p *Parser) primary() Expr {
 	if p.match(False) {
-		return LiteralExpr{false}
+		return LiteralExpr{p.previous(), false}
 	}
 	if p.match(True) {
-		return LiteralExpr{true}
+		return LiteralExpr{p.previous(), true}
 	}
 	if p.match(Nil) {
-		return LiteralExpr{nil}
+		return LiteralExpr{p.previous(), nil}
 	}
 	if p.match(Number, String) {
-		return LiteralExpr{p.previous().Literal}
+		return LiteralExpr{p.previous(), p.previous().Literal}
 	}
 	if p.match(Identifier) {
 		return VariableExpr{p.previous()}

@@ -29,6 +29,7 @@ type GroupingExpr struct {
 }
 
 type LiteralExpr struct {
+	Token Token
 	Value any
 }
 

@@ -1,6 +1,6 @@
 Binary(Left: Expr, Operator: Token, Right: Expr)
 Grouping(Expression: Expr)
-Literal(Value: any)
+Literal(Token: Token, Value: any)
 Unary(Operator: Token, Right: Expr)
 Variable(Name: Token)
 Assignment(Name: Token, Value: Expr)
