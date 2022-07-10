@@ -114,6 +114,10 @@ func main() {
 		VarName:    iName[:1],
 		Schemas:    parseSchemas(string(bs)),
 	}
+	if data.VarName == "v" {
+		// Conflicts with visitor variable, use another.
+		data.VarName = "x"
+	}
 	var b strings.Builder
 	err = tmpl.Execute(&b, data)
 	if err != nil {
