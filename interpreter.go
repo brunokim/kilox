@@ -82,11 +82,28 @@ func (cl class) Arity() int {
 }
 
 func (cl class) Call(i *Interpreter, args []any) any {
-	return instance{cl}
+	return newInstance(cl)
 }
 
 type instance struct {
 	cl class
+
+	property map[string]any
+}
+
+func newInstance(cl class) instance {
+	return instance{
+		cl:       cl,
+		property: make(map[string]any),
+	}
+}
+
+func (is instance) get(name Token) any {
+	v, ok := is.property[name.Lexeme]
+	if !ok {
+		panic(runtimeError{name, fmt.Sprintf("undefined property in %s", is)})
+	}
+	return v
 }
 
 func (is instance) String() string {
@@ -338,7 +355,12 @@ func (i *Interpreter) visitFunctionExpr(expr FunctionExpr) {
 }
 
 func (i *Interpreter) visitGetExpr(expr GetExpr) {
-	panic("lox.(*Interpreter).visitGetExpr is not implemented")
+	obj := i.evaluate(expr.Object)
+	is, ok := obj.(instance)
+	if !ok {
+		panic(runtimeError{expr.Name, fmt.Sprintf("want an instance for property access, got %[1]T (%[1]v)", obj)})
+	}
+	i.value = is.get(expr.Name)
 }
 
 // ----

@@ -1,0 +1,6 @@
+// experiments: -typing
+
+class Foo {}
+
+var foo = Foo();
+print foo.bar;   // error: token 'bar' in line 6: undefined property in <instance Foo>
