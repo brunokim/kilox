@@ -11,6 +11,11 @@ print Machine; // output: <class Machine>
 var m = Machine();
 print m;           // output: <instance Machine>
 
+m.ip = 0;
+m.instr = "ADD %1 %2";
+
+print m.instr; // output: ADD %1 %2
+
 {
     var cl = Machine;
     print cl;         // output: <class Machine>
@@ -18,3 +23,22 @@ print m;           // output: <instance Machine>
     var m = Machine();
     print m;           // output: <instance Machine>
 }
+
+
+class Cons {}
+
+var c3 = Cons();
+c3.head = 3;
+c3.tail = nil;
+ 
+var c2 = Cons();
+c2.head = 2;
+c2.tail = c3;
+ 
+var c1 = Cons();
+c1.head = 1;
+c1.tail = c2;
+
+print c1.tail.tail.head; // output: 3
+c1.tail.head = 20;
+print c1.tail;           // output: <instance Cons>

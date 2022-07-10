@@ -326,5 +326,6 @@ func (r *Resolver) visitGetExpr(expr GetExpr) {
 }
 
 func (r *Resolver) visitSetExpr(expr SetExpr) {
-	panic("lox.(*Resolver).visitSetExpr is not implemented")
+	r.resolveExpr(expr.Value)
+	r.resolveExpr(expr.Object)
 }

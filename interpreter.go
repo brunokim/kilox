@@ -88,22 +88,26 @@ func (cl class) Call(i *Interpreter, args []any) any {
 type instance struct {
 	cl class
 
-	property map[string]any
+	fields map[string]any
 }
 
 func newInstance(cl class) instance {
 	return instance{
-		cl:       cl,
-		property: make(map[string]any),
+		cl:     cl,
+		fields: make(map[string]any),
 	}
 }
 
 func (is instance) get(name Token) any {
-	v, ok := is.property[name.Lexeme]
+	v, ok := is.fields[name.Lexeme]
 	if !ok {
 		panic(runtimeError{name, fmt.Sprintf("undefined property in %s", is)})
 	}
 	return v
+}
+
+func (is instance) set(name Token, value any) {
+	is.fields[name.Lexeme] = value
 }
 
 func (is instance) String() string {
@@ -364,7 +368,14 @@ func (i *Interpreter) visitGetExpr(expr GetExpr) {
 }
 
 func (i *Interpreter) visitSetExpr(expr SetExpr) {
-	panic("lox.(*Interpreter).visitSetExpr is not implemented")
+	obj := i.evaluate(expr.Object)
+	is, ok := obj.(instance)
+	if !ok {
+		panic(runtimeError{expr.Name, fmt.Sprintf("want an instance for field access, got %[1]T (%[1]v)", obj)})
+	}
+	value := i.evaluate(expr.Value)
+	is.set(expr.Name, value)
+	i.value = value
 }
 
 // ----
