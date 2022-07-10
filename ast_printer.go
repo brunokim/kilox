@@ -90,6 +90,10 @@ func (p *ASTPrinter) visitGetExpr(expr GetExpr) {
 	panic("lox.(*ASTPrinter).visitGetExpr is not implemented")
 }
 
+func (p *ASTPrinter) visitSetExpr(expr SetExpr) {
+	panic("lox.(*ASTPrinter).visitSetExpr is not implemented")
+}
+
 // ----
 
 func (p *ASTPrinter) visitExpressionStmt(stmt ExpressionStmt) {

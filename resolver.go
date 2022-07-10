@@ -324,3 +324,7 @@ func (r *Resolver) visitGetExpr(expr GetExpr) {
 	r.resolveExpr(expr.Object)
 	// We don't resolve property access statically, only dinamically.
 }
+
+func (r *Resolver) visitSetExpr(expr SetExpr) {
+	panic("lox.(*Resolver).visitSetExpr is not implemented")
+}

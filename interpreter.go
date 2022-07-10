@@ -363,6 +363,10 @@ func (i *Interpreter) visitGetExpr(expr GetExpr) {
 	i.value = is.get(expr.Name)
 }
 
+func (i *Interpreter) visitSetExpr(expr SetExpr) {
+	panic("lox.(*Interpreter).visitSetExpr is not implemented")
+}
+
 // ----
 
 func operate2(token Token, left, right any) any {

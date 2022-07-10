@@ -1,1 +1,1 @@
-(a) = 1; // error: line 1 at '=': invalid target for assignment: want variable, got lox.GroupingExpr
+(a) = 1; // error: line 1 at '=': invalid target for assignment: want variable or get expression, got lox.GroupingExpr

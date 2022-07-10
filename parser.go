@@ -267,15 +267,20 @@ func (p *Parser) assignment() Expr {
 	if !p.match(Equal) {
 		return expr
 	}
-	name, isVar := expr.(VariableExpr)
-	if !isVar {
-		msg := fmt.Sprintf("invalid target for assignment: want variable, got %T", expr)
-		p.addError(parseError{p.previous(), msg})
+	equals := p.previous()
+	switch e := expr.(type) {
+	case VariableExpr:
+		value := p.assignment()
+		return AssignmentExpr{e.Name, value}
+	case GetExpr:
+		value := p.assignment()
+		return SetExpr{e.Object, e.Name, value}
+	default:
+		msg := fmt.Sprintf("invalid target for assignment: want variable or get expression, got %T", expr)
+		p.addError(parseError{equals, msg})
 		p.assignment() // Keep consuming tokens after '=', but discard them.
 		return nil
 	}
-	value := p.assignment()
-	return AssignmentExpr{name.Name, value}
 }
 
 func (p *Parser) or() Expr {

@@ -44,7 +44,7 @@ Sub-statements
 Expressions
 
     expression ::= assignment ;
-    assignment ::= identifier "=" assignment ;
+    assignment ::= (call ".")? identifier "=" assignment ;
                  | logic_or
                  ;
     logic_or   ::= logic_and ("or" logic_and)* ;

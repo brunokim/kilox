@@ -169,6 +169,15 @@ func TestParserExpression(t *testing.T) {
 			},
 			Name: token(lox.Identifier, "qux"),
 		}},
+		{"foo(a).bar = 10", lox.SetExpr{
+			Object: lox.CallExpr{
+				Callee: variableExpr("foo"),
+				Args:   []lox.Expr{variableExpr("a")},
+				Paren:  token(lox.RightParen, ")"),
+			},
+			Name:  token(lox.Identifier, "bar"),
+			Value: number(10),
+		}},
 	}
 
 	for _, test := range tests {

@@ -17,6 +17,7 @@ type exprVisitor interface {
 	visitCallExpr(e CallExpr)
 	visitFunctionExpr(e FunctionExpr)
 	visitGetExpr(e GetExpr)
+	visitSetExpr(e SetExpr)
 }
 
 type BinaryExpr struct {
@@ -71,6 +72,12 @@ type GetExpr struct {
 	Name   Token
 }
 
+type SetExpr struct {
+	Object Expr
+	Name   Token
+	Value  Expr
+}
+
 func (e BinaryExpr) accept(v exprVisitor) {
 	v.visitBinaryExpr(e)
 }
@@ -109,4 +116,8 @@ func (e FunctionExpr) accept(v exprVisitor) {
 
 func (e GetExpr) accept(v exprVisitor) {
 	v.visitGetExpr(e)
+}
+
+func (e SetExpr) accept(v exprVisitor) {
+	v.visitSetExpr(e)
 }
