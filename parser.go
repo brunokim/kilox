@@ -206,7 +206,7 @@ func (p *Parser) forStatement() Stmt {
 		// so we use the preceding semicolon.
 		// It shouldn't matter much because the token is used only to report type error messages, and I
 		// don't expect typing issues with a truthy/falsey condition.
-		cond = LiteralExpr{p.previous(), true}
+		cond = &LiteralExpr{p.previous(), true}
 	}
 	p.consume(Semicolon, "Expect ';' after loop condition")
 	// Increment
@@ -269,12 +269,12 @@ func (p *Parser) assignment() Expr {
 	}
 	equals := p.previous()
 	switch e := expr.(type) {
-	case VariableExpr:
+	case *VariableExpr:
 		value := p.assignment()
-		return AssignmentExpr{e.Name, value}
-	case GetExpr:
+		return &AssignmentExpr{e.Name, value}
+	case *GetExpr:
 		value := p.assignment()
-		return SetExpr{e.Object, e.Name, value}
+		return &SetExpr{e.Object, e.Name, value}
 	default:
 		msg := fmt.Sprintf("invalid target for assignment: want variable or get expression, got %T", expr)
 		p.addError(parseError{equals, msg})
@@ -288,7 +288,7 @@ func (p *Parser) or() Expr {
 	for p.match(Or) {
 		operator := p.previous()
 		right := p.and()
-		expr = LogicExpr{expr, operator, right}
+		expr = &LogicExpr{expr, operator, right}
 	}
 	return expr
 }
@@ -298,7 +298,7 @@ func (p *Parser) and() Expr {
 	for p.match(And) {
 		operator := p.previous()
 		right := p.equality()
-		expr = LogicExpr{expr, operator, right}
+		expr = &LogicExpr{expr, operator, right}
 	}
 	return expr
 }
@@ -308,7 +308,7 @@ func (p *Parser) equality() Expr {
 	for p.match(BangEqual, EqualEqual) {
 		operator := p.previous()
 		right := p.comparison()
-		expr = BinaryExpr{expr, operator, right}
+		expr = &BinaryExpr{expr, operator, right}
 	}
 	return expr
 }
@@ -318,7 +318,7 @@ func (p *Parser) comparison() Expr {
 	for p.match(Greater, GreaterEqual, Less, LessEqual) {
 		operator := p.previous()
 		right := p.term()
-		expr = BinaryExpr{expr, operator, right}
+		expr = &BinaryExpr{expr, operator, right}
 	}
 	return expr
 }
@@ -328,7 +328,7 @@ func (p *Parser) term() Expr {
 	for p.match(Minus, Plus) {
 		operator := p.previous()
 		right := p.factor()
-		expr = BinaryExpr{expr, operator, right}
+		expr = &BinaryExpr{expr, operator, right}
 	}
 	return expr
 }
@@ -338,7 +338,7 @@ func (p *Parser) factor() Expr {
 	for p.match(Slash, Star) {
 		operator := p.previous()
 		right := p.unary()
-		expr = BinaryExpr{expr, operator, right}
+		expr = &BinaryExpr{expr, operator, right}
 	}
 	return expr
 }
@@ -347,7 +347,7 @@ func (p *Parser) unary() Expr {
 	if p.match(Bang, Minus) {
 		operator := p.previous()
 		right := p.unary()
-		return UnaryExpr{operator, right}
+		return &UnaryExpr{operator, right}
 	}
 	return p.call()
 }
@@ -359,7 +359,7 @@ func (p *Parser) call() Expr {
 			expr = p.finishCall(expr)
 		} else if p.match(Dot) {
 			name := p.consume(Identifier, "expecting property name after '.'")
-			expr = GetExpr{expr, name}
+			expr = &GetExpr{expr, name}
 		} else {
 			break
 		}
@@ -379,29 +379,29 @@ func (p *Parser) finishCall(callee Expr) Expr {
 		}
 	}
 	paren := p.consume(RightParen, "expecting ')' after arguments")
-	return CallExpr{callee, paren, args}
+	return &CallExpr{callee, paren, args}
 }
 
 func (p *Parser) primary() Expr {
 	if p.match(False) {
-		return LiteralExpr{p.previous(), false}
+		return &LiteralExpr{p.previous(), false}
 	}
 	if p.match(True) {
-		return LiteralExpr{p.previous(), true}
+		return &LiteralExpr{p.previous(), true}
 	}
 	if p.match(Nil) {
-		return LiteralExpr{p.previous(), nil}
+		return &LiteralExpr{p.previous(), nil}
 	}
 	if p.match(Number, String) {
-		return LiteralExpr{p.previous(), p.previous().Literal}
+		return &LiteralExpr{p.previous(), p.previous().Literal}
 	}
 	if p.match(Identifier) {
-		return VariableExpr{p.previous()}
+		return &VariableExpr{p.previous()}
 	}
 	if p.match(LeftParen) {
 		expr := p.expression()
 		p.consume(RightParen, "expecting ')' after expression")
-		return GroupingExpr{expr}
+		return &GroupingExpr{expr}
 	}
 	if p.match(Fun) {
 		return p.anonymousFunction()
@@ -409,13 +409,13 @@ func (p *Parser) primary() Expr {
 	panic(parseError{p.peek(), "expecting expression"})
 }
 
-func (p *Parser) anonymousFunction() FunctionExpr {
+func (p *Parser) anonymousFunction() *FunctionExpr {
 	kind := "anonymous function"
 	keyword := p.previous()
 	params := p.functionParams(kind)
 	body := p.functionBody(kind)
 
-	return FunctionExpr{
+	return &FunctionExpr{
 		Keyword: keyword,
 		Params:  params,
 		Body:    body,

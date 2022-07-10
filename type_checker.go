@@ -240,18 +240,18 @@ func (c *TypeChecker) visitClassStmt(stmt ClassStmt) {
 
 // ----
 
-func (c *TypeChecker) visitBinaryExpr(expr BinaryExpr) {
+func (c *TypeChecker) visitBinaryExpr(expr *BinaryExpr) {
 	op := c.getBinding(expr.Operator.Lexeme)
 	left := c.checkExpr(expr.Left)
 	right := c.checkExpr(expr.Right)
 	c.checkCall(op, left, right)
 }
 
-func (c *TypeChecker) visitGroupingExpr(expr GroupingExpr) {
+func (c *TypeChecker) visitGroupingExpr(expr *GroupingExpr) {
 	c.checkExpr(expr.Expression)
 }
 
-func (c *TypeChecker) visitLiteralExpr(expr LiteralExpr) {
+func (c *TypeChecker) visitLiteralExpr(expr *LiteralExpr) {
 	switch expr.Value.(type) {
 	case bool:
 		c.currType = BoolType{expr.Token}
@@ -268,30 +268,30 @@ func (c *TypeChecker) visitLiteralExpr(expr LiteralExpr) {
 	}
 }
 
-func (c *TypeChecker) visitUnaryExpr(expr UnaryExpr) {
+func (c *TypeChecker) visitUnaryExpr(expr *UnaryExpr) {
 	op := c.getBinding(expr.Operator.Lexeme)
 	right := c.checkExpr(expr.Right)
 	c.checkCall(op, right)
 }
 
-func (c *TypeChecker) visitVariableExpr(expr VariableExpr) {
+func (c *TypeChecker) visitVariableExpr(expr *VariableExpr) {
 	c.currType = c.getBinding(expr.Name.Lexeme)
 }
 
-func (c *TypeChecker) visitAssignmentExpr(expr AssignmentExpr) {
+func (c *TypeChecker) visitAssignmentExpr(expr *AssignmentExpr) {
 	t := c.checkExpr(expr.Value)
 	c.bind(expr.Name.Lexeme, t)
 	c.currType = t
 }
 
-func (c *TypeChecker) visitLogicExpr(expr LogicExpr) {
+func (c *TypeChecker) visitLogicExpr(expr *LogicExpr) {
 	op := c.getBinding(expr.Operator.Lexeme)
 	left := c.checkExpr(expr.Left)
 	right := c.checkExpr(expr.Right)
 	c.checkCall(op, left, right)
 }
 
-func (c *TypeChecker) visitCallExpr(expr CallExpr) {
+func (c *TypeChecker) visitCallExpr(expr *CallExpr) {
 	t := c.checkExpr(expr.Callee)
 	args := make([]Type, len(expr.Args))
 	for i, arg := range expr.Args {
@@ -300,14 +300,14 @@ func (c *TypeChecker) visitCallExpr(expr CallExpr) {
 	c.checkCall(t, args...)
 }
 
-func (c *TypeChecker) visitFunctionExpr(expr FunctionExpr) {
+func (c *TypeChecker) visitFunctionExpr(expr *FunctionExpr) {
 	c.checkFunctionType("", expr.Params, expr.Body)
 }
 
-func (c *TypeChecker) visitGetExpr(expr GetExpr) {
+func (c *TypeChecker) visitGetExpr(expr *GetExpr) {
 	panic("lox.(*TypeChecker).visitGetExpr is not implemented")
 }
 
-func (c *TypeChecker) visitSetExpr(expr SetExpr) {
+func (c *TypeChecker) visitSetExpr(expr *SetExpr) {
 	panic("lox.(*TypeChecker).visitSetExpr is not implemented")
 }

@@ -3,12 +3,5 @@ fun foo() {}
 
 var a = foo();
 
-// a = foo();
-// PANIC:runtime error: hash of unhashable type lox.CallExpr
-// at lox/interpreter.go:322
-//    func (i *Interpreter) visitAssignmentExpr(expr AssignmentExpr) {
-//     	value := i.evaluate(expr.Value)
-//     	pos, ok := i.locals[expr]
-//                          ^
-//     	if ok {
-	
+a = foo();
+print a; // output: nil

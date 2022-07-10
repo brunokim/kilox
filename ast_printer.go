@@ -42,15 +42,15 @@ func (p *ASTPrinter) indent() {
 
 // ----
 
-func (p *ASTPrinter) visitBinaryExpr(expr BinaryExpr) {
+func (p *ASTPrinter) visitBinaryExpr(expr *BinaryExpr) {
 	p.parenthesize(multiLine, expr.Operator, expr.Left, expr.Right)
 }
 
-func (p *ASTPrinter) visitGroupingExpr(expr GroupingExpr) {
+func (p *ASTPrinter) visitGroupingExpr(expr *GroupingExpr) {
 	p.parenthesize(singleLine, "group", expr.Expression)
 }
 
-func (p *ASTPrinter) visitLiteralExpr(expr LiteralExpr) {
+func (p *ASTPrinter) visitLiteralExpr(expr *LiteralExpr) {
 	value := "nil"
 	if expr.Value != nil {
 		value = fmt.Sprintf("%v", expr.Value)
@@ -58,39 +58,39 @@ func (p *ASTPrinter) visitLiteralExpr(expr LiteralExpr) {
 	p.printStuff(value)
 }
 
-func (p *ASTPrinter) visitUnaryExpr(expr UnaryExpr) {
+func (p *ASTPrinter) visitUnaryExpr(expr *UnaryExpr) {
 	p.parenthesize(singleLine, expr.Operator, expr.Right)
 }
 
-func (p *ASTPrinter) visitVariableExpr(expr VariableExpr) {
+func (p *ASTPrinter) visitVariableExpr(expr *VariableExpr) {
 	p.printStuff(expr.Name)
 }
 
-func (p *ASTPrinter) visitAssignmentExpr(expr AssignmentExpr) {
+func (p *ASTPrinter) visitAssignmentExpr(expr *AssignmentExpr) {
 	p.parenthesize(singleLine, "set", expr.Name, expr.Value)
 }
 
-func (p *ASTPrinter) visitLogicExpr(expr LogicExpr) {
+func (p *ASTPrinter) visitLogicExpr(expr *LogicExpr) {
 	p.parenthesize(multiLine, expr.Operator, expr.Left, expr.Right)
 }
 
-func (p *ASTPrinter) visitCallExpr(expr CallExpr) {
+func (p *ASTPrinter) visitCallExpr(expr *CallExpr) {
 	parts := []any{expr.Callee}
 	parts = append(parts, moveArray[Expr](expr.Args...)...)
 	p.parenthesize(multiLine, parts...)
 }
 
-func (p *ASTPrinter) visitFunctionExpr(expr FunctionExpr) {
+func (p *ASTPrinter) visitFunctionExpr(expr *FunctionExpr) {
 	parts := []any{"fun", expr.Params}
 	parts = append(parts, moveArray[Stmt](expr.Body...)...)
 	p.parenthesize(multiLine, parts...)
 }
 
-func (p *ASTPrinter) visitGetExpr(expr GetExpr) {
+func (p *ASTPrinter) visitGetExpr(expr *GetExpr) {
 	panic("lox.(*ASTPrinter).visitGetExpr is not implemented")
 }
 
-func (p *ASTPrinter) visitSetExpr(expr SetExpr) {
+func (p *ASTPrinter) visitSetExpr(expr *SetExpr) {
 	panic("lox.(*ASTPrinter).visitSetExpr is not implemented")
 }
 

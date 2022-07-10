@@ -272,22 +272,22 @@ func (r *Resolver) visitClassStmt(stmt ClassStmt) {
 
 // ----
 
-func (r *Resolver) visitBinaryExpr(expr BinaryExpr) {
+func (r *Resolver) visitBinaryExpr(expr *BinaryExpr) {
 	r.resolveExpr(expr.Left)
 	r.resolveExpr(expr.Right)
 }
 
-func (r *Resolver) visitGroupingExpr(expr GroupingExpr) {
+func (r *Resolver) visitGroupingExpr(expr *GroupingExpr) {
 	r.resolveExpr(expr.Expression)
 }
 
-func (r *Resolver) visitLiteralExpr(expr LiteralExpr) {}
+func (r *Resolver) visitLiteralExpr(expr *LiteralExpr) {}
 
-func (r *Resolver) visitUnaryExpr(expr UnaryExpr) {
+func (r *Resolver) visitUnaryExpr(expr *UnaryExpr) {
 	r.resolveExpr(expr.Right)
 }
 
-func (r *Resolver) visitVariableExpr(expr VariableExpr) {
+func (r *Resolver) visitVariableExpr(expr *VariableExpr) {
 	if len(r.scopes) == 0 {
 		return
 	}
@@ -299,33 +299,33 @@ func (r *Resolver) visitVariableExpr(expr VariableExpr) {
 	r.resolveLocal(expr, expr.Name)
 }
 
-func (r *Resolver) visitAssignmentExpr(expr AssignmentExpr) {
+func (r *Resolver) visitAssignmentExpr(expr *AssignmentExpr) {
 	r.resolveExpr(expr.Value)
 	r.resolveLocal(expr, expr.Name)
 }
 
-func (r *Resolver) visitLogicExpr(expr LogicExpr) {
+func (r *Resolver) visitLogicExpr(expr *LogicExpr) {
 	r.resolveExpr(expr.Left)
 	r.resolveExpr(expr.Right)
 }
 
-func (r *Resolver) visitCallExpr(expr CallExpr) {
+func (r *Resolver) visitCallExpr(expr *CallExpr) {
 	r.resolveExpr(expr.Callee)
 	for _, arg := range expr.Args {
 		r.resolveExpr(arg)
 	}
 }
 
-func (r *Resolver) visitFunctionExpr(expr FunctionExpr) {
+func (r *Resolver) visitFunctionExpr(expr *FunctionExpr) {
 	r.resolveFunction(expr.Params, expr.Body, anonymousFunc)
 }
 
-func (r *Resolver) visitGetExpr(expr GetExpr) {
+func (r *Resolver) visitGetExpr(expr *GetExpr) {
 	r.resolveExpr(expr.Object)
 	// We don't resolve property access statically, only dinamically.
 }
 
-func (r *Resolver) visitSetExpr(expr SetExpr) {
+func (r *Resolver) visitSetExpr(expr *SetExpr) {
 	r.resolveExpr(expr.Value)
 	r.resolveExpr(expr.Object)
 }

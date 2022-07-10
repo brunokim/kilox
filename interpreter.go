@@ -294,30 +294,30 @@ func (i *Interpreter) evaluate(expr Expr) any {
 	return i.value
 }
 
-func (i *Interpreter) visitBinaryExpr(expr BinaryExpr) {
+func (i *Interpreter) visitBinaryExpr(expr *BinaryExpr) {
 	left := i.evaluate(expr.Left)
 	right := i.evaluate(expr.Right)
 	i.value = operate2(expr.Operator, left, right)
 }
 
-func (i *Interpreter) visitGroupingExpr(expr GroupingExpr) {
+func (i *Interpreter) visitGroupingExpr(expr *GroupingExpr) {
 	i.evaluate(expr.Expression)
 }
 
-func (i *Interpreter) visitLiteralExpr(expr LiteralExpr) {
+func (i *Interpreter) visitLiteralExpr(expr *LiteralExpr) {
 	i.value = expr.Value
 }
 
-func (i *Interpreter) visitUnaryExpr(expr UnaryExpr) {
+func (i *Interpreter) visitUnaryExpr(expr *UnaryExpr) {
 	right := i.evaluate(expr.Right)
 	i.value = operate1(expr.Operator, right)
 }
 
-func (i *Interpreter) visitVariableExpr(expr VariableExpr) {
+func (i *Interpreter) visitVariableExpr(expr *VariableExpr) {
 	i.value = i.lookupVariable(expr.Name, expr)
 }
 
-func (i *Interpreter) visitAssignmentExpr(expr AssignmentExpr) {
+func (i *Interpreter) visitAssignmentExpr(expr *AssignmentExpr) {
 	value := i.evaluate(expr.Value)
 	pos, ok := i.locals[expr]
 	if ok {
@@ -327,7 +327,7 @@ func (i *Interpreter) visitAssignmentExpr(expr AssignmentExpr) {
 	}
 }
 
-func (i *Interpreter) visitLogicExpr(expr LogicExpr) {
+func (i *Interpreter) visitLogicExpr(expr *LogicExpr) {
 	left := i.evaluate(expr.Left)
 	if expr.Operator.TokenType == Or && isTruthy(left) {
 		return
@@ -338,7 +338,7 @@ func (i *Interpreter) visitLogicExpr(expr LogicExpr) {
 	i.evaluate(expr.Right)
 }
 
-func (i *Interpreter) visitCallExpr(expr CallExpr) {
+func (i *Interpreter) visitCallExpr(expr *CallExpr) {
 	callee := i.evaluate(expr.Callee)
 	args := make([]any, len(expr.Args))
 	for index, arg := range expr.Args {
@@ -354,11 +354,11 @@ func (i *Interpreter) visitCallExpr(expr CallExpr) {
 	i.value = f.Call(i, args)
 }
 
-func (i *Interpreter) visitFunctionExpr(expr FunctionExpr) {
+func (i *Interpreter) visitFunctionExpr(expr *FunctionExpr) {
 	i.value = function{"anonymous", expr.Params, expr.Body, i.env}
 }
 
-func (i *Interpreter) visitGetExpr(expr GetExpr) {
+func (i *Interpreter) visitGetExpr(expr *GetExpr) {
 	obj := i.evaluate(expr.Object)
 	is, ok := obj.(instance)
 	if !ok {
@@ -367,7 +367,7 @@ func (i *Interpreter) visitGetExpr(expr GetExpr) {
 	i.value = is.get(expr.Name)
 }
 
-func (i *Interpreter) visitSetExpr(expr SetExpr) {
+func (i *Interpreter) visitSetExpr(expr *SetExpr) {
 	obj := i.evaluate(expr.Object)
 	is, ok := obj.(instance)
 	if !ok {

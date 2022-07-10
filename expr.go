@@ -7,17 +7,17 @@ type Expr interface {
 }
 
 type exprVisitor interface {
-	visitBinaryExpr(e BinaryExpr)
-	visitGroupingExpr(e GroupingExpr)
-	visitLiteralExpr(e LiteralExpr)
-	visitUnaryExpr(e UnaryExpr)
-	visitVariableExpr(e VariableExpr)
-	visitAssignmentExpr(e AssignmentExpr)
-	visitLogicExpr(e LogicExpr)
-	visitCallExpr(e CallExpr)
-	visitFunctionExpr(e FunctionExpr)
-	visitGetExpr(e GetExpr)
-	visitSetExpr(e SetExpr)
+	visitBinaryExpr(e *BinaryExpr)
+	visitGroupingExpr(e *GroupingExpr)
+	visitLiteralExpr(e *LiteralExpr)
+	visitUnaryExpr(e *UnaryExpr)
+	visitVariableExpr(e *VariableExpr)
+	visitAssignmentExpr(e *AssignmentExpr)
+	visitLogicExpr(e *LogicExpr)
+	visitCallExpr(e *CallExpr)
+	visitFunctionExpr(e *FunctionExpr)
+	visitGetExpr(e *GetExpr)
+	visitSetExpr(e *SetExpr)
 }
 
 type BinaryExpr struct {
@@ -78,46 +78,46 @@ type SetExpr struct {
 	Value  Expr
 }
 
-func (e BinaryExpr) accept(v exprVisitor) {
+func (e *BinaryExpr) accept(v exprVisitor) {
 	v.visitBinaryExpr(e)
 }
 
-func (e GroupingExpr) accept(v exprVisitor) {
+func (e *GroupingExpr) accept(v exprVisitor) {
 	v.visitGroupingExpr(e)
 }
 
-func (e LiteralExpr) accept(v exprVisitor) {
+func (e *LiteralExpr) accept(v exprVisitor) {
 	v.visitLiteralExpr(e)
 }
 
-func (e UnaryExpr) accept(v exprVisitor) {
+func (e *UnaryExpr) accept(v exprVisitor) {
 	v.visitUnaryExpr(e)
 }
 
-func (e VariableExpr) accept(v exprVisitor) {
+func (e *VariableExpr) accept(v exprVisitor) {
 	v.visitVariableExpr(e)
 }
 
-func (e AssignmentExpr) accept(v exprVisitor) {
+func (e *AssignmentExpr) accept(v exprVisitor) {
 	v.visitAssignmentExpr(e)
 }
 
-func (e LogicExpr) accept(v exprVisitor) {
+func (e *LogicExpr) accept(v exprVisitor) {
 	v.visitLogicExpr(e)
 }
 
-func (e CallExpr) accept(v exprVisitor) {
+func (e *CallExpr) accept(v exprVisitor) {
 	v.visitCallExpr(e)
 }
 
-func (e FunctionExpr) accept(v exprVisitor) {
+func (e *FunctionExpr) accept(v exprVisitor) {
 	v.visitFunctionExpr(e)
 }
 
-func (e GetExpr) accept(v exprVisitor) {
+func (e *GetExpr) accept(v exprVisitor) {
 	v.visitGetExpr(e)
 }
 
-func (e SetExpr) accept(v exprVisitor) {
+func (e *SetExpr) accept(v exprVisitor) {
 	v.visitSetExpr(e)
 }

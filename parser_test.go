@@ -8,23 +8,23 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
-func literal(tokenType lox.TokenType, v any) lox.LiteralExpr {
-	return lox.LiteralExpr{Token: literalToken(tokenType, "", v), Value: v}
+func literal(tokenType lox.TokenType, v any) *lox.LiteralExpr {
+	return &lox.LiteralExpr{Token: literalToken(tokenType, "", v), Value: v}
 }
 
-func number(x float64) lox.LiteralExpr {
-	return lox.LiteralExpr{Token: literalToken(lox.Number, "", x), Value: x}
+func number(x float64) *lox.LiteralExpr {
+	return &lox.LiteralExpr{Token: literalToken(lox.Number, "", x), Value: x}
 }
 
-func boolean(x bool) lox.LiteralExpr {
+func boolean(x bool) *lox.LiteralExpr {
 	if x {
-		return lox.LiteralExpr{Token: token(lox.True, ""), Value: true}
+		return &lox.LiteralExpr{Token: token(lox.True, ""), Value: true}
 	}
-	return lox.LiteralExpr{Token: token(lox.False, ""), Value: false}
+	return &lox.LiteralExpr{Token: token(lox.False, ""), Value: false}
 }
 
-func variableExpr(name string) lox.VariableExpr {
-	return lox.VariableExpr{Name: token(lox.Identifier, name)}
+func variableExpr(name string) *lox.VariableExpr {
+	return &lox.VariableExpr{Name: token(lox.Identifier, name)}
 }
 
 func TestParserExpression(t *testing.T) {
@@ -39,15 +39,15 @@ func TestParserExpression(t *testing.T) {
 		{"nil", literal(lox.Nil, nil)},
 		{`"abc def"`, literal(lox.String, "abc def")},
 		{"x", variableExpr("x")},
-		{"-1", lox.UnaryExpr{Operator: token(lox.Minus, "-"), Right: number(1)}},
-		{"(1)", lox.GroupingExpr{Expression: number(1)}},
-		{"2-1", lox.BinaryExpr{
+		{"-1", &lox.UnaryExpr{Operator: token(lox.Minus, "-"), Right: number(1)}},
+		{"(1)", &lox.GroupingExpr{Expression: number(1)}},
+		{"2-1", &lox.BinaryExpr{
 			Left:     number(2),
 			Operator: token(lox.Minus, "-"),
 			Right:    number(1),
 		}},
-		{"3-2-1", lox.BinaryExpr{
-			Left: lox.BinaryExpr{
+		{"3-2-1", &lox.BinaryExpr{
+			Left: &lox.BinaryExpr{
 				Left:     number(3),
 				Operator: token(lox.Minus, "-"),
 				Right:    number(2),
@@ -55,8 +55,8 @@ func TestParserExpression(t *testing.T) {
 			Operator: token(lox.Minus, "-"),
 			Right:    number(1),
 		}},
-		{"3*2-1", lox.BinaryExpr{
-			Left: lox.BinaryExpr{
+		{"3*2-1", &lox.BinaryExpr{
+			Left: &lox.BinaryExpr{
 				Left:     number(3),
 				Operator: token(lox.Star, "*"),
 				Right:    number(2),
@@ -64,34 +64,34 @@ func TestParserExpression(t *testing.T) {
 			Operator: token(lox.Minus, "-"),
 			Right:    number(1),
 		}},
-		{"3-2*1", lox.BinaryExpr{
+		{"3-2*1", &lox.BinaryExpr{
 			Left:     number(3),
 			Operator: token(lox.Minus, "-"),
-			Right: lox.BinaryExpr{
+			Right: &lox.BinaryExpr{
 				Left:     number(2),
 				Operator: token(lox.Star, "*"),
 				Right:    number(1),
 			},
 		}},
-		{"4*3-2*1", lox.BinaryExpr{
-			Left: lox.BinaryExpr{
+		{"4*3-2*1", &lox.BinaryExpr{
+			Left: &lox.BinaryExpr{
 				Left:     number(4),
 				Operator: token(lox.Star, "*"),
 				Right:    number(3),
 			},
 			Operator: token(lox.Minus, "-"),
-			Right: lox.BinaryExpr{
+			Right: &lox.BinaryExpr{
 				Left:     number(2),
 				Operator: token(lox.Star, "*"),
 				Right:    number(1),
 			},
 		}},
-		{"4*(3-2)*1", lox.BinaryExpr{
-			Left: lox.BinaryExpr{
+		{"4*(3-2)*1", &lox.BinaryExpr{
+			Left: &lox.BinaryExpr{
 				Left:     number(4),
 				Operator: token(lox.Star, "*"),
-				Right: lox.GroupingExpr{
-					Expression: lox.BinaryExpr{
+				Right: &lox.GroupingExpr{
+					Expression: &lox.BinaryExpr{
 						Left:     number(3),
 						Operator: token(lox.Minus, "-"),
 						Right:    number(2),
@@ -101,21 +101,21 @@ func TestParserExpression(t *testing.T) {
 			Operator: token(lox.Star, "*"),
 			Right:    number(1),
 		}},
-		{"1 != 2 > 3 + 4 / !!5", lox.BinaryExpr{
+		{"1 != 2 > 3 + 4 / !!5", &lox.BinaryExpr{
 			Left:     number(1),
 			Operator: token(lox.BangEqual, "!="),
-			Right: lox.BinaryExpr{
+			Right: &lox.BinaryExpr{
 				Left:     number(2),
 				Operator: token(lox.Greater, ">"),
-				Right: lox.BinaryExpr{
+				Right: &lox.BinaryExpr{
 					Left:     number(3),
 					Operator: token(lox.Plus, "+"),
-					Right: lox.BinaryExpr{
+					Right: &lox.BinaryExpr{
 						Left:     number(4),
 						Operator: token(lox.Slash, "/"),
-						Right: lox.UnaryExpr{
+						Right: &lox.UnaryExpr{
 							Operator: token(lox.Bang, "!"),
-							Right: lox.UnaryExpr{
+							Right: &lox.UnaryExpr{
 								Operator: token(lox.Bang, "!"),
 								Right:    number(5),
 							},
@@ -124,20 +124,20 @@ func TestParserExpression(t *testing.T) {
 				},
 			},
 		}},
-		{"a = 1", lox.AssignmentExpr{
+		{"a = 1", &lox.AssignmentExpr{
 			Name:  token(lox.Identifier, "a"),
 			Value: number(1),
 		}},
-		{"a = b = 10", lox.AssignmentExpr{
+		{"a = b = 10", &lox.AssignmentExpr{
 			Name: token(lox.Identifier, "a"),
-			Value: lox.AssignmentExpr{
+			Value: &lox.AssignmentExpr{
 				Name:  token(lox.Identifier, "b"),
 				Value: number(10),
 			},
 		}},
-		{"a and b or c or d and e", lox.LogicExpr{
-			Left: lox.LogicExpr{
-				Left: lox.LogicExpr{
+		{"a and b or c or d and e", &lox.LogicExpr{
+			Left: &lox.LogicExpr{
+				Left: &lox.LogicExpr{
 					Left:     variableExpr("a"),
 					Operator: token(lox.And, "and"),
 					Right:    variableExpr("b"),
@@ -146,17 +146,17 @@ func TestParserExpression(t *testing.T) {
 				Right:    variableExpr("c"),
 			},
 			Operator: token(lox.Or, "or"),
-			Right: lox.LogicExpr{
+			Right: &lox.LogicExpr{
 				Left:     variableExpr("d"),
 				Operator: token(lox.And, "and"),
 				Right:    variableExpr("e"),
 			},
 		}},
-		{"foo(1).bar.baz().qux", lox.GetExpr{
-			Object: lox.CallExpr{
-				Callee: lox.GetExpr{
-					Object: lox.GetExpr{
-						Object: lox.CallExpr{
+		{"foo(1).bar.baz().qux", &lox.GetExpr{
+			Object: &lox.CallExpr{
+				Callee: &lox.GetExpr{
+					Object: &lox.GetExpr{
+						Object: &lox.CallExpr{
 							Callee: variableExpr("foo"),
 							Args:   []lox.Expr{number(1)},
 							Paren:  token(lox.RightParen, ")"),
@@ -169,8 +169,8 @@ func TestParserExpression(t *testing.T) {
 			},
 			Name: token(lox.Identifier, "qux"),
 		}},
-		{"foo(a).bar = 10", lox.SetExpr{
-			Object: lox.CallExpr{
+		{"foo(a).bar = 10", &lox.SetExpr{
+			Object: &lox.CallExpr{
 				Callee: variableExpr("foo"),
 				Args:   []lox.Expr{variableExpr("a")},
 				Paren:  token(lox.RightParen, ")"),
@@ -197,7 +197,7 @@ func TestParserStatements(t *testing.T) {
 		text string
 		want []lox.Stmt
 	}{
-		{"a+2;", []lox.Stmt{lox.ExpressionStmt{lox.BinaryExpr{
+		{"a+2;", []lox.Stmt{lox.ExpressionStmt{&lox.BinaryExpr{
 			Left:     variableExpr("a"),
 			Operator: token(lox.Plus, "+"),
 			Right:    number(2),
@@ -213,7 +213,7 @@ func TestParserStatements(t *testing.T) {
 		{"if (a) b = 10;", []lox.Stmt{
 			lox.IfStmt{
 				Condition: variableExpr("a"),
-				Then: lox.ExpressionStmt{lox.AssignmentExpr{
+				Then: lox.ExpressionStmt{&lox.AssignmentExpr{
 					Name:  token(lox.Identifier, "b"),
 					Value: number(10),
 				}},
@@ -222,11 +222,11 @@ func TestParserStatements(t *testing.T) {
 		{"if (a) b = 10; else a = 5;", []lox.Stmt{
 			lox.IfStmt{
 				Condition: variableExpr("a"),
-				Then: lox.ExpressionStmt{lox.AssignmentExpr{
+				Then: lox.ExpressionStmt{&lox.AssignmentExpr{
 					Name:  token(lox.Identifier, "b"),
 					Value: number(10),
 				}},
-				Else: lox.ExpressionStmt{lox.AssignmentExpr{
+				Else: lox.ExpressionStmt{&lox.AssignmentExpr{
 					Name:  token(lox.Identifier, "a"),
 					Value: number(5),
 				}},
@@ -250,9 +250,9 @@ func TestParserStatements(t *testing.T) {
 		{"while (a) a = a - 1;", []lox.Stmt{
 			lox.LoopStmt{
 				Condition: variableExpr("a"),
-				Body: lox.ExpressionStmt{lox.AssignmentExpr{
+				Body: lox.ExpressionStmt{&lox.AssignmentExpr{
 					Name: token(lox.Identifier, "a"),
-					Value: lox.BinaryExpr{
+					Value: &lox.BinaryExpr{
 						Left:     variableExpr("a"),
 						Operator: token(lox.Minus, "-"),
 						Right:    number(1),
@@ -262,7 +262,7 @@ func TestParserStatements(t *testing.T) {
 		}},
 		{"for (;;) print 42;", []lox.Stmt{
 			lox.LoopStmt{
-				Condition: lox.LiteralExpr{token(lox.Semicolon, ";"), true},
+				Condition: &lox.LiteralExpr{token(lox.Semicolon, ";"), true},
 				Body:      lox.PrintStmt{number(42)},
 			},
 		}},
@@ -270,14 +270,14 @@ func TestParserStatements(t *testing.T) {
 			lox.BlockStmt{[]lox.Stmt{
 				lox.VarStmt{Name: token(lox.Identifier, "i"), Init: number(0)},
 				lox.LoopStmt{
-					Condition: lox.LiteralExpr{token(lox.Semicolon, ";"), true},
+					Condition: &lox.LiteralExpr{token(lox.Semicolon, ";"), true},
 					Body:      lox.PrintStmt{variableExpr("i")},
 				},
 			}},
 		}},
 		{"for (; i > 0;) print i;", []lox.Stmt{
 			lox.LoopStmt{
-				Condition: lox.BinaryExpr{
+				Condition: &lox.BinaryExpr{
 					Left:     variableExpr("i"),
 					Operator: token(lox.Greater, ">"),
 					Right:    number(0),
@@ -287,11 +287,11 @@ func TestParserStatements(t *testing.T) {
 		}},
 		{"for (;; i = i+1) print i;", []lox.Stmt{
 			lox.LoopStmt{
-				Condition: lox.LiteralExpr{token(lox.Semicolon, ";"), true},
+				Condition: &lox.LiteralExpr{token(lox.Semicolon, ";"), true},
 				Body:      lox.PrintStmt{variableExpr("i")},
-				OnLoop: lox.AssignmentExpr{
+				OnLoop: &lox.AssignmentExpr{
 					Name: token(lox.Identifier, "i"),
-					Value: lox.BinaryExpr{
+					Value: &lox.BinaryExpr{
 						Left:     variableExpr("i"),
 						Operator: token(lox.Plus, "+"),
 						Right:    number(1),
@@ -301,7 +301,7 @@ func TestParserStatements(t *testing.T) {
 		}},
 		{"for (;; inc) { if (a) continue; continue; }", []lox.Stmt{
 			lox.LoopStmt{
-				Condition: lox.LiteralExpr{token(lox.Semicolon, ";"), true},
+				Condition: &lox.LiteralExpr{token(lox.Semicolon, ";"), true},
 				Body: lox.BlockStmt{[]lox.Stmt{
 					lox.IfStmt{
 						Condition: variableExpr("a"),
