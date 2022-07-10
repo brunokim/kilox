@@ -1,0 +1,14 @@
+// experiments: -typing
+
+class Machine {
+    onHalt(evt) {
+        print "halt!";
+    }
+}
+
+print Machine; // output: <class Machine>
+
+{
+    var a = Machine;
+    print a;         // output: <class Machine>
+}

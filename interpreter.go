@@ -69,6 +69,16 @@ func (f function) String() string {
 
 // ----
 
+type class struct {
+	name string
+}
+
+func (cl class) String() string {
+	return fmt.Sprintf("<class %s>", cl.name)
+}
+
+// ----
+
 type loopState int
 
 const (
@@ -235,7 +245,9 @@ func (i *Interpreter) visitReturnStmt(stmt ReturnStmt) {
 }
 
 func (i *Interpreter) visitClassStmt(stmt ClassStmt) {
-	panic("lox.(*Interpreter).visitClassStmt is not implemented")
+	name := stmt.Name.Lexeme
+	cl := class{name}
+	i.env.Define(name, cl)
 }
 
 // ----

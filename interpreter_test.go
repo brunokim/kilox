@@ -42,8 +42,19 @@ func TestInterpreter(t *testing.T) {
 
 func runLox(text string, experiments ...string) (string, error) {
 	enabled := make(map[string]bool)
+	disabled := make(map[string]bool)
 	for _, exp := range experiments {
-		enabled[exp] = true
+		switch exp[0] {
+		case '+':
+			enabled[exp[1:]] = true
+		case '-':
+			disabled[exp[1:]] = true
+		default:
+			enabled[exp] = true
+		}
+	}
+	for exp := range disabled {
+		delete(enabled, exp)
 	}
 	s := lox.NewScanner(text)
 	tokens, err := s.ScanTokens()
@@ -94,9 +105,13 @@ func extractComment(text, pattern string) string {
 
 func extractExperiments(text string) []string {
 	expStr := extractComment(text, "experiments")
-	exps := strings.Split(expStr, ",")
-	for i, exp := range exps {
-		exps[i] = strings.TrimSpace(exp)
+	var exps []string
+	for _, exp := range strings.Split(expStr, ",") {
+		exp = strings.TrimSpace(exp)
+		if exp == "" {
+			continue
+		}
+		exps = append(exps, exp)
 	}
 	return exps
 }

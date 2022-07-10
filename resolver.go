@@ -19,6 +19,7 @@ const (
 	local declType = iota
 	funcName
 	funcParam
+	className
 )
 
 type variableState struct {
@@ -265,7 +266,8 @@ func (r *Resolver) visitReturnStmt(stmt ReturnStmt) {
 }
 
 func (r *Resolver) visitClassStmt(stmt ClassStmt) {
-	panic("lox.(*Resolver).visitClassStmt is not implemented")
+	r.declare(stmt.Name, className)
+	r.define(stmt.Name)
 }
 
 // ----
