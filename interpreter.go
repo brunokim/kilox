@@ -77,6 +77,22 @@ func (cl class) String() string {
 	return fmt.Sprintf("<class %s>", cl.name)
 }
 
+func (cl class) Arity() int {
+	return 0
+}
+
+func (cl class) Call(i *Interpreter, args []any) any {
+	return instance{cl}
+}
+
+type instance struct {
+	cl class
+}
+
+func (is instance) String() string {
+	return fmt.Sprintf("<instance %s>", is.cl.name)
+}
+
 // ----
 
 type loopState int
@@ -395,7 +411,7 @@ type runtimeError struct {
 }
 
 func (err runtimeError) Error() string {
-	return fmt.Sprintf("operator %s in line %d: %s", err.token.Lexeme, err.token.Line, err.msg)
+	return fmt.Sprintf("token '%s' in line %d: %s", err.token.Lexeme, err.token.Line, err.msg)
 }
 
 func checkNumberOperand(token Token, right any) float64 {

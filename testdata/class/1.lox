@@ -8,7 +8,13 @@ class Machine {
 
 print Machine; // output: <class Machine>
 
+var m = Machine();
+print m;           // output: <instance Machine>
+
 {
-    var a = Machine;
-    print a;         // output: <class Machine>
+    var cl = Machine;
+    print cl;         // output: <class Machine>
+
+    var m = Machine();
+    print m;           // output: <instance Machine>
 }
