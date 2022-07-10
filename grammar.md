@@ -56,7 +56,7 @@ Expressions
     unary      ::= ("!"|"-") unary
                  | call
                  ;
-    call       ::= primary ( "(" arguments? ")" )* ;
+    call       ::= primary ( "(" arguments? ")" | "." identifier )* ;
     arguments  ::= expression ( "," expression )* ;
     primary    ::= number | string | "true" | "false" | "nil"
                  | "(" expression ")"

@@ -337,6 +337,10 @@ func (i *Interpreter) visitFunctionExpr(expr FunctionExpr) {
 	i.value = function{"anonymous", expr.Params, expr.Body, i.env}
 }
 
+func (i *Interpreter) visitGetExpr(expr GetExpr) {
+	panic("lox.(*Interpreter).visitGetExpr is not implemented")
+}
+
 // ----
 
 func operate2(token Token, left, right any) any {

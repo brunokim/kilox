@@ -86,6 +86,10 @@ func (p *ASTPrinter) visitFunctionExpr(expr FunctionExpr) {
 	p.parenthesize(multiLine, parts...)
 }
 
+func (p *ASTPrinter) visitGetExpr(expr GetExpr) {
+	panic("lox.(*ASTPrinter).visitGetExpr is not implemented")
+}
+
 // ----
 
 func (p *ASTPrinter) visitExpressionStmt(stmt ExpressionStmt) {

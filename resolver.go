@@ -319,3 +319,7 @@ func (r *Resolver) visitCallExpr(expr CallExpr) {
 func (r *Resolver) visitFunctionExpr(expr FunctionExpr) {
 	r.resolveFunction(expr.Params, expr.Body, anonymousFunc)
 }
+
+func (r *Resolver) visitGetExpr(expr GetExpr) {
+	panic("lox.(*Resolver).visitGetExpr is not implemented")
+}

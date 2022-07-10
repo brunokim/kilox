@@ -152,6 +152,23 @@ func TestParserExpression(t *testing.T) {
 				Right:    variableExpr("e"),
 			},
 		}},
+		{"foo(1).bar.baz().qux", lox.GetExpr{
+			Object: lox.CallExpr{
+				Callee: lox.GetExpr{
+					Object: lox.GetExpr{
+						Object: lox.CallExpr{
+							Callee: variableExpr("foo"),
+							Args:   []lox.Expr{number(1)},
+							Paren:  token(lox.RightParen, ")"),
+						},
+						Name: token(lox.Identifier, "bar"),
+					},
+					Name: token(lox.Identifier, "baz"),
+				},
+				Paren: token(lox.RightParen, ")"),
+			},
+			Name: token(lox.Identifier, "qux"),
+		}},
 	}
 
 	for _, test := range tests {

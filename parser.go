@@ -352,6 +352,9 @@ func (p *Parser) call() Expr {
 	for {
 		if p.match(LeftParen) {
 			expr = p.finishCall(expr)
+		} else if p.match(Dot) {
+			name := p.consume(Identifier, "expecting property name after '.'")
+			expr = GetExpr{expr, name}
 		} else {
 			break
 		}

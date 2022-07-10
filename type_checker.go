@@ -303,3 +303,7 @@ func (c *TypeChecker) visitCallExpr(expr CallExpr) {
 func (c *TypeChecker) visitFunctionExpr(expr FunctionExpr) {
 	c.checkFunctionType("", expr.Params, expr.Body)
 }
+
+func (c *TypeChecker) visitGetExpr(expr GetExpr) {
+	panic("lox.(*TypeChecker).visitGetExpr is not implemented")
+}
