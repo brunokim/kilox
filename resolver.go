@@ -24,6 +24,13 @@ const (
 	thisKeyword
 )
 
+type classType int
+
+const (
+	noClass classType = iota
+	someClass
+)
+
 type variableState struct {
 	name      Token
 	decl      declType
@@ -42,14 +49,16 @@ type Resolver struct {
 	scopes []*scope
 	errors []resolveError
 
-	currFunc funcType
-	isInLoop bool
+	currFunc  funcType
+	currClass classType
+	isInLoop  bool
 }
 
 func NewResolver(interpreter *Interpreter) *Resolver {
 	return &Resolver{
-		i:        interpreter,
-		currFunc: noFunc,
+		i:         interpreter,
+		currFunc:  noFunc,
+		currClass: noClass,
 	}
 }
 
@@ -268,6 +277,9 @@ func (r *Resolver) visitReturnStmt(stmt ReturnStmt) {
 }
 
 func (r *Resolver) visitClassStmt(stmt ClassStmt) {
+	defer func(oldType classType) { r.currClass = oldType }(r.currClass)
+	r.currClass = someClass
+
 	r.declare(stmt.Name, className)
 	r.define(stmt.Name)
 
@@ -342,5 +354,8 @@ func (r *Resolver) visitSetExpr(expr *SetExpr) {
 }
 
 func (r *Resolver) visitThisExpr(expr *ThisExpr) {
+	if r.currClass == noClass {
+		r.addError(resolveError{expr.Keyword, "'this' can only be used within classes"})
+	}
 	r.resolveLocal(expr, expr.Keyword)
 }

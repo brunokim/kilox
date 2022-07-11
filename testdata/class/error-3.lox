@@ -1,0 +1,7 @@
+class Bar {
+    baz() {
+        this = 10; // error: line 3 at '=': invalid target for assignment: want variable or get expression, got this expression
+    }
+}
+
+

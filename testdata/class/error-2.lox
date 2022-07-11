@@ -4,3 +4,5 @@ class Foo {
     qux(x) {}    // error: line 4 at 'x': function param is never read
 }
 
+print this; // error: line 7 at 'this': 'this' can only be used within classes
+
