@@ -354,7 +354,7 @@ func (i *Interpreter) visitClassStmt(stmt ClassStmt) {
 	className := stmt.Name.Lexeme
 	i.env.Define(className, nil)
 	cl := newClass(className)
-	for _, method := range stmt.Statics {
+	for _, method := range stmt.StaticMethods {
 		methodName := method.Name.Lexeme
 		isInit := false
 		cl.m.methods[methodName] = function{methodName, method.Params, method.Body, i.env, isInit}

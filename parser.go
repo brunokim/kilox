@@ -70,7 +70,7 @@ func (p *Parser) declaration() Stmt {
 	return p.statement()
 }
 
-func (p *Parser) varDeclaration() Stmt {
+func (p *Parser) varDeclaration() VarStmt {
 	name := p.consume(Identifier, "expecting variable name")
 	var init Expr
 	if p.match(Equal) {
@@ -83,19 +83,30 @@ func (p *Parser) varDeclaration() Stmt {
 func (p *Parser) classDeclaration() Stmt {
 	name := p.consume(Identifier, "expecting class name")
 	p.consume(LeftBrace, "expecting '{' before class body")
-	var methods, statics []FunctionStmt
+	stmt := ClassStmt{Name: name}
 	for !p.isAtEnd() && !p.check(RightBrace) {
-		if p.match(Class) {
-			statics = append(statics, p.function("method"))
-		} else {
-			methods = append(methods, p.function("method"))
-		}
+		isStatic := p.match(Class)
+		p.attribute(&stmt, isStatic)
 	}
 	p.consume(RightBrace, "expecting '}' after class body")
-	return ClassStmt{
-		Name:    name,
-		Methods: methods,
-		Statics: statics,
+	return stmt
+}
+
+func (p *Parser) attribute(stmt *ClassStmt, isStatic bool) {
+	if p.match(Var) {
+		decl := p.varDeclaration()
+		if isStatic {
+			stmt.StaticVars = append(stmt.StaticVars, decl)
+		} else {
+			stmt.Vars = append(stmt.Vars, decl)
+		}
+		return
+	}
+	decl := p.function("method")
+	if isStatic {
+		stmt.StaticMethods = append(stmt.StaticMethods, decl)
+	} else {
+		stmt.Methods = append(stmt.Methods, decl)
 	}
 }
 

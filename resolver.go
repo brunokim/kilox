@@ -301,7 +301,7 @@ func (r *Resolver) visitClassStmt(stmt ClassStmt) {
 	r.define(stmt.Name)
 
 	r.beginScope() // class
-	r.resolveMethods(stmt.Statics, true /*isStatic*/)
+	r.resolveMethods(stmt.StaticMethods, true /*isStatic*/)
 
 	r.beginScope() // instance
 	r.resolveMethods(stmt.Methods, false /*isStatic*/)

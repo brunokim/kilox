@@ -11,7 +11,7 @@ Top-level
 
 Declaration
     
-    classDecl ::= "class" identifier "{" method* "}" ;
+    classDecl ::= "class" identifier "{" attribute* "}" ;
     funDecl   ::= "fun" identifier function ;
     varDecl   ::= "var" identifier ( "=" expression )? ";" ;
     statement ::= exprStmt
@@ -63,6 +63,10 @@ Expressions
                  | anonFunction
                  | identifier
                  ;
+
+Classes
+
+    attribute ::= "class"? ( method | varDecl );
 
 Functions
 

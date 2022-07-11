@@ -356,9 +356,26 @@ func TestParserStatements(t *testing.T) {
 					{Name: token(lox.Identifier, "f")},
 					{Name: token(lox.Identifier, "i")},
 				},
-				Statics: []lox.FunctionStmt{
+				StaticMethods: []lox.FunctionStmt{
 					{Name: token(lox.Identifier, "g")},
 					{Name: token(lox.Identifier, "h")},
+				},
+			},
+		}},
+		{"class Foo { f(){} class var g; class h(){} var i; }", []lox.Stmt{
+			lox.ClassStmt{
+				Name: token(lox.Identifier, "Foo"),
+				Methods: []lox.FunctionStmt{
+					{Name: token(lox.Identifier, "f")},
+				},
+				StaticMethods: []lox.FunctionStmt{
+					{Name: token(lox.Identifier, "h")},
+				},
+				Vars: []lox.VarStmt{
+					{Name: token(lox.Identifier, "i")},
+				},
+				StaticVars: []lox.VarStmt{
+					{Name: token(lox.Identifier, "g")},
 				},
 			},
 		}},

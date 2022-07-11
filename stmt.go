@@ -69,9 +69,11 @@ type ReturnStmt struct {
 }
 
 type ClassStmt struct {
-	Name    Token
-	Methods []FunctionStmt
-	Statics []FunctionStmt
+	Name          Token
+	Methods       []FunctionStmt
+	Vars          []VarStmt
+	StaticMethods []FunctionStmt
+	StaticVars    []VarStmt
 }
 
 func (s ExpressionStmt) accept(v stmtVisitor) {
