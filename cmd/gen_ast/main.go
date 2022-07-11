@@ -17,17 +17,15 @@ type StringSet map[string]bool
 type Data struct {
 	Extensions StringSet
 	Invocation string
-	TitleName  string
-	LowerName  string
+	Name       string
 	VarName    string
 	Schemas    []Schema
 }
 
 type Schema struct {
-	TitleName string
-	LowerName string
-	IsPtr     bool
-	Fields    []Field
+	Name   string
+	IsPtr  bool
+	Fields []Field
 }
 
 type Field struct {
@@ -36,7 +34,7 @@ type Field struct {
 }
 
 func schemaName(d Data, s Schema) string {
-	return s.TitleName + d.TitleName
+	return s.Name + d.Name
 }
 
 func schemaType(d Data, s Schema) string {
@@ -55,14 +53,14 @@ package lox
 {{- end}}
 
 {{block "interface declaration" . -}}
-type {{.TitleName}} interface {
-	accept(v {{.LowerName}}Visitor)
+type {{.Name}} interface {
+	accept(v {{.Name | lower}}Visitor)
     {{if .Extensions.typename}}typeName() string{{end}}
 }
 {{- end}}
 
 {{block "visitor declaration" . -}}
-type {{.LowerName}}Visitor interface{
+type {{.Name|lower}}Visitor interface{
 	{{range .Schemas -}}
 		visit{{schemaName $ .}}({{$.VarName}} {{schemaType $ .}})
 	{{end -}}
@@ -82,7 +80,7 @@ type {{.LowerName}}Visitor interface{
 
 {{block "interface implementation" . -}}
 {{range .Schemas -}}
-    func ({{$.VarName}} {{schemaType $ .}}) accept(v {{$.LowerName}}Visitor) {
+    func ({{$.VarName}} {{schemaType $ .}}) accept(v {{$.Name | lower}}Visitor) {
         v.visit{{schemaName $ .}}({{$.VarName}})
     }
 
@@ -92,7 +90,7 @@ type {{.LowerName}}Visitor interface{
 {{block "typename" . -}}
 {{if .Extensions.typename}}
     {{range .Schemas -}}
-        func ({{$.VarName}} {{schemaType $ .}}) typeName() string { return "{{.LowerName}}"; }
+        func ({{$.VarName}} {{schemaType $ .}}) typeName() string { return "{{.Name | lower}}"; }
     {{end -}}
 {{end}}
 {{- end}}
@@ -102,6 +100,7 @@ var tmpl = template.Must(
 	template.New("").Funcs(map[string]any{
 		"schemaType": schemaType,
 		"schemaName": schemaName,
+		"lower":      strings.ToLower,
 	}).Parse(fileTemplate))
 
 var (
@@ -125,8 +124,7 @@ func main() {
 	data := &Data{
 		Extensions: exts,
 		Invocation: strings.Join(os.Args[1:], " "),
-		TitleName:  strings.Title(iName),
-		LowerName:  iName,
+		Name:       strings.Title(iName),
 		VarName:    iName[:1],
 		Schemas:    parseSchemas(string(bs)),
 	}
@@ -196,10 +194,9 @@ func parseSchema(line string) Schema {
 		panic(fmt.Sprintf("line %q doesn't match pattern 'Struct(Field1: Type1, Field2: Type2)'", line))
 	}
 	return Schema{
-		TitleName: parts[2],
-		LowerName: strings.ToLower(parts[2]),
-		IsPtr:     parts[1] == "*",
-		Fields:    parseFields(parts[3]),
+		Name:   parts[2],
+		IsPtr:  parts[1] == "*",
+		Fields: parseFields(parts[3]),
 	}
 }
 
