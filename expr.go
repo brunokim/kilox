@@ -123,14 +123,14 @@ func (e *SetExpr) accept(v exprVisitor) {
 	v.visitSetExpr(e)
 }
 
-func (e *BinaryExpr) typeName() string     { return "binary" }
-func (e *GroupingExpr) typeName() string   { return "grouping" }
-func (e *LiteralExpr) typeName() string    { return "literal" }
-func (e *UnaryExpr) typeName() string      { return "unary" }
-func (e *VariableExpr) typeName() string   { return "variable" }
-func (e *AssignmentExpr) typeName() string { return "assignment" }
-func (e *LogicExpr) typeName() string      { return "logic" }
-func (e *CallExpr) typeName() string       { return "call" }
-func (e *FunctionExpr) typeName() string   { return "function" }
-func (e *GetExpr) typeName() string        { return "get" }
-func (e *SetExpr) typeName() string        { return "set" }
+func (*BinaryExpr) typeName() string     { return "binary" }
+func (*GroupingExpr) typeName() string   { return "grouping" }
+func (*LiteralExpr) typeName() string    { return "literal" }
+func (*UnaryExpr) typeName() string      { return "unary" }
+func (*VariableExpr) typeName() string   { return "variable" }
+func (*AssignmentExpr) typeName() string { return "assignment" }
+func (*LogicExpr) typeName() string      { return "logic" }
+func (*CallExpr) typeName() string       { return "call" }
+func (*FunctionExpr) typeName() string   { return "function" }
+func (*GetExpr) typeName() string        { return "get" }
+func (*SetExpr) typeName() string        { return "set" }

@@ -90,7 +90,7 @@ type {{.Name|lower}}Visitor interface{
 {{block "typename" . -}}
 {{if .Extensions.typename}}
     {{range .Schemas -}}
-        func ({{$.VarName}} {{schemaType $ .}}) typeName() string { return "{{.Name | lower}}"; }
+        func ({{schemaType $ .}}) typeName() string { return "{{.Name | lower}}"; }
     {{end -}}
 {{end}}
 {{- end}}
