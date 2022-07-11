@@ -1,9 +1,10 @@
 // Generated file, do not modify
-// Invocation: gen_ast -spec ./cmd/gen_ast/expr.spec -dest expr.go
+// Invocation: gen_ast -spec ./cmd/gen_ast/expr.spec -dest expr.go -extensions typename
 package lox
 
 type Expr interface {
 	accept(v exprVisitor)
+	typeName() string
 }
 
 type exprVisitor interface {
@@ -121,3 +122,15 @@ func (e *GetExpr) accept(v exprVisitor) {
 func (e *SetExpr) accept(v exprVisitor) {
 	v.visitSetExpr(e)
 }
+
+func (e *BinaryExpr) typeName() string     { return "binary" }
+func (e *GroupingExpr) typeName() string   { return "grouping" }
+func (e *LiteralExpr) typeName() string    { return "literal" }
+func (e *UnaryExpr) typeName() string      { return "unary" }
+func (e *VariableExpr) typeName() string   { return "variable" }
+func (e *AssignmentExpr) typeName() string { return "assignment" }
+func (e *LogicExpr) typeName() string      { return "logic" }
+func (e *CallExpr) typeName() string       { return "call" }
+func (e *FunctionExpr) typeName() string   { return "function" }
+func (e *GetExpr) typeName() string        { return "get" }
+func (e *SetExpr) typeName() string        { return "set" }

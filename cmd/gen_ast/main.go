@@ -12,7 +12,10 @@ import (
 	"text/template"
 )
 
+type StringSet map[string]bool
+
 type Data struct {
+	Extensions StringSet
 	Invocation string
 	TitleName  string
 	LowerName  string
@@ -21,9 +24,10 @@ type Data struct {
 }
 
 type Schema struct {
-	Name   string
-	IsPtr  bool
-	Fields []Field
+	TitleName string
+	LowerName string
+	IsPtr     bool
+	Fields    []Field
 }
 
 type Field struct {
@@ -32,7 +36,7 @@ type Field struct {
 }
 
 func schemaName(d Data, s Schema) string {
-	return s.Name + d.TitleName
+	return s.TitleName + d.TitleName
 }
 
 func schemaType(d Data, s Schema) string {
@@ -53,6 +57,7 @@ package lox
 {{block "interface declaration" . -}}
 type {{.TitleName}} interface {
 	accept(v {{.LowerName}}Visitor)
+    {{if .Extensions.typename}}typeName() string{{end}}
 }
 {{- end}}
 
@@ -83,6 +88,14 @@ type {{.LowerName}}Visitor interface{
 
 {{end -}}
 {{- end}}
+
+{{block "typename" . -}}
+{{if .Extensions.typename}}
+    {{range .Schemas -}}
+        func ({{$.VarName}} {{schemaType $ .}}) typeName() string { return "{{.LowerName}}"; }
+    {{end -}}
+{{end}}
+{{- end}}
 `
 
 var tmpl = template.Must(
@@ -92,9 +105,10 @@ var tmpl = template.Must(
 	}).Parse(fileTemplate))
 
 var (
-	spec = flag.String("spec", "", "Spec file to read")
-	pkg  = flag.String("pkg", "lox", "Package where this code belongs")
-	dest = flag.String("dest", "", "Destination file. If not given, default to gen_%s.go, where %s is the spec name")
+	spec       = flag.String("spec", "", "Spec file to read")
+	pkg        = flag.String("pkg", "lox", "Package where this code belongs")
+	dest       = flag.String("dest", "", "Destination file. If not given, default to gen_%s.go, where %s is the spec name")
+	extensions = flag.String("extensions", "", "Comma-separated list of extensions to apply")
 )
 
 func main() {
@@ -107,7 +121,9 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	exts := parseExtensions(*extensions)
 	data := &Data{
+		Extensions: exts,
 		Invocation: strings.Join(os.Args[1:], " "),
 		TitleName:  strings.Title(iName),
 		LowerName:  iName,
@@ -145,11 +161,26 @@ func interfaceName(filename string) string {
 	return strings.ToLower(groups[1])
 }
 
+func parseExtensions(text string) StringSet {
+	exts := make(StringSet)
+	extList := strings.Split(text, ",")
+	for _, ext := range extList {
+		ext = strings.ToLower(strings.TrimSpace(ext))
+		if ext == "" {
+			continue
+		}
+		exts[ext] = true
+	}
+	return exts
+}
+
 func parseSchemas(text string) []Schema {
 	var schemas []Schema
 	lines := strings.Split(text, "\n")
 	for _, line := range lines {
-		line = strings.TrimSpace(line)
+		commentRE := regexp.MustCompile(`^(.*?)(//.*)?$`)
+		groups := commentRE.FindStringSubmatch(line)
+		line = strings.TrimSpace(groups[1])
 		if line == "" {
 			continue
 		}
@@ -165,9 +196,10 @@ func parseSchema(line string) Schema {
 		panic(fmt.Sprintf("line %q doesn't match pattern 'Struct(Field1: Type1, Field2: Type2)'", line))
 	}
 	return Schema{
-		Name:   parts[2],
-		IsPtr:  parts[1] == "*",
-		Fields: parseFields(parts[3]),
+		TitleName: parts[2],
+		LowerName: strings.ToLower(parts[2]),
+		IsPtr:     parts[1] == "*",
+		Fields:    parseFields(parts[3]),
 	}
 }
 
