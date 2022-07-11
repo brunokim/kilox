@@ -137,6 +137,12 @@ func (is instance) String() string {
 type class struct {
 	meta
 	instance
+	fieldInitializers []fieldInitializer
+}
+
+type fieldInitializer struct {
+	name  string
+	value any
 }
 
 func newMeta(name string) meta {
@@ -167,6 +173,9 @@ func (cl class) Arity() int {
 
 func (cl class) Call(i *Interpreter, args []any) any {
 	is := newInstance(cl.meta)
+	for _, fieldInit := range cl.fieldInitializers {
+		is.fields[fieldInit.name] = fieldInit.value
+	}
 	init, ok := cl.methods["init"]
 	if ok {
 		init.bind(is).Call(i, args)
@@ -358,6 +367,19 @@ func (i *Interpreter) visitClassStmt(stmt ClassStmt) {
 		methodName := method.Name.Lexeme
 		isInit := false
 		cl.m.methods[methodName] = function{methodName, method.Params, method.Body, i.env, isInit}
+	}
+	for _, decl := range stmt.StaticVars {
+		cl.instance.fields[decl.Name.Lexeme] = nil
+		if decl.Init != nil {
+			cl.instance.fields[decl.Name.Lexeme] = i.evaluate(decl.Init)
+		}
+	}
+	for _, decl := range stmt.Vars {
+		fieldInit := fieldInitializer{name: decl.Name.Lexeme}
+		if decl.Init != nil {
+			fieldInit.value = i.evaluate(decl.Init)
+		}
+		cl.fieldInitializers = append(cl.fieldInitializers, fieldInit)
 	}
 	classEnv := i.env.Child(staticEnvironment)
 	for _, method := range stmt.Methods {

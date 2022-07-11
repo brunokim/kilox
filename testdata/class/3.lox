@@ -1,6 +1,8 @@
 // experiments: -typing
 
 class Storage {
+    class var strategy;
+
     class new(m, n) {
         if (this.strategy == nil) {
             this.setStrategy("sparse");
@@ -28,7 +30,6 @@ class Storage {
         print "Done!";
     }
 }
-Storage.strategy = nil;
 
 var s1 = Storage.new(10, 20);
 // output: Allocating...

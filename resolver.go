@@ -23,6 +23,8 @@ const (
 	funcParam
 	className
 	thisKeyword
+	classVar
+	instanceVar
 )
 
 type classType int
@@ -202,6 +204,14 @@ func (r *Resolver) resolveMethods(methods []FunctionStmt, isStatic bool) {
 	}
 }
 
+func (r *Resolver) resolveVarDeclaration(name Token, init Expr, decl declType) {
+	r.declare(name, decl)
+	if init != nil {
+		r.resolveExpr(init)
+	}
+	r.define(name)
+}
+
 // TODO: the error output order is weird, because scopes are resolved in pre-order.
 // This means that 'fun unused(x) {}' reports first for 'x', and then for 'unused'.
 // Figure out how to execute this (or at least sort it) in post-order.
@@ -231,11 +241,7 @@ func (r *Resolver) visitPrintStmt(stmt PrintStmt) {
 }
 
 func (r *Resolver) visitVarStmt(stmt VarStmt) {
-	r.declare(stmt.Name, local)
-	if stmt.Init != nil {
-		r.resolveExpr(stmt.Init)
-	}
-	r.define(stmt.Name)
+	r.resolveVarDeclaration(stmt.Name, stmt.Init, local)
 }
 
 func (r *Resolver) visitIfStmt(stmt IfStmt) {
@@ -301,10 +307,19 @@ func (r *Resolver) visitClassStmt(stmt ClassStmt) {
 	r.define(stmt.Name)
 
 	r.beginScope() // class
+
 	r.resolveMethods(stmt.StaticMethods, true /*isStatic*/)
+	for _, decl := range stmt.StaticVars {
+		r.resolveVarDeclaration(decl.Name, decl.Init, classVar)
+	}
 
 	r.beginScope() // instance
+
 	r.resolveMethods(stmt.Methods, false /*isStatic*/)
+	for _, decl := range stmt.Vars {
+		r.resolveVarDeclaration(decl.Name, decl.Init, instanceVar)
+	}
+
 	r.endScope() // instance
 
 	r.endScope() // class

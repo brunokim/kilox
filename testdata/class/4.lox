@@ -1,0 +1,51 @@
+// experiments: -typing
+
+class Point {
+    var x;
+    var y;
+    init(x, y) {
+        this.x = x;
+        this.y = y;
+    }
+}
+
+class Rectangle {
+    var topLeft;
+    var bottomRight;
+    var fillColor = "red";
+    var borderColor = "black";
+
+    init(topLeft, bottomRight) {
+        this.topLeft = topLeft;
+        this.bottomRight = bottomRight;
+    }
+
+    class var latest;
+    class fromCorners(x1, y1, x2, y2) {
+        if (x1 > x2) { var temp = x1; x1 = x2; x2 = temp; }
+        if (y1 > y2) { var temp = y1; y1 = y2; y2 = temp; }
+
+        var rect = Rectangle(Point(x1, y2), Point(x2, y1));
+        if (this.latest != nil) {
+            // Initialize colors from latest built rectangle's settings.
+            rect.fillColor = this.latest.fillColor;
+            rect.borderColor = this.latest.borderColor;
+        }
+        this.latest = rect;
+        return rect;
+    }
+}
+
+var r1 = Rectangle.fromCorners(0, 0, 4, 3);
+print r1.fillColor;   // output: red
+print r1.borderColor; // output: black
+r1.fillColor = "blue";
+
+var r2 = Rectangle.fromCorners(1, 1, 5, 2);
+print r2.fillColor;   // output: blue
+print r2.borderColor; // output: black
+r2.borderColor = "gray";
+
+var r3 = Rectangle.fromCorners(-1, 3, 4, 2);
+print r3.fillColor;   // output: blue
+print r3.borderColor; // output: gray
