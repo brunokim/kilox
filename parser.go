@@ -83,14 +83,19 @@ func (p *Parser) varDeclaration() Stmt {
 func (p *Parser) classDeclaration() Stmt {
 	name := p.consume(Identifier, "expecting class name")
 	p.consume(LeftBrace, "expecting '{' before class body")
-	var methods []FunctionStmt
+	var methods, statics []FunctionStmt
 	for !p.isAtEnd() && !p.check(RightBrace) {
-		methods = append(methods, p.function("method"))
+		if p.match(Class) {
+			statics = append(statics, p.function("method"))
+		} else {
+			methods = append(methods, p.function("method"))
+		}
 	}
 	p.consume(RightBrace, "expecting '}' after class body")
 	return ClassStmt{
 		Name:    name,
 		Methods: methods,
+		Statics: statics,
 	}
 }
 

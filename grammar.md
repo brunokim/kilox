@@ -67,7 +67,7 @@ Expressions
 Functions
 
     anonFunction ::= "fun" function ;
-    method       ::= identifier function ;
+    method       ::= "class"? identifier function ;
     function     ::= "(" parameters? ")" block ;
     parameters   ::= identifier ("," identifier)* ;
 

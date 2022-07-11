@@ -349,6 +349,19 @@ func TestParserStatements(t *testing.T) {
 				},
 			},
 		}},
+		{"class Foo { f(){} class g(){} class h(){} i(){} }", []lox.Stmt{
+			lox.ClassStmt{
+				Name: token(lox.Identifier, "Foo"),
+				Methods: []lox.FunctionStmt{
+					{Name: token(lox.Identifier, "f")},
+					{Name: token(lox.Identifier, "i")},
+				},
+				Statics: []lox.FunctionStmt{
+					{Name: token(lox.Identifier, "g")},
+					{Name: token(lox.Identifier, "h")},
+				},
+			},
+		}},
 	}
 
 	for _, test := range tests {
