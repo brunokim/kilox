@@ -88,15 +88,68 @@ func (f function) String() string {
 
 // ----
 
-type class struct {
+type object interface {
+	get(name Token) any
+	set(name Token, value any)
+}
+
+type meta struct {
 	name    string
 	methods map[string]function
 }
 
-func newClass(name string) class {
-	return class{
+// ----
+
+type instance struct {
+	m      meta
+	fields map[string]any
+}
+
+func newInstance(m meta) instance {
+	return instance{
+		m:      m,
+		fields: make(map[string]any),
+	}
+}
+
+func (is instance) get(name Token) any {
+	v, ok := is.fields[name.Lexeme]
+	if ok {
+		return v
+	}
+	m, ok := is.m.methods[name.Lexeme]
+	if ok {
+		return m.bind(is)
+	}
+	panic(runtimeError{name, fmt.Sprintf("undefined property in %s", is)})
+}
+
+func (is instance) set(name Token, value any) {
+	is.fields[name.Lexeme] = value
+}
+
+func (is instance) String() string {
+	return fmt.Sprintf("<instance %s>", is.m.name)
+}
+
+// ----
+
+type class struct {
+	meta
+	instance
+}
+
+func newMeta(name string) meta {
+	return meta{
 		name:    name,
 		methods: make(map[string]function),
+	}
+}
+
+func newClass(name string) class {
+	return class{
+		meta:     newMeta(name),
+		instance: newInstance(newMeta(name + " metaclass")),
 	}
 }
 
@@ -113,7 +166,7 @@ func (cl class) Arity() int {
 }
 
 func (cl class) Call(i *Interpreter, args []any) any {
-	is := newInstance(cl)
+	is := newInstance(cl.meta)
 	init, ok := cl.methods["init"]
 	if ok {
 		init.bind(is).Call(i, args)
@@ -121,39 +174,12 @@ func (cl class) Call(i *Interpreter, args []any) any {
 	return is
 }
 
-// ----
-
-type instance struct {
-	cl class
-
-	fields map[string]any
+func (cl class) get(name Token) any {
+	return cl.instance.get(name)
 }
 
-func newInstance(cl class) instance {
-	return instance{
-		cl:     cl,
-		fields: make(map[string]any),
-	}
-}
-
-func (is instance) get(name Token) any {
-	v, ok := is.fields[name.Lexeme]
-	if ok {
-		return v
-	}
-	m, ok := is.cl.methods[name.Lexeme]
-	if ok {
-		return m.bind(is)
-	}
-	panic(runtimeError{name, fmt.Sprintf("undefined property in %s", is)})
-}
-
-func (is instance) set(name Token, value any) {
-	is.fields[name.Lexeme] = value
-}
-
-func (is instance) String() string {
-	return fmt.Sprintf("<instance %s>", is.cl.name)
+func (cl class) set(name Token, value any) {
+	cl.instance.set(name, value)
 }
 
 // ----
@@ -328,13 +354,16 @@ func (i *Interpreter) visitClassStmt(stmt ClassStmt) {
 	className := stmt.Name.Lexeme
 	i.env.Define(className, nil)
 	cl := newClass(className)
-	for _, method := range stmt.Methods {
+	for _, method := range stmt.Statics {
 		methodName := method.Name.Lexeme
 		isInit := false
-		if methodName == "init" {
-			isInit = true
-		}
-		cl.methods[methodName] = function{methodName, method.Params, method.Body, i.env, isInit}
+		cl.m.methods[methodName] = function{methodName, method.Params, method.Body, i.env, isInit}
+	}
+	classEnv := i.env.Child(staticEnvironment)
+	for _, method := range stmt.Methods {
+		methodName := method.Name.Lexeme
+		isInit := (methodName == "init")
+		cl.methods[methodName] = function{methodName, method.Params, method.Body, classEnv, isInit}
 	}
 	i.env.Set(stmt.Name, cl)
 }
@@ -413,7 +442,7 @@ func (i *Interpreter) visitFunctionExpr(expr *FunctionExpr) {
 
 func (i *Interpreter) visitGetExpr(expr *GetExpr) {
 	obj := i.evaluate(expr.Object)
-	is, ok := obj.(instance)
+	is, ok := obj.(object)
 	if !ok {
 		panic(runtimeError{expr.Name, fmt.Sprintf("want an instance for property access, got %[1]T (%[1]v)", obj)})
 	}
@@ -422,7 +451,7 @@ func (i *Interpreter) visitGetExpr(expr *GetExpr) {
 
 func (i *Interpreter) visitSetExpr(expr *SetExpr) {
 	obj := i.evaluate(expr.Object)
-	is, ok := obj.(instance)
+	is, ok := obj.(object)
 	if !ok {
 		panic(runtimeError{expr.Name, fmt.Sprintf("want an instance for field access, got %[1]T (%[1]v)", obj)})
 	}

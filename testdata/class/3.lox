@@ -1,0 +1,43 @@
+// experiments: -typing
+
+class Storage {
+    class new(m, n) {
+        if (this.strategy == nil) {
+            this.setStrategy("sparse");
+        }
+        return Storage(this.strategy, m, n);
+    }
+
+    class setStrategy(s) {
+        this.strategy = s;
+    }
+
+    init(strategy, m, n) {
+        if (strategy == "sparse") {
+            this.alloc(4*(m+n));
+        } else if (strategy == "dense") {
+            this.alloc(m*n);
+        } else {
+            print "unknown strategy: " + strategy;
+        }
+    }
+
+    alloc(size) {
+        print "Allocating...";
+        print size;
+        print "Done!";
+    }
+}
+Storage.strategy = nil;
+
+var s1 = Storage.new(10, 20);
+// output: Allocating...
+// output: 120
+// output: Done!
+
+Storage.strategy = "dense";
+
+var s2 = Storage.new(10, 20);
+// output: Allocating...
+// output: 200
+// output: Done!

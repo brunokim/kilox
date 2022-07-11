@@ -189,6 +189,19 @@ func (r *Resolver) resolveFunction(params []Token, body []Stmt, t funcType) {
 	r.endScope()
 }
 
+func (r *Resolver) resolveMethods(methods []FunctionStmt, isStatic bool) {
+	token := Token{Lexeme: "this"}
+	r.declare(token, thisKeyword)
+	r.define(token)
+	for _, method := range methods {
+		ftype := methodFunc
+		if method.Name.Lexeme == "init" && !isStatic {
+			ftype = initFunc
+		}
+		r.resolveFunction(method.Params, method.Body, ftype)
+	}
+}
+
 // TODO: the error output order is weird, because scopes are resolved in pre-order.
 // This means that 'fun unused(x) {}' reports first for 'x', and then for 'unused'.
 // Figure out how to execute this (or at least sort it) in post-order.
@@ -287,18 +300,14 @@ func (r *Resolver) visitClassStmt(stmt ClassStmt) {
 	r.declare(stmt.Name, className)
 	r.define(stmt.Name)
 
-	r.beginScope()
-	token := Token{Lexeme: "this"}
-	r.declare(token, thisKeyword)
-	r.define(token)
-	for _, method := range stmt.Methods {
-		ftype := methodFunc
-		if method.Name.Lexeme == "init" {
-			ftype = initFunc
-		}
-		r.resolveFunction(method.Params, method.Body, ftype)
-	}
-	r.endScope()
+	r.beginScope() // class
+	r.resolveMethods(stmt.Statics, true /*isStatic*/)
+
+	r.beginScope() // instance
+	r.resolveMethods(stmt.Methods, false /*isStatic*/)
+	r.endScope() // instance
+
+	r.endScope() // class
 }
 
 // ----
