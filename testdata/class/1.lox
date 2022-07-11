@@ -1,7 +1,7 @@
 // experiments: -typing
 
 class Machine {
-    onHalt(evt) {
+    onHalt(evt_) {
         print "halt!";
     }
 }
@@ -10,6 +10,8 @@ print Machine; // output: <class Machine>
 
 var m = Machine();
 print m;           // output: <instance Machine>
+
+m.onHalt("");      // output: halt!
 
 m.ip = 0;
 m.instr = "ADD %1 %2";

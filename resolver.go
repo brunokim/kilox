@@ -11,6 +11,7 @@ const (
 	noFunc funcType = iota
 	namedFunc
 	anonymousFunc
+	methodFunc
 )
 
 type declType int
@@ -268,6 +269,10 @@ func (r *Resolver) visitReturnStmt(stmt ReturnStmt) {
 func (r *Resolver) visitClassStmt(stmt ClassStmt) {
 	r.declare(stmt.Name, className)
 	r.define(stmt.Name)
+
+	for _, method := range stmt.Methods {
+		r.resolveFunction(method.Params, method.Body, methodFunc)
+	}
 }
 
 // ----

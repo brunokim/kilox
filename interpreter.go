@@ -70,7 +70,15 @@ func (f function) String() string {
 // ----
 
 type class struct {
-	name string
+	name    string
+	methods map[string]function
+}
+
+func newClass(name string) class {
+	return class{
+		name:    name,
+		methods: make(map[string]function),
+	}
 }
 
 func (cl class) String() string {
@@ -84,6 +92,8 @@ func (cl class) Arity() int {
 func (cl class) Call(i *Interpreter, args []any) any {
 	return newInstance(cl)
 }
+
+// ----
 
 type instance struct {
 	cl class
@@ -100,10 +110,14 @@ func newInstance(cl class) instance {
 
 func (is instance) get(name Token) any {
 	v, ok := is.fields[name.Lexeme]
-	if !ok {
-		panic(runtimeError{name, fmt.Sprintf("undefined property in %s", is)})
+	if ok {
+		return v
 	}
-	return v
+	m, ok := is.cl.methods[name.Lexeme]
+	if ok {
+		return m
+	}
+	panic(runtimeError{name, fmt.Sprintf("undefined property in %s", is)})
 }
 
 func (is instance) set(name Token, value any) {
@@ -282,9 +296,14 @@ func (i *Interpreter) visitReturnStmt(stmt ReturnStmt) {
 }
 
 func (i *Interpreter) visitClassStmt(stmt ClassStmt) {
-	name := stmt.Name.Lexeme
-	cl := class{name}
-	i.env.Define(name, cl)
+	className := stmt.Name.Lexeme
+	i.env.Define(className, nil)
+	cl := newClass(className)
+	for _, method := range stmt.Methods {
+		methodName := method.Name.Lexeme
+		cl.methods[methodName] = function{methodName, method.Params, method.Body, i.env}
+	}
+	i.env.Set(stmt.Name, cl)
 }
 
 // ----

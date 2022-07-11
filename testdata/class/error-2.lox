@@ -1,0 +1,6 @@
+// experiments: -typing
+
+class Foo {
+    qux(x) {}    // error: line 4 at 'x': function param is never read
+}
+
