@@ -48,6 +48,11 @@ func (f function) bind(is instance) function {
 	return function{f.name, f.params, f.body, env, f.isInit}
 }
 
+func (f function) getThis() instance {
+	// In a method, the only variable stored in the environment is 'this'.
+	return f.closure.GetStatic(0, 0).(instance)
+}
+
 func (f function) Arity() int {
 	return len(f.params)
 }
@@ -60,7 +65,11 @@ func (f function) Call(i *Interpreter, args []any) (result any) {
 	defer func() {
 		if r := recover(); r != nil {
 			if res, ok := r.(returnSignal); ok {
-				result = res.value
+				if f.isInit {
+					result = f.getThis()
+				} else {
+					result = res.value
+				}
 			} else {
 				panic(r)
 			}
@@ -68,8 +77,7 @@ func (f function) Call(i *Interpreter, args []any) (result any) {
 	}()
 	i.executeBlock(f.body, env)
 	if f.isInit {
-		// f is an init method. Its immediate closure only contains the variable "this".
-		return f.closure.GetStatic(0, 0)
+		return f.getThis()
 	}
 	return nil
 }

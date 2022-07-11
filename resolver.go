@@ -12,6 +12,7 @@ const (
 	namedFunc
 	anonymousFunc
 	methodFunc
+	initFunc
 )
 
 type declType int
@@ -272,6 +273,9 @@ func (r *Resolver) visitReturnStmt(stmt ReturnStmt) {
 		r.addError(resolveError{stmt.Keyword, "'return' can only be used within functions"})
 	}
 	if stmt.Result != nil {
+		if r.currFunc == initFunc {
+			r.addError(resolveError{stmt.Keyword, "can't return a value from an initializer"})
+		}
 		r.resolveExpr(stmt.Result)
 	}
 }
@@ -288,7 +292,11 @@ func (r *Resolver) visitClassStmt(stmt ClassStmt) {
 	r.declare(token, thisKeyword)
 	r.define(token)
 	for _, method := range stmt.Methods {
-		r.resolveFunction(method.Params, method.Body, methodFunc)
+		ftype := methodFunc
+		if method.Name.Lexeme == "init" {
+			ftype = initFunc
+		}
+		r.resolveFunction(method.Params, method.Body, ftype)
 	}
 	r.endScope()
 }

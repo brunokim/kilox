@@ -9,3 +9,19 @@ class Foo {
 var foo = Foo();      // output: <instance Foo>
 var bar = foo.init(); // output: <instance Foo>
 print bar;            // output: <instance Foo>
+
+class Baz {
+    init(x) {
+        if (x < 10) {
+            this.small = true;
+            return;
+        }
+        this.small = false;
+    }
+}
+
+var b1 = Baz(3);
+var b2 = Baz(30);
+
+print b1.small; // output: true
+print b2.small; // output: false
