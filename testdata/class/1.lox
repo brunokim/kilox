@@ -28,6 +28,11 @@ print m.instr; // output: ADD %1 %2
 
 
 class Cons {
+    init(head, tail) {
+        this.head = head;
+        this.tail = tail;
+    }
+
     printMe() {
         print this.head;
         if (this.tail != nil) {
@@ -36,17 +41,9 @@ class Cons {
     }
 }
 
-var c3 = Cons();
-c3.head = 3;
-c3.tail = nil;
- 
-var c2 = Cons();
-c2.head = 2;
-c2.tail = c3;
- 
-var c1 = Cons();
-c1.head = 1;
-c1.tail = c2;
+var c3 = Cons(3, nil);
+var c2 = Cons(2, c3);
+var c1 = Cons(1, c2);
 
 print c1.tail.tail.head; // output: 3
 c1.tail.head = 20;

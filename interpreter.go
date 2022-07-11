@@ -39,12 +39,13 @@ type function struct {
 	params  []Token
 	body    []Stmt
 	closure *Environment
+	isInit  bool
 }
 
 func (f function) bind(is instance) function {
 	env := f.closure.Child(staticEnvironment)
 	env.Define("this", is)
-	return function{f.name, f.params, f.body, env}
+	return function{f.name, f.params, f.body, env, f.isInit}
 }
 
 func (f function) Arity() int {
@@ -66,6 +67,10 @@ func (f function) Call(i *Interpreter, args []any) (result any) {
 		}
 	}()
 	i.executeBlock(f.body, env)
+	if f.isInit {
+		// f is an init method. Its immediate closure only contains the variable "this".
+		return f.closure.GetStatic(0, 0)
+	}
 	return nil
 }
 
@@ -92,11 +97,20 @@ func (cl class) String() string {
 }
 
 func (cl class) Arity() int {
+	init, ok := cl.methods["init"]
+	if ok {
+		return init.Arity()
+	}
 	return 0
 }
 
 func (cl class) Call(i *Interpreter, args []any) any {
-	return newInstance(cl)
+	is := newInstance(cl)
+	init, ok := cl.methods["init"]
+	if ok {
+		init.bind(is).Call(i, args)
+	}
+	return is
 }
 
 // ----
@@ -289,7 +303,8 @@ func (i *Interpreter) visitContinueStmt(stmt ContinueStmt) {
 
 func (i *Interpreter) visitFunctionStmt(stmt FunctionStmt) {
 	name := stmt.Name.Lexeme
-	f := function{name, stmt.Params, stmt.Body, i.env}
+	isInit := false
+	f := function{name, stmt.Params, stmt.Body, i.env, isInit}
 	i.env.Define(name, f)
 }
 
@@ -307,7 +322,11 @@ func (i *Interpreter) visitClassStmt(stmt ClassStmt) {
 	cl := newClass(className)
 	for _, method := range stmt.Methods {
 		methodName := method.Name.Lexeme
-		cl.methods[methodName] = function{methodName, method.Params, method.Body, i.env}
+		isInit := false
+		if methodName == "init" {
+			isInit = true
+		}
+		cl.methods[methodName] = function{methodName, method.Params, method.Body, i.env, isInit}
 	}
 	i.env.Set(stmt.Name, cl)
 }
@@ -380,7 +399,8 @@ func (i *Interpreter) visitCallExpr(expr *CallExpr) {
 }
 
 func (i *Interpreter) visitFunctionExpr(expr *FunctionExpr) {
-	i.value = function{"anonymous", expr.Params, expr.Body, i.env}
+	isInit := false
+	i.value = function{"anonymous", expr.Params, expr.Body, i.env, isInit}
 }
 
 func (i *Interpreter) visitGetExpr(expr *GetExpr) {

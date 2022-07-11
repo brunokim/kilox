@@ -1,0 +1,11 @@
+// experiments: -typing
+
+class Foo {
+    init() {
+        print this;
+    }
+}
+
+var foo = Foo();      // output: <instance Foo>
+var bar = foo.init(); // output: <instance Foo>
+print bar;            // output: <instance Foo>
