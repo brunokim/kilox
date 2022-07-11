@@ -21,6 +21,7 @@ const (
 	funcName
 	funcParam
 	className
+	thisKeyword
 )
 
 type variableState struct {
@@ -270,9 +271,14 @@ func (r *Resolver) visitClassStmt(stmt ClassStmt) {
 	r.declare(stmt.Name, className)
 	r.define(stmt.Name)
 
+	r.beginScope()
+	token := Token{Lexeme: "this"}
+	r.declare(token, thisKeyword)
+	r.define(token)
 	for _, method := range stmt.Methods {
 		r.resolveFunction(method.Params, method.Body, methodFunc)
 	}
+	r.endScope()
 }
 
 // ----
@@ -336,5 +342,5 @@ func (r *Resolver) visitSetExpr(expr *SetExpr) {
 }
 
 func (r *Resolver) visitThisExpr(expr *ThisExpr) {
-	panic("lox.(*Resolver).visitThisExpr is not implemented")
+	r.resolveLocal(expr, expr.Keyword)
 }

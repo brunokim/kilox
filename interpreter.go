@@ -41,6 +41,12 @@ type function struct {
 	closure *Environment
 }
 
+func (f function) bind(is instance) function {
+	env := f.closure.Child(staticEnvironment)
+	env.Define("this", is)
+	return function{f.name, f.params, f.body, env}
+}
+
 func (f function) Arity() int {
 	return len(f.params)
 }
@@ -115,7 +121,7 @@ func (is instance) get(name Token) any {
 	}
 	m, ok := is.cl.methods[name.Lexeme]
 	if ok {
-		return m
+		return m.bind(is)
 	}
 	panic(runtimeError{name, fmt.Sprintf("undefined property in %s", is)})
 }
@@ -398,7 +404,7 @@ func (i *Interpreter) visitSetExpr(expr *SetExpr) {
 }
 
 func (i *Interpreter) visitThisExpr(expr *ThisExpr) {
-	panic("lox.(*Interpreter).visitThisExpr is not implemented")
+	i.value = i.lookupVariable(expr.Keyword, expr)
 }
 
 // ----

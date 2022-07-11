@@ -27,7 +27,14 @@ print m.instr; // output: ADD %1 %2
 }
 
 
-class Cons {}
+class Cons {
+    printMe() {
+        print this.head;
+        if (this.tail != nil) {
+            this.tail.printMe();
+        }
+    }
+}
 
 var c3 = Cons();
 c3.head = 3;
@@ -44,3 +51,8 @@ c1.tail = c2;
 print c1.tail.tail.head; // output: 3
 c1.tail.head = 20;
 print c1.tail;           // output: <instance Cons>
+
+c1.printMe();
+// output: 1
+// output: 20
+// output: 3
