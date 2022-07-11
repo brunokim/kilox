@@ -311,3 +311,7 @@ func (c *TypeChecker) visitGetExpr(expr *GetExpr) {
 func (c *TypeChecker) visitSetExpr(expr *SetExpr) {
 	panic("lox.(*TypeChecker).visitSetExpr is not implemented")
 }
+
+func (c *TypeChecker) visitThisExpr(expr *ThisExpr) {
+	panic("lox.(*TypeChecker).visitThisExpr is not implemented")
+}

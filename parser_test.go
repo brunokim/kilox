@@ -37,6 +37,7 @@ func TestParserExpression(t *testing.T) {
 		{"false", boolean(false)},
 		{"true", boolean(true)},
 		{"nil", literal(lox.Nil, nil)},
+		{"this", &lox.ThisExpr{token(lox.This, "this")}},
 		{`"abc def"`, literal(lox.String, "abc def")},
 		{"x", variableExpr("x")},
 		{"-1", &lox.UnaryExpr{Operator: token(lox.Minus, "-"), Right: number(1)}},

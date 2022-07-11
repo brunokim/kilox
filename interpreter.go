@@ -397,6 +397,10 @@ func (i *Interpreter) visitSetExpr(expr *SetExpr) {
 	i.value = value
 }
 
+func (i *Interpreter) visitThisExpr(expr *ThisExpr) {
+	panic("lox.(*Interpreter).visitThisExpr is not implemented")
+}
+
 // ----
 
 func operate2(token Token, left, right any) any {

@@ -10,3 +10,4 @@
 *Function(Keyword: Token, Params: []Token, Body: []Stmt) // fun(x, y) { }
 *Get(Object: Expr, Name: Token)                          // obj.field
 *Set(Object: Expr, Name: Token, Value: Expr)             // obj.field = 1
+*This(Keyword: Token)                                    // this

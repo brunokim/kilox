@@ -58,7 +58,7 @@ Expressions
                  ;
     call       ::= primary ( "(" arguments? ")" | "." identifier )* ;
     arguments  ::= expression ( "," expression )* ;
-    primary    ::= number | string | "true" | "false" | "nil"
+    primary    ::= number | string | "true" | "false" | "nil" | "this"
                  | "(" expression ")"
                  | anonFunction
                  | identifier

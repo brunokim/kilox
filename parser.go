@@ -406,6 +406,9 @@ func (p *Parser) primary() Expr {
 	if p.match(Fun) {
 		return p.anonymousFunction()
 	}
+	if p.match(This) {
+		return &ThisExpr{p.previous()}
+	}
 	panic(parseError{p.peek(), "expecting expression"})
 }
 

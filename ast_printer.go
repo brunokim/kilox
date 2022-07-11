@@ -94,6 +94,10 @@ func (p *ASTPrinter) visitSetExpr(expr *SetExpr) {
 	panic("lox.(*ASTPrinter).visitSetExpr is not implemented")
 }
 
+func (p *ASTPrinter) visitThisExpr(expr *ThisExpr) {
+	panic("lox.(*ASTPrinter).visitThisExpr is not implemented")
+}
+
 // ----
 
 func (p *ASTPrinter) visitExpressionStmt(stmt ExpressionStmt) {

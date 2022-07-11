@@ -19,6 +19,7 @@ type exprVisitor interface {
 	visitFunctionExpr(e *FunctionExpr)
 	visitGetExpr(e *GetExpr)
 	visitSetExpr(e *SetExpr)
+	visitThisExpr(e *ThisExpr)
 }
 
 type BinaryExpr struct {
@@ -79,6 +80,10 @@ type SetExpr struct {
 	Value  Expr
 }
 
+type ThisExpr struct {
+	Keyword Token
+}
+
 func (e *BinaryExpr) accept(v exprVisitor) {
 	v.visitBinaryExpr(e)
 }
@@ -123,6 +128,10 @@ func (e *SetExpr) accept(v exprVisitor) {
 	v.visitSetExpr(e)
 }
 
+func (e *ThisExpr) accept(v exprVisitor) {
+	v.visitThisExpr(e)
+}
+
 func (*BinaryExpr) typeName() string     { return "binary" }
 func (*GroupingExpr) typeName() string   { return "grouping" }
 func (*LiteralExpr) typeName() string    { return "literal" }
@@ -134,3 +143,4 @@ func (*CallExpr) typeName() string       { return "call" }
 func (*FunctionExpr) typeName() string   { return "function" }
 func (*GetExpr) typeName() string        { return "get" }
 func (*SetExpr) typeName() string        { return "set" }
+func (*ThisExpr) typeName() string       { return "this" }
