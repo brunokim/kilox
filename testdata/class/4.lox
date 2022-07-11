@@ -10,16 +10,6 @@ class Point {
 }
 
 class Rectangle {
-    var topLeft;
-    var bottomRight;
-    var fillColor = "red";
-    var borderColor = "black";
-
-    init(topLeft, bottomRight) {
-        this.topLeft = topLeft;
-        this.bottomRight = bottomRight;
-    }
-
     class var latest;
     class fromCorners(x1, y1, x2, y2) {
         if (x1 > x2) { var temp = x1; x1 = x2; x2 = temp; }
@@ -33,6 +23,16 @@ class Rectangle {
         }
         this.latest = rect;
         return rect;
+    }
+
+    var topLeft;
+    var bottomRight;
+    var fillColor = "red";
+    var borderColor = "black";
+
+    init(topLeft, bottomRight) {
+        this.topLeft = topLeft;
+        this.bottomRight = bottomRight;
     }
 }
 
