@@ -67,7 +67,7 @@ func (p *ASTPrinter) visitVariableExpr(expr *VariableExpr) {
 }
 
 func (p *ASTPrinter) visitAssignmentExpr(expr *AssignmentExpr) {
-	p.parenthesize(singleLine, "set", expr.Name, expr.Value)
+	p.parenthesize(singleLine, "assign", expr.Name, expr.Value)
 }
 
 func (p *ASTPrinter) visitLogicExpr(expr *LogicExpr) {
@@ -87,15 +87,15 @@ func (p *ASTPrinter) visitFunctionExpr(expr *FunctionExpr) {
 }
 
 func (p *ASTPrinter) visitGetExpr(expr *GetExpr) {
-	panic("lox.(*ASTPrinter).visitGetExpr is not implemented")
+	p.parenthesize(singleLine, "get", expr.Object, expr.Name)
 }
 
 func (p *ASTPrinter) visitSetExpr(expr *SetExpr) {
-	panic("lox.(*ASTPrinter).visitSetExpr is not implemented")
+	p.parenthesize(singleLine, "set", expr.Object, expr.Name, expr.Value)
 }
 
 func (p *ASTPrinter) visitThisExpr(expr *ThisExpr) {
-	panic("lox.(*ASTPrinter).visitThisExpr is not implemented")
+	p.str.WriteString("this")
 }
 
 // ----

@@ -2,6 +2,7 @@ package lox
 
 import (
 	"fmt"
+	"strings"
 )
 
 type dynType int
@@ -29,6 +30,33 @@ func NewEnvironment(t dynType) *Environment {
 func (env *Environment) isDynamic() bool {
 	return env.dynamics != nil
 }
+
+func (env *Environment) Debug() string {
+	var b strings.Builder
+	env.debug(&b)
+	return b.String()
+}
+
+func (env *Environment) debug(b *strings.Builder) {
+	if env.isDynamic() {
+		b.WriteString("- type: dynamic\n")
+		b.WriteString("  bindings:\n")
+		for name, value := range env.dynamics {
+			fmt.Fprintf(b, "    %[1]s: {type: %[2]T, value: %[2]v}\n", name, value)
+		}
+	} else {
+		b.WriteString("- type: static\n")
+		b.WriteString("  bindings:\n")
+		for _, value := range env.locals {
+			fmt.Fprintf(b, "    - {type: %[1]T, value: %[1]v}\n", value)
+		}
+	}
+	if env.enclosing != nil {
+		env.enclosing.debug(b)
+	}
+}
+
+// ----
 
 func (env *Environment) Child(t dynType) *Environment {
 	if t == dynamicEnvironment && !env.isDynamic() {
