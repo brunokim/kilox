@@ -4,67 +4,12 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"time"
 )
 
 type Callable interface {
 	Arity() int
 	Call(i *Interpreter, args []any) any
 }
-
-var builtin = NewEnvironment(dynamicEnvironment)
-
-func init() {
-	builtin.Define("clock", clockFunc{})
-	builtin.Define("type", typeFunc{})
-}
-
-// ----
-
-type clockFunc struct{}
-
-func (f clockFunc) Arity() int { return 0 }
-func (f clockFunc) Call(i *Interpreter, args []any) any {
-	return float64(time.Now().UnixMicro()) / 1e6
-}
-func (f clockFunc) String() string { return "<native fn clock>" }
-
-// ----
-
-type typeFunc struct{}
-
-func (f typeFunc) Arity() int { return 1 }
-func (f typeFunc) Call(i *Interpreter, args []any) any {
-	arg := args[0]
-	switch v := arg.(type) {
-	case bool:
-		return BoolType{}
-	case float64:
-		return NumberType{}
-	case string:
-		return StringType{}
-	case instance:
-		return v.m
-	case class:
-		return v.m
-	case meta:
-		return metaType{}
-	case metaType:
-		return metaType{}
-	case function:
-		params := make([]Type, v.Arity())
-		for i := 0; i < v.Arity(); i++ {
-			params[i] = &RefType{id: i + 1}
-		}
-		return FunctionType{params, &RefType{id: v.Arity() + 1}}
-	default:
-		if arg == nil {
-			return NilType{}
-		}
-		panic(runtimeError{Token{}, fmt.Sprintf("unhandled type(%[1]v) (%[1]T)", arg)})
-	}
-}
-func (f typeFunc) String() string { return "<native fn type>" }
 
 // ----
 
@@ -80,9 +25,9 @@ type function struct {
 	isInit  bool
 }
 
-func (f function) bind(is instance) function {
+func (f function) bind(obj object) function {
 	env := f.closure.Child(staticEnvironment)
-	env.Define("this", is)
+	env.Define("this", obj)
 	return function{f.name, f.params, f.body, env, f.isInit}
 }
 
@@ -122,121 +67,6 @@ func (f function) Call(i *Interpreter, args []any) (result any) {
 
 func (f function) String() string {
 	return fmt.Sprintf("<fn %s>", f.name)
-}
-
-// ----
-
-type object interface {
-	get(name Token) any
-	set(name Token, value any)
-}
-
-type metaType struct{}
-
-type meta struct {
-	name    string
-	methods map[string]function
-}
-
-func (m meta) String() string {
-	return fmt.Sprintf("<meta %s>", m.name)
-}
-
-func (metaType) String() string {
-	return "<meta meta>"
-}
-
-// ----
-
-type instance struct {
-	m      meta
-	fields map[string]any
-}
-
-func newInstance(m meta) instance {
-	return instance{
-		m:      m,
-		fields: make(map[string]any),
-	}
-}
-
-func (is instance) get(name Token) any {
-	v, ok := is.fields[name.Lexeme]
-	if ok {
-		return v
-	}
-	m, ok := is.m.methods[name.Lexeme]
-	if ok {
-		return m.bind(is)
-	}
-	panic(runtimeError{name, fmt.Sprintf("undefined property in %s", is)})
-}
-
-func (is instance) set(name Token, value any) {
-	is.fields[name.Lexeme] = value
-}
-
-func (is instance) String() string {
-	return fmt.Sprintf("<instance %s>", is.m.name)
-}
-
-// ----
-
-type class struct {
-	meta
-	instance
-	fieldInitializers []fieldInitializer
-}
-
-type fieldInitializer struct {
-	name  string
-	value any
-}
-
-func newMeta(name string) meta {
-	return meta{
-		name:    name,
-		methods: make(map[string]function),
-	}
-}
-
-func newClass(name string) class {
-	return class{
-		meta:     newMeta(name),
-		instance: newInstance(newMeta(name + " metaclass")),
-	}
-}
-
-func (cl class) String() string {
-	return fmt.Sprintf("<class %s>", cl.name)
-}
-
-func (cl class) Arity() int {
-	init, ok := cl.methods["init"]
-	if ok {
-		return init.Arity()
-	}
-	return 0
-}
-
-func (cl class) Call(i *Interpreter, args []any) any {
-	is := newInstance(cl.meta)
-	for _, fieldInit := range cl.fieldInitializers {
-		is.fields[fieldInit.name] = fieldInit.value
-	}
-	init, ok := cl.methods["init"]
-	if ok {
-		init.bind(is).Call(i, args)
-	}
-	return is
-}
-
-func (cl class) get(name Token) any {
-	return cl.instance.get(name)
-}
-
-func (cl class) set(name Token, value any) {
-	cl.instance.set(name, value)
 }
 
 // ----
@@ -299,6 +129,8 @@ func (i *Interpreter) Interpret(stmts []Stmt) (err error) {
 	return nil
 }
 
+// ----
+
 func (i *Interpreter) resolve(expr Expr, depth int, index int) {
 	i.locals[expr] = localPosition{depth, index}
 }
@@ -311,8 +143,6 @@ func (i *Interpreter) lookupVariable(name Token, expr Expr) any {
 	return i.globals.Get(name)
 }
 
-// ----
-
 func (i *Interpreter) execute(stmt Stmt) {
 	stmt.accept(i)
 }
@@ -324,6 +154,8 @@ func (i *Interpreter) executeBlock(stmts []Stmt, env *Environment) {
 		i.execute(stmt)
 	}
 }
+
+// ----
 
 func (i *Interpreter) visitExpressionStmt(stmt ExpressionStmt) {
 	i.evaluate(stmt.Expression)
@@ -410,30 +242,32 @@ func (i *Interpreter) visitReturnStmt(stmt ReturnStmt) {
 func (i *Interpreter) visitClassStmt(stmt ClassStmt) {
 	className := stmt.Name.Lexeme
 	i.env.Define(className, nil)
-	cl := newClass(className)
+	meta := newMetaClass(className)
+	cl := newClass(meta)
 	for _, method := range stmt.StaticMethods {
 		methodName := method.Name.Lexeme
 		isInit := false
-		cl.m.methods[methodName] = function{methodName, method.Params, method.Body, i.env, isInit}
+		cl.meta.methods[methodName] = function{methodName, method.Params, method.Body, i.env, isInit}
 	}
 	for _, decl := range stmt.StaticVars {
-		cl.instance.fields[decl.Name.Lexeme] = nil
+		var value any = nil
 		if decl.Init != nil {
-			cl.instance.fields[decl.Name.Lexeme] = i.evaluate(decl.Init)
+			value = i.evaluate(decl.Init)
 		}
+		cl.static.set(decl.Name, value)
 	}
 	for _, decl := range stmt.Vars {
-		fieldInit := fieldInitializer{name: decl.Name.Lexeme}
+		fieldInit := fieldInitializer{name: decl.Name}
 		if decl.Init != nil {
 			fieldInit.value = i.evaluate(decl.Init)
 		}
-		cl.fieldInitializers = append(cl.fieldInitializers, fieldInit)
+		cl.fieldInits = append(cl.fieldInits, fieldInit)
 	}
 	classEnv := i.env.Child(staticEnvironment)
 	for _, method := range stmt.Methods {
 		methodName := method.Name.Lexeme
 		isInit := (methodName == "init")
-		cl.methods[methodName] = function{methodName, method.Params, method.Body, classEnv, isInit}
+		cl.instanceBehavior.methods[methodName] = function{methodName, method.Params, method.Body, classEnv, isInit}
 	}
 	i.env.Set(stmt.Name, cl)
 }
@@ -514,7 +348,7 @@ func (i *Interpreter) visitGetExpr(expr *GetExpr) {
 	obj := i.evaluate(expr.Object)
 	is, ok := obj.(object)
 	if !ok {
-		panic(runtimeError{expr.Name, fmt.Sprintf("want an instance for property access, got %[1]T (%[1]v)", obj)})
+		panic(runtimeError{expr.Name, fmt.Sprintf("want an object for property access, got %[1]T (%[1]v)", obj)})
 	}
 	i.value = is.get(expr.Name)
 }
@@ -523,7 +357,7 @@ func (i *Interpreter) visitSetExpr(expr *SetExpr) {
 	obj := i.evaluate(expr.Object)
 	is, ok := obj.(object)
 	if !ok {
-		panic(runtimeError{expr.Name, fmt.Sprintf("want an instance for field access, got %[1]T (%[1]v)", obj)})
+		panic(runtimeError{expr.Name, fmt.Sprintf("want an object for field access, got %[1]T (%[1]v)", obj)})
 	}
 	value := i.evaluate(expr.Value)
 	is.set(expr.Name, value)

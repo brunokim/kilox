@@ -17,8 +17,8 @@ print type(nil);  // output: Nil
 print type(true); // output: Bool
 print type(1);    // output: Number
 print type("a");  // output: String
-print type(foo);  // output: <meta Foo>
-print type(Foo);  // output: <meta Foo metaclass>
+print type(foo);  // output: <class Foo>
+print type(Foo);  // output: <meta Foo>
 
 print type(type(Foo));       // output: <meta meta>
 print type(type(type(Foo))); // output: <meta meta>
