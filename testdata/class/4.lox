@@ -11,18 +11,11 @@ class Point {
 
 class Rectangle {
     class var latest;
+
     class fromCorners(x1, y1, x2, y2) {
         if (x1 > x2) { var temp = x1; x1 = x2; x2 = temp; }
         if (y1 > y2) { var temp = y1; y1 = y2; y2 = temp; }
-
-        var rect = Rectangle(Point(x1, y2), Point(x2, y1));
-        if (this.latest != nil) {
-            // Initialize colors from latest built rectangle's settings.
-            rect.fillColor = this.latest.fillColor;
-            rect.borderColor = this.latest.borderColor;
-        }
-        this.latest = rect;
-        return rect;
+        return Rectangle(Point(x1, y2), Point(x2, y1));
     }
 
     var topLeft;
@@ -33,6 +26,14 @@ class Rectangle {
     init(topLeft, bottomRight) {
         this.topLeft = topLeft;
         this.bottomRight = bottomRight;
+
+        var latest = type(this).latest;
+        if (latest != nil) {
+            // Initialize colors from latest built rectangle's settings.
+            this.fillColor = latest.fillColor;
+            this.borderColor = latest.borderColor;
+        }
+        type(this).latest = this;
     }
 }
 
@@ -46,6 +47,6 @@ print r2.fillColor;   // output: blue
 print r2.borderColor; // output: black
 r2.borderColor = "gray";
 
-var r3 = Rectangle.fromCorners(-1, 3, 4, 2);
+var r3 = Rectangle(Point(-1, 3), Point(4, 2));
 print r3.fillColor;   // output: blue
 print r3.borderColor; // output: gray
