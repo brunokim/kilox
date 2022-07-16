@@ -1,0 +1,24 @@
+// experiments: -typing
+
+var last;
+for (var i = 0; i < 5; i = i + 1) {
+    // Build linked list containing the current count
+    // as an instance var.
+    class Node {
+        var x = i;
+        var before = last;
+    }
+    last = Node();
+}
+
+// Walk list backwards printing the values.
+var node = last;
+while (node != nil) {
+    print node.x;
+    node = node.before;
+}
+// output: 4
+// output: 3
+// output: 2
+// output: 1
+// output: 0

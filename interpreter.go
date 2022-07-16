@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 )
 
 type Callable interface {
@@ -48,20 +49,16 @@ func (f function) Call(i *Interpreter, args []any) (result any) {
 	defer func() {
 		if r := recover(); r != nil {
 			if res, ok := r.(returnSignal); ok {
-				if f.isInit {
-					result = f.getThis()
-				} else {
-					result = res.value
-				}
+				result = res.value
 			} else {
 				panic(r)
 			}
 		}
+		if f.isInit {
+			result = f.getThis()
+		}
 	}()
 	i.executeBlock(f.body, env)
-	if f.isInit {
-		return f.getThis()
-	}
 	return nil
 }
 
@@ -127,6 +124,18 @@ func (i *Interpreter) Interpret(stmts []Stmt) (err error) {
 		i.execute(stmt)
 	}
 	return nil
+}
+
+func (i *Interpreter) Debug() string {
+	var b strings.Builder
+	b.WriteString("locals:\n")
+	for expr, pos := range i.locals {
+		dist, idx := pos.distance, pos.index
+		fmt.Fprintf(&b, "  '%[1]p %[1]v': {dist: %[2]d, idx: %[3]d}\n", expr, dist, idx)
+	}
+	b.WriteString("environment:\n")
+	b.WriteString(i.env.Debug())
+	return b.String()
 }
 
 // ----
@@ -241,9 +250,7 @@ func (i *Interpreter) visitReturnStmt(stmt ReturnStmt) {
 
 func (i *Interpreter) visitClassStmt(stmt ClassStmt) {
 	className := stmt.Name.Lexeme
-	i.env.Define(className, nil)
-	meta := newMetaClass(className)
-	cl := newClass(meta)
+	cl := newClass(newMetaClass(className))
 	for _, method := range stmt.StaticMethods {
 		methodName := method.Name.Lexeme
 		isInit := false
@@ -269,7 +276,7 @@ func (i *Interpreter) visitClassStmt(stmt ClassStmt) {
 		isInit := (methodName == "init")
 		cl.instanceBehavior.methods[methodName] = function{methodName, method.Params, method.Body, classEnv, isInit}
 	}
-	i.env.Set(stmt.Name, cl)
+	i.env.Define(className, cl)
 }
 
 // ----

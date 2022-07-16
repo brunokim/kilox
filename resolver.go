@@ -306,23 +306,37 @@ func (r *Resolver) visitClassStmt(stmt ClassStmt) {
 	r.declare(stmt.Name, className)
 	r.define(stmt.Name)
 
-	r.beginScope() // class
-
-	r.resolveMethods(stmt.StaticMethods, true /*isStatic*/)
+	// Static and instance initializers cannot refer to other names
+	// declared in the instance and class scopes, so they are initialized
+	// in the surrounding scope, the same as the class.
 	for _, decl := range stmt.StaticVars {
-		r.resolveVarDeclaration(decl.Name, decl.Init, classVar)
+		if decl.Init != nil {
+			r.resolveExpr(decl.Init)
+		}
 	}
-
-	r.beginScope() // instance
-
-	r.resolveMethods(stmt.Methods, false /*isStatic*/)
 	for _, decl := range stmt.Vars {
-		r.resolveVarDeclaration(decl.Name, decl.Init, instanceVar)
+		if decl.Init != nil {
+			r.resolveExpr(decl.Init)
+		}
 	}
-
-	r.endScope() // instance
-
-	r.endScope() // class
+	r.beginScope()
+	{
+		// class scope
+		r.resolveMethods(stmt.StaticMethods, true /*isStatic*/)
+		for _, decl := range stmt.StaticVars {
+			r.resolveVarDeclaration(decl.Name, nil, classVar)
+		}
+		r.beginScope()
+		{
+			// instance scope
+			r.resolveMethods(stmt.Methods, false /*isStatic*/)
+			for _, decl := range stmt.Vars {
+				r.resolveVarDeclaration(decl.Name, nil, instanceVar)
+			}
+		}
+		r.endScope()
+	}
+	r.endScope()
 }
 
 // ----
