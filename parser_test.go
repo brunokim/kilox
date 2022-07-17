@@ -8,25 +8,6 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
-func literal(tokenType lox.TokenType, v any) *lox.LiteralExpr {
-	return &lox.LiteralExpr{Token: literalToken(tokenType, "", v), Value: v}
-}
-
-func number(x float64) *lox.LiteralExpr {
-	return &lox.LiteralExpr{Token: literalToken(lox.Number, "", x), Value: x}
-}
-
-func boolean(x bool) *lox.LiteralExpr {
-	if x {
-		return &lox.LiteralExpr{Token: token(lox.True, ""), Value: true}
-	}
-	return &lox.LiteralExpr{Token: token(lox.False, ""), Value: false}
-}
-
-func variableExpr(name string) *lox.VariableExpr {
-	return &lox.VariableExpr{Name: token(lox.Identifier, name)}
-}
-
 func TestParserExpression(t *testing.T) {
 	tests := []struct {
 		text string
@@ -391,38 +372,4 @@ func TestParserStatements(t *testing.T) {
 			t.Errorf("%s: (-want, +got)%s", test.text, diff)
 		}
 	}
-}
-
-// -----
-
-func parse(t *testing.T, text string) ([]lox.Stmt, error) {
-	s := lox.NewScanner(text)
-	tokens, err := s.ScanTokens()
-	if err != nil {
-		t.Fatalf("%q: want nil, got err: %v", text, err)
-	}
-	p := lox.NewParser(tokens)
-	return p.Parse()
-}
-
-func parseStmts(t *testing.T, text string) []lox.Stmt {
-	stmts, err := parse(t, text)
-	if err != nil {
-		t.Fatalf("%q: want nil, got err: %v", text, err)
-	}
-	return stmts
-}
-
-func parseExpr(t *testing.T, text string) lox.Expr {
-	stmts := parseStmts(t, text+";")
-	if len(stmts) != 1 {
-		t.Log(stmts)
-		t.Fatalf("%q: expecting a single statement, got %d", text, len(stmts))
-	}
-	exprStmt, ok := stmts[0].(lox.ExpressionStmt)
-	if !ok {
-		t.Log(stmts[0])
-		t.Fatalf("%q: expecting an expression statement, got %T", text, stmts[0])
-	}
-	return exprStmt.Expression
 }

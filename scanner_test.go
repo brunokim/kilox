@@ -8,18 +8,6 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
-func token(tokenType lox.TokenType, text string) lox.Token {
-	return literalToken(tokenType, text, nil)
-}
-
-func literalToken(tokenType lox.TokenType, text string, literal any) lox.Token {
-	return lox.Token{
-		TokenType: tokenType,
-		Lexeme:    text,
-		Literal:   literal,
-	}
-}
-
 func TestScanner(t *testing.T) {
 	tests := []struct {
 		text string
