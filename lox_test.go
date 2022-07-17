@@ -38,36 +38,31 @@ func runLox(text string, experiments map[string]bool) (string, error) {
 	return b.String(), err
 }
 
-func parse(t *testing.T, text string) ([]lox.Stmt, error) {
+func parser(t *testing.T, text string) *lox.Parser {
 	s := lox.NewScanner(text)
 	tokens, err := s.ScanTokens()
 	if err != nil {
-		t.Fatalf("%q: want nil, got err: %v", text, err)
+		t.Fatalf("parser(%q): %v", text, err)
 	}
-	p := lox.NewParser(tokens)
-	return p.Parse()
+	return lox.NewParser(tokens)
 }
 
 func parseStmts(t *testing.T, text string) []lox.Stmt {
-	stmts, err := parse(t, text)
+	p := parser(t, text)
+	stmts, err := p.Parse()
 	if err != nil {
-		t.Fatalf("%q: want nil, got err: %v", text, err)
+		t.Fatalf("parseStmts(%q): %v", text, err)
 	}
 	return stmts
 }
 
 func parseExpr(t *testing.T, text string) lox.Expr {
-	stmts := parseStmts(t, text+";")
-	if len(stmts) != 1 {
-		t.Log(stmts)
-		t.Fatalf("%q: expecting a single statement, got %d", text, len(stmts))
+	p := parser(t, text)
+	expr, err := p.ParseExpression()
+	if err != nil {
+		t.Fatalf("parseExpr(%q): %v", text, err)
 	}
-	exprStmt, ok := stmts[0].(lox.ExpressionStmt)
-	if !ok {
-		t.Log(stmts[0])
-		t.Fatalf("%q: expecting an expression statement, got %T", text, stmts[0])
-	}
-	return exprStmt.Expression
+	return expr
 }
 
 // ---- scanner test
