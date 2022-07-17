@@ -7,9 +7,9 @@ import (
 type typeScope map[string]Type
 
 var (
-	t  = &RefType{}
-	t1 = &RefType{}
-	t2 = &RefType{}
+	t  = &RefType{id: -1}
+	t1 = &RefType{id: -2}
+	t2 = &RefType{id: -3}
 )
 
 func types(ts ...Type) []Type {

@@ -17,7 +17,24 @@ func TestCheck(t *testing.T) {
 		{
 			"var a = 1; print a;",
 			map[string]lox.Type{
-				"$.1.Expression": lox.NumberType{literalToken(lox.Number, "1", 1.0)},
+				"$.1.Expression": num_,
+			},
+		},
+		{
+			"var a = true; var b = a; print b;",
+			map[string]lox.Type{
+				"$.1.Init":       bool_,
+				"$.2.Expression": bool_,
+			},
+		},
+		{
+			"var a = 1; while (a < 4) { var b = a + 1; a = b; }",
+			map[string]lox.Type{
+				"$.1.Condition":                          func_(types(num_, num_), bool_),
+				"$.1.Condition.Left":                     num_,
+				"$.1.Body.Statements.0.Init":             func_(types(num_, num_), num_),
+				"$.1.Body.Statements.0.Init.Left":        num_,
+				"$.1.Body.Statements.1.Expression.Value": ref_(num_),
 			},
 		},
 	}
@@ -38,7 +55,12 @@ func TestCheck(t *testing.T) {
 			want[elem.(lox.Expr)] = type_
 		}
 		opts := cmp.Options{
-			cmpopts.IgnoreFields(lox.Token{}, "Line"),
+			cmpopts.IgnoreFields(nil_, "Token"),
+			cmpopts.IgnoreFields(num_, "Token"),
+			cmpopts.IgnoreFields(bool_, "Token"),
+			cmpopts.IgnoreFields(str_, "Token"),
+			cmpopts.IgnoreFields(lox.FunctionType{}, "options"),
+			cmpopts.IgnoreFields(lox.RefType{}, "options", "id"),
 		}
 		if diff := cmp.Diff(want, types, opts); diff != "" {
 			t.Errorf("%q: (-want,+got):%s", test.text, diff)

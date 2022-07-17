@@ -146,6 +146,28 @@ func extractExperiments(text string) map[string]bool {
 
 // ---- type checker test
 
+func types(ts ...lox.Type) []lox.Type {
+	return ts
+}
+
+func ref_(value lox.Type) *lox.RefType {
+	return &lox.RefType{Value: value}
+}
+
+func func_(params []lox.Type, result lox.Type) lox.FunctionType {
+	return lox.FunctionType{
+		Params: params,
+		Return: result,
+	}
+}
+
+var (
+	nil_  = lox.NilType{}
+	num_  = lox.NumberType{}
+	bool_ = lox.BoolType{}
+	str_  = lox.StringType{}
+)
+
 func walkPath(path string, obj any) (any, error) {
 	steps := strings.Split(path, ".")
 	if (steps[0] != "") && (steps[0] != "$") {
@@ -153,6 +175,7 @@ func walkPath(path string, obj any) (any, error) {
 	}
 	value := reflect.ValueOf(obj)
 	for i, step := range steps[1:] {
+		fmt.Println("walk", step)
 		// Dereference value until hitting a concrete type.
 		for value.Kind() == reflect.Pointer || value.Kind() == reflect.Interface {
 			value = value.Elem()
@@ -177,11 +200,11 @@ func walkPath(path string, obj any) (any, error) {
 func getIndex(value reflect.Value, idx int) (reflect.Value, error) {
 	switch value.Kind() {
 	case reflect.Map:
-		value = value.MapIndex(reflect.ValueOf(idx))
-		if value.IsZero() {
+		v := value.MapIndex(reflect.ValueOf(idx))
+		if !v.IsValid() {
 			return reflect.Value{}, fmt.Errorf("key %d not found in map", idx)
 		}
-		return value, nil
+		return v, nil
 	case reflect.Array, reflect.Slice, reflect.String:
 		if idx < 0 || idx >= value.Len() {
 			return reflect.Value{}, fmt.Errorf("index %d is out of range [0,%d)", idx, value.Len())
@@ -196,13 +219,13 @@ func getKey(value reflect.Value, key string) (reflect.Value, error) {
 	switch value.Kind() {
 	case reflect.Map:
 		v := value.MapIndex(reflect.ValueOf(key))
-		if v.IsZero() {
+		if !v.IsValid() {
 			return reflect.Value{}, fmt.Errorf("key %q not found in map with type %v", key, value.Type())
 		}
 		return v, nil
 	case reflect.Struct:
 		v := value.FieldByName(key)
-		if value.IsZero() {
+		if !v.IsValid() {
 			return reflect.Value{}, fmt.Errorf("field %q not found in struct with type %v", key, value.Type())
 		}
 		return v, nil
