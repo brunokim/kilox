@@ -4,6 +4,10 @@ import (
 	"fmt"
 )
 
+// Bindings is a representation of the values associated to a
+// set of Refs.
+type Bindings map[*RefType]Type
+
 // Walk ref chain until finding an unbound ref, or another type.
 func deref(t Type) Type {
 	for {
@@ -16,41 +20,6 @@ func deref(t Type) Type {
 		}
 		t = x.Value
 	}
-}
-
-// Splice union types into list.
-func flattenTypes(ts []Type) []Type {
-	result := make([]Type, 0, len(ts))
-	for _, t := range ts {
-		t = deref(t)
-		u, ok := t.(*UnionType)
-		if !ok {
-			result = append(result, t)
-		} else {
-			result = append(result, flattenTypes(u.Types)...)
-		}
-	}
-	return result
-}
-
-// Construct a union of distinct types.
-func unionTypes(ts ...Type) Type {
-	if len(ts) == 0 {
-		return NilType{}
-	}
-	if len(ts) == 1 {
-		return ts[0]
-	}
-	u := new(UnionType)
-	seen := make(map[string]struct{})
-	for _, t := range flattenTypes(ts) {
-		key := TypePrint(t)
-		if _, ok := seen[key]; !ok {
-			seen[key] = struct{}{}
-			u.Types = append(u.Types, t)
-		}
-	}
-	return u
 }
 
 // ----
@@ -119,7 +88,7 @@ func (m *refMapper) visitFunctionType(t FunctionType) {
 		params[i] = m.visit(param)
 	}
 	result := m.visit(t.Return)
-	m.state = FunctionType{params, result}
+	m.state = FunctionType{params, result, nil}
 }
 
 func (m *refMapper) visitRefType(t *RefType) {
@@ -128,12 +97,4 @@ func (m *refMapper) visitRefType(t *RefType) {
 	} else {
 		m.state = m.transform(t)
 	}
-}
-
-func (m *refMapper) visitUnionType(t *UnionType) {
-	var types []Type
-	for _, subtype := range t.Types {
-		types = append(types, m.visit(subtype))
-	}
-	m.state = unionTypes(types...)
 }

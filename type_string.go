@@ -21,7 +21,6 @@ func (t NumberType) String() string   { return TypePrint(t) }
 func (t StringType) String() string   { return TypePrint(t) }
 func (t FunctionType) String() string { return TypePrint(t) }
 func (t *RefType) String() string     { return TypePrint(t) }
-func (t *UnionType) String() string   { return TypePrint(t) }
 
 // ----
 
@@ -70,15 +69,4 @@ func (p *typePrinter) visitRefType(x *RefType) {
 		p.b.WriteRune('&')
 		p.write(x.Value)
 	}
-}
-
-func (p *typePrinter) visitUnionType(t *UnionType) {
-	p.b.WriteRune('(')
-	for i, subtype := range t.Types {
-		p.write(subtype)
-		if i < len(t.Types)-1 {
-			p.b.WriteRune('|')
-		}
-	}
-	p.b.WriteRune(')')
 }

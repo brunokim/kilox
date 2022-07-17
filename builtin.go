@@ -49,7 +49,10 @@ func (f typeFunc) Call(i *Interpreter, args []any) any {
 		for i := 0; i < v.Arity(); i++ {
 			params[i] = &RefType{id: i + 1}
 		}
-		return FunctionType{params, &RefType{id: v.Arity() + 1}}
+		return FunctionType{
+			Params: params,
+			Return: &RefType{id: v.Arity() + 1},
+		}
 	default:
 		if arg == nil {
 			return NilType{}

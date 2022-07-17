@@ -12,29 +12,59 @@ var (
 	t2 = &RefType{}
 )
 
+func types(ts ...Type) []Type {
+	return ts
+}
+
+func ref_(value Type, options ...Bindings) *RefType {
+	return &RefType{
+		Value:   value,
+		options: options,
+	}
+}
+
+func func_(params []Type, result Type, options ...Bindings) FunctionType {
+	return FunctionType{
+		Params:  params,
+		Return:  result,
+		options: options,
+	}
+}
+
+var (
+	nil_  = NilType{}
+	num_  = NumberType{}
+	bool_ = BoolType{}
+	str_  = StringType{}
+)
+
 var builtinTypes = typeScope{
 	// Arithmetic operators
-	"+": unionTypes(
-		FunctionType{[]Type{NumberType{}, NumberType{}}, NumberType{}},
-		FunctionType{[]Type{StringType{}, StringType{}}, StringType{}}),
-	"-": unionTypes(
-		FunctionType{[]Type{NumberType{}, NumberType{}}, NumberType{}},
-		FunctionType{[]Type{NumberType{}}, NumberType{}}),
-	"*": FunctionType{[]Type{NumberType{}, NumberType{}}, NumberType{}},
-	"/": FunctionType{[]Type{NumberType{}, NumberType{}}, NumberType{}},
+	"+": func_(types(t, t), t,
+		Bindings{t: num_},
+		Bindings{t: str_}),
+	"-": ref_(t,
+		Bindings{t: func_(types(num_, num_), num_)},
+		Bindings{t: func_(types(num_), num_)}),
+	"*": func_(types(num_, num_), num_),
+	"/": func_(types(num_, num_), num_),
 	// Logic operators
-	"<":  FunctionType{[]Type{NumberType{}, NumberType{}}, BoolType{}},
-	"<=": FunctionType{[]Type{NumberType{}, NumberType{}}, BoolType{}},
-	">":  FunctionType{[]Type{NumberType{}, NumberType{}}, BoolType{}},
-	">=": FunctionType{[]Type{NumberType{}, NumberType{}}, BoolType{}},
-	"==": FunctionType{[]Type{t1, t2}, BoolType{}},
-	"!=": FunctionType{[]Type{t1, t2}, BoolType{}},
-	"!":  FunctionType{[]Type{t}, BoolType{}},
+	"<":  func_(types(num_, num_), bool_),
+	"<=": func_(types(num_, num_), bool_),
+	">":  func_(types(num_, num_), bool_),
+	">=": func_(types(num_, num_), bool_),
+	"==": func_(types(t1, t2), bool_),
+	"!=": func_(types(t1, t2), bool_),
+	"!":  func_(types(t), bool_),
 	// Logic control
-	"and": FunctionType{[]Type{t1, t2}, unionTypes(t1, t2)},
-	"or":  FunctionType{[]Type{t1, t2}, unionTypes(t1, t2)},
+	"and": func_(types(t1, t2), t,
+		Bindings{t: t1},
+		Bindings{t: t2}),
+	"or": func_(types(t1, t2), t,
+		Bindings{t: t1},
+		Bindings{t: t2}),
 	// Builtin
-	"clock": FunctionType{[]Type{}, NumberType{}},
+	"clock": func_(types(), num_),
 }
 
 type TypeChecker struct {

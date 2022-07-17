@@ -13,7 +13,6 @@ type typeVisitor interface {
 	visitStringType(t StringType)
 	visitFunctionType(t FunctionType)
 	visitRefType(t *RefType)
-	visitUnionType(t *UnionType)
 }
 
 type NilType struct {
@@ -33,17 +32,15 @@ type StringType struct {
 }
 
 type FunctionType struct {
-	Params []Type
-	Return Type
+	Params  []Type
+	Return  Type
+	options []Bindings
 }
 
 type RefType struct {
-	Value Type
-	id    int
-}
-
-type UnionType struct {
-	Types []Type
+	Value   Type
+	id      int
+	options []Bindings
 }
 
 func (t NilType) accept(v typeVisitor) {
@@ -68,8 +65,4 @@ func (t FunctionType) accept(v typeVisitor) {
 
 func (t *RefType) accept(v typeVisitor) {
 	v.visitRefType(t)
-}
-
-func (t *UnionType) accept(v typeVisitor) {
-	v.visitUnionType(t)
 }

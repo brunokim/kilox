@@ -207,8 +207,3 @@ func (u *unifier) visitRefType(x *RefType) {
 		u.bindRef(x, y)
 	}
 }
-
-func (u *unifier) visitUnionType(t1 *UnionType) {
-	u.pushChoicePoint(t1.Types)
-	u.push(t1.Types[0], u.t2)
-}
