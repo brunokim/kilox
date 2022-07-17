@@ -38,37 +38,41 @@ func (c *TypeChecker) addError(err typeError) {
 
 // ----
 
+type transformRef func(x *RefType, opts []Bindings) Type
+
 func Ground(t Type) (Type, bool) {
 	isGround := true
-	t = mapUnboundRefs(t, func(x *RefType) Type {
+	mapUnboundRefs(t, func(x *RefType, opts []Bindings) Type {
 		isGround = false
-		return x
+		return nil
 	})
 	return t, isGround
 }
 
 func Copy(t Type, newRef func() *RefType) Type {
 	table := make(map[*RefType]*RefType)
-	return mapUnboundRefs(t, func(x *RefType) Type {
+	transform := func(x *RefType, opts []Bindings) Type {
 		y, ok := table[x]
 		if !ok {
 			y = newRef()
+			y.options = opts
 			table[x] = y
 		}
 		return y
-	})
+	}
+	return mapUnboundRefs(t, transform)
 }
 
 // ----
 
-func mapUnboundRefs(t Type, f func(x *RefType) Type) Type {
+func mapUnboundRefs(t Type, f transformRef) Type {
 	m := refMapper{transform: f}
 	m.visit(t)
 	return m.state
 }
 
 type refMapper struct {
-	transform func(x *RefType) Type
+	transform transformRef
 	state     Type
 }
 
@@ -88,13 +92,28 @@ func (m *refMapper) visitFunctionType(t FunctionType) {
 		params[i] = m.visit(param)
 	}
 	result := m.visit(t.Return)
-	m.state = FunctionType{params, result, nil}
+	options := m.visitOptions(t.options)
+	m.state = FunctionType{params, result, options}
 }
 
 func (m *refMapper) visitRefType(t *RefType) {
 	if t.Value != nil {
 		m.visit(t.Value)
 	} else {
-		m.state = m.transform(t)
+		options := m.visitOptions(t.options)
+		m.state = m.transform(t, options)
 	}
+}
+
+func (m *refMapper) visitOptions(opts []Bindings) []Bindings {
+	options := make([]Bindings, len(opts))
+	for i, option := range opts {
+		options[i] = make(Bindings)
+		for ref, value := range option {
+			ref = m.visit(ref).(*RefType)
+			value = m.visit(value)
+			options[i][ref] = value
+		}
+	}
+	return options
 }
