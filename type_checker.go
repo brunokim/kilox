@@ -68,9 +68,9 @@ var builtinTypes = typeScope{
 }
 
 type TypeChecker struct {
-	i      *Interpreter
 	errors []typeError
 	scopes []typeScope
+	types  map[Expr]Type
 
 	currType   Type
 	returnType Type
@@ -78,22 +78,22 @@ type TypeChecker struct {
 	refID int
 }
 
-func NewTypeChecker(interpreter *Interpreter) *TypeChecker {
+func NewTypeChecker() *TypeChecker {
 	return &TypeChecker{
-		i: interpreter,
 		scopes: []typeScope{
 			builtinTypes,
 			make(typeScope), // Top-level scope
 		},
+		types: make(map[Expr]Type),
 	}
 }
 
-func (c *TypeChecker) Check(stmts []Stmt) error {
+func (c *TypeChecker) Check(stmts []Stmt) (map[Expr]Type, error) {
 	c.checkStmts(stmts)
 	if len(c.errors) > 0 {
-		return errors[typeError](c.errors)
+		return nil, errors[typeError](c.errors)
 	}
-	return nil
+	return c.types, nil
 }
 
 func (c *TypeChecker) addErrors(errs ...typeError) {
@@ -131,10 +131,11 @@ func (c *TypeChecker) unify(t1, t2 Type) {
 	u.unify(t1, t2)
 }
 
-func (c *TypeChecker) getBinding(name string) Type {
+func (c *TypeChecker) getBinding(expr Expr, name string) Type {
 	for i := len(c.scopes) - 1; i >= 0; i-- {
 		scope := c.scopes[i]
 		if t, ok := scope[name]; ok {
+			c.types[expr] = t
 			return Copy(t, c.newRefType)
 		}
 	}
@@ -271,7 +272,7 @@ func (c *TypeChecker) visitClassStmt(stmt ClassStmt) {
 // ----
 
 func (c *TypeChecker) visitBinaryExpr(expr *BinaryExpr) {
-	op := c.getBinding(expr.Operator.Lexeme)
+	op := c.getBinding(expr, expr.Operator.Lexeme)
 	left := c.checkExpr(expr.Left)
 	right := c.checkExpr(expr.Right)
 	c.checkCall(op, left, right)
@@ -299,13 +300,13 @@ func (c *TypeChecker) visitLiteralExpr(expr *LiteralExpr) {
 }
 
 func (c *TypeChecker) visitUnaryExpr(expr *UnaryExpr) {
-	op := c.getBinding(expr.Operator.Lexeme)
+	op := c.getBinding(expr, expr.Operator.Lexeme)
 	right := c.checkExpr(expr.Right)
 	c.checkCall(op, right)
 }
 
 func (c *TypeChecker) visitVariableExpr(expr *VariableExpr) {
-	c.currType = c.getBinding(expr.Name.Lexeme)
+	c.currType = c.getBinding(expr, expr.Name.Lexeme)
 }
 
 func (c *TypeChecker) visitAssignmentExpr(expr *AssignmentExpr) {
@@ -315,7 +316,7 @@ func (c *TypeChecker) visitAssignmentExpr(expr *AssignmentExpr) {
 }
 
 func (c *TypeChecker) visitLogicExpr(expr *LogicExpr) {
-	op := c.getBinding(expr.Operator.Lexeme)
+	op := c.getBinding(expr, expr.Operator.Lexeme)
 	left := c.checkExpr(expr.Left)
 	right := c.checkExpr(expr.Right)
 	c.checkCall(op, left, right)
