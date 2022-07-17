@@ -8,22 +8,7 @@ import (
 	"github.com/brunokim/lox"
 )
 
-func runLox(text string, experiments ...string) (string, error) {
-	enabled := make(map[string]bool)
-	disabled := make(map[string]bool)
-	for _, exp := range experiments {
-		switch exp[0] {
-		case '+':
-			enabled[exp[1:]] = true
-		case '-':
-			disabled[exp[1:]] = true
-		default:
-			enabled[exp] = true
-		}
-	}
-	for exp := range disabled {
-		delete(enabled, exp)
-	}
+func runLox(text string, experiments map[string]bool) (string, error) {
 	s := lox.NewScanner(text)
 	tokens, err := s.ScanTokens()
 	if err != nil {
@@ -40,7 +25,7 @@ func runLox(text string, experiments ...string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if enabled["typing"] {
+	if experiments["typing"] {
 		c := lox.NewTypeChecker(i)
 		err := c.Check(stmts)
 		if err != nil {
@@ -140,15 +125,23 @@ func extractComment(text, pattern string) string {
 	return b.String()
 }
 
-func extractExperiments(text string) []string {
+func extractExperiments(text string) map[string]bool {
 	expStr := extractComment(text, "experiments")
-	var exps []string
+	exps := make(map[string]bool)
 	for _, exp := range strings.Split(expStr, ",") {
 		exp = strings.TrimSpace(exp)
 		if exp == "" {
 			continue
 		}
-		exps = append(exps, exp)
+		// Last setting wins.
+		switch exp[0] {
+		case '+':
+			exps[exp[1:]] = true
+		case '-':
+			exps[exp[1:]] = false
+		default:
+			exps[exp] = true
+		}
 	}
 	return exps
 }
