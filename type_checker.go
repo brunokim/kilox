@@ -136,7 +136,7 @@ func (c *TypeChecker) getBinding(expr Expr, name string) Type {
 		scope := c.scopes[i]
 		if t, ok := scope[name]; ok {
 			c.types[expr] = t
-			return Copy(t, c.newRefType)
+			return t
 		}
 	}
 	panic(fmt.Sprintf("compiler error: variable %q not found, shouldn't happen after resolver", name))
@@ -190,7 +190,7 @@ func (c *TypeChecker) checkCall(callee Type, args ...Type) Type {
 		Params: args,
 		Return: result,
 	}
-	c.unify(callee, callType)
+	c.unify(Copy(callee, c.newRefType), callType)
 	c.currType = result
 	return result
 }

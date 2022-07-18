@@ -175,7 +175,6 @@ func walkPath(path string, obj any) (any, error) {
 	}
 	value := reflect.ValueOf(obj)
 	for i, step := range steps[1:] {
-		fmt.Println("walk", step)
 		// Dereference value until hitting a concrete type.
 		for value.Kind() == reflect.Pointer || value.Kind() == reflect.Interface {
 			value = value.Elem()
