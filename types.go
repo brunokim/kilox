@@ -4,9 +4,8 @@ import (
 	"fmt"
 )
 
-// Bindings is a representation of the values associated to a
-// set of Refs.
-type Bindings map[*RefType]Type
+// Constraint is an instance of valid ref bindings.
+type Constraint map[*RefType]Type
 
 // Walk ref chain until finding an unbound ref, or another type.
 func deref(t Type) Type {
@@ -38,11 +37,11 @@ func (c *TypeChecker) addError(err typeError) {
 
 // ----
 
-type transformRef func(x *RefType, opts []Bindings) Type
+type transformRef func(x *RefType, cnstrs []Constraint) Type
 
 func Ground(t Type) (Type, bool) {
 	isGround := true
-	mapUnboundRefs(t, func(x *RefType, opts []Bindings) Type {
+	mapUnboundRefs(t, func(x *RefType, cnstrs []Constraint) Type {
 		isGround = false
 		return nil
 	})
@@ -51,11 +50,11 @@ func Ground(t Type) (Type, bool) {
 
 func Copy(t Type, newRef func() *RefType) Type {
 	table := make(map[*RefType]*RefType)
-	transform := func(x *RefType, opts []Bindings) Type {
+	transform := func(x *RefType, constraints []Constraint) Type {
 		y, ok := table[x]
 		if !ok {
 			y = newRef()
-			y.options = opts
+			y.constraints = constraints
 			table[x] = y
 		}
 		return y
@@ -92,28 +91,27 @@ func (m *refMapper) visitFunctionType(t FunctionType) {
 		params[i] = m.visit(param)
 	}
 	result := m.visit(t.Return)
-	options := m.visitOptions(t.options)
-	m.state = FunctionType{params, result, options}
+	m.state = FunctionType{params, result}
 }
 
 func (m *refMapper) visitRefType(t *RefType) {
 	if t.Value != nil {
 		m.visit(t.Value)
 	} else {
-		options := m.visitOptions(t.options)
-		m.state = m.transform(t, options)
+		constraints := m.visitConstraints(t.constraints)
+		m.state = m.transform(t, constraints)
 	}
 }
 
-func (m *refMapper) visitOptions(opts []Bindings) []Bindings {
-	options := make([]Bindings, len(opts))
-	for i, option := range opts {
-		options[i] = make(Bindings)
-		for ref, value := range option {
+func (m *refMapper) visitConstraints(cnstrs []Constraint) []Constraint {
+	constraints := make([]Constraint, len(cnstrs))
+	for i, constraint := range cnstrs {
+		constraints[i] = make(Constraint)
+		for ref, value := range constraint {
 			ref = m.visit(ref).(*RefType)
 			value = m.visit(value)
-			options[i][ref] = value
+			constraints[i][ref] = value
 		}
 	}
-	return options
+	return constraints
 }

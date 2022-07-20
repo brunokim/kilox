@@ -16,18 +16,17 @@ func types(ts ...Type) []Type {
 	return ts
 }
 
-func ref_(value Type, options ...Bindings) *RefType {
+func ref_(value Type, constraints ...Constraint) *RefType {
 	return &RefType{
-		Value:   value,
-		options: options,
+		Value:       value,
+		constraints: constraints,
 	}
 }
 
-func func_(params []Type, result Type, options ...Bindings) FunctionType {
+func func_(params []Type, result Type) FunctionType {
 	return FunctionType{
-		Params:  params,
-		Return:  result,
-		options: options,
+		Params: params,
+		Return: result,
 	}
 }
 
@@ -40,12 +39,12 @@ var (
 
 var builtinTypes = typeScope{
 	// Arithmetic operators
-	"+": func_(types(t, t), t,
-		Bindings{t: num_},
-		Bindings{t: str_}),
+	"+": ref_(func_(types(t, t), t),
+		Constraint{t: num_},
+		Constraint{t: str_}),
 	"-": ref_(t,
-		Bindings{t: func_(types(num_, num_), num_)},
-		Bindings{t: func_(types(num_), num_)}),
+		Constraint{t: func_(types(num_, num_), num_)},
+		Constraint{t: func_(types(num_), num_)}),
 	"*": func_(types(num_, num_), num_),
 	"/": func_(types(num_, num_), num_),
 	// Logic operators
@@ -57,12 +56,12 @@ var builtinTypes = typeScope{
 	"!=": func_(types(t1, t2), bool_),
 	"!":  func_(types(t), bool_),
 	// Logic control
-	"and": func_(types(t1, t2), t,
-		Bindings{t: t1},
-		Bindings{t: t2}),
-	"or": func_(types(t1, t2), t,
-		Bindings{t: t1},
-		Bindings{t: t2}),
+	"and": ref_(func_(types(t1, t2), t),
+		Constraint{t: t1},
+		Constraint{t: t2}),
+	"or": ref_(func_(types(t1, t2), t),
+		Constraint{t: t1},
+		Constraint{t: t2}),
 	// Builtin
 	"clock": func_(types(), num_),
 }

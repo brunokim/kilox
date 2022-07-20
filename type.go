@@ -32,15 +32,14 @@ type StringType struct {
 }
 
 type FunctionType struct {
-	Params  []Type
-	Return  Type
-	options []Bindings
+	Params []Type
+	Return Type
 }
 
 type RefType struct {
-	Value   Type
-	id      int
-	options []Bindings
+	Value       Type
+	id          int
+	constraints []Constraint
 }
 
 func (t NilType) accept(v typeVisitor) {
