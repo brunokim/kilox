@@ -65,7 +65,10 @@ func Copy(t Type, newRef func() *RefType) Type {
 // ----
 
 func mapUnboundRefs(t Type, f transformRef) Type {
-	m := refMapper{transform: f}
+	m := refMapper{
+		transform: f,
+		seen:      make(map[*RefType]struct{}),
+	}
 	m.visit(t)
 	return m.state
 }
@@ -73,6 +76,7 @@ func mapUnboundRefs(t Type, f transformRef) Type {
 type refMapper struct {
 	transform transformRef
 	state     Type
+	seen      map[*RefType]struct{}
 }
 
 func (m *refMapper) visit(t Type) Type {
@@ -95,6 +99,11 @@ func (m *refMapper) visitFunctionType(t FunctionType) {
 }
 
 func (m *refMapper) visitRefType(t *RefType) {
+	if _, ok := m.seen[t]; ok {
+		m.state = t
+		return
+	}
+	m.seen[t] = struct{}{}
 	if t.Value != nil {
 		m.visit(t.Value)
 	} else {

@@ -32,7 +32,7 @@ func TestCheck(t *testing.T) {
 			map[string]lox.Type{
 				"$.1.Condition":                          func_(types(num_, num_), bool_),
 				"$.1.Condition.Left":                     num_,
-				"$.1.Body.Statements.0.Init":             func_(types(num_, num_), num_),
+				"$.1.Body.Statements.0.Init":             func_(types(ref_(num_), ref_(num_)), ref_(num_)),
 				"$.1.Body.Statements.0.Init.Left":        num_,
 				"$.1.Body.Statements.1.Expression.Value": ref_(num_),
 			},

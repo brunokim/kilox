@@ -6,12 +6,6 @@ import (
 
 type typeScope map[string]Type
 
-var (
-	t  = &RefType{id: -1}
-	t1 = &RefType{id: -2}
-	t2 = &RefType{id: -3}
-)
-
 func types(ts ...Type) []Type {
 	return ts
 }
@@ -37,33 +31,69 @@ var (
 	str_  = StringType{}
 )
 
-var builtinTypes = typeScope{
+func makeBuiltinTypes() typeScope {
+	scope := make(typeScope)
+
+	var id int
+	newRef := func() *RefType {
+		id--
+		return &RefType{id: id}
+	}
+	t := newRef()
+	t1 := newRef()
+	t2 := newRef()
+
 	// Arithmetic operators
-	"+": ref_(func_(types(t, t), t),
-		Constraint{t: num_},
-		Constraint{t: str_}),
-	"-": ref_(t,
-		Constraint{t: func_(types(num_, num_), num_)},
-		Constraint{t: func_(types(num_), num_)}),
-	"*": func_(types(num_, num_), num_),
-	"/": func_(types(num_, num_), num_),
+	{
+		x := newRef()
+		scope["+"] = func_(types(x, x), x)
+		x.constraints = []Constraint{
+			Constraint{x: num_},
+			Constraint{x: str_},
+		}
+	}
+	{
+		x := newRef()
+		scope["-"] = x
+		x.constraints = []Constraint{
+			Constraint{x: func_(types(num_, num_), num_)},
+			Constraint{x: func_(types(num_), num_)},
+		}
+	}
+	scope["*"] = func_(types(num_, num_), num_)
+	scope["/"] = func_(types(num_, num_), num_)
+
 	// Logic operators
-	"<":  func_(types(num_, num_), bool_),
-	"<=": func_(types(num_, num_), bool_),
-	">":  func_(types(num_, num_), bool_),
-	">=": func_(types(num_, num_), bool_),
-	"==": func_(types(t1, t2), bool_),
-	"!=": func_(types(t1, t2), bool_),
-	"!":  func_(types(t), bool_),
+	scope["<"] = func_(types(num_, num_), bool_)
+	scope["<="] = func_(types(num_, num_), bool_)
+	scope[">"] = func_(types(num_, num_), bool_)
+	scope[">="] = func_(types(num_, num_), bool_)
+	scope["=="] = func_(types(t1, t2), bool_)
+	scope["!="] = func_(types(t1, t2), bool_)
+	scope["!"] = func_(types(t), bool_)
+
 	// Logic control
-	"and": ref_(func_(types(t1, t2), t),
-		Constraint{t: t1},
-		Constraint{t: t2}),
-	"or": ref_(func_(types(t1, t2), t),
-		Constraint{t: t1},
-		Constraint{t: t2}),
+	{
+		x := newRef()
+		scope["and"] = func_(types(t1, t2), x)
+		x.constraints = []Constraint{
+			Constraint{x: t1},
+			Constraint{x: t2},
+		}
+	}
+	{
+		x := newRef()
+		scope["or"] = func_(types(t1, t2), x)
+		x.constraints = []Constraint{
+			Constraint{x: t1},
+			Constraint{x: t2},
+		}
+	}
+
 	// Builtin
-	"clock": func_(types(), num_),
+	scope["clock"] = func_(types(), num_)
+
+	return scope
 }
 
 type TypeChecker struct {
@@ -80,7 +110,7 @@ type TypeChecker struct {
 func NewTypeChecker() *TypeChecker {
 	return &TypeChecker{
 		scopes: []typeScope{
-			builtinTypes,
+			makeBuiltinTypes(),
 			make(typeScope), // Top-level scope
 		},
 		types: make(map[Expr]Type),
