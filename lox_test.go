@@ -146,11 +146,17 @@ func extractExperiments(text string) map[string]bool {
 
 // ---- type checker test
 
-func types(ts ...lox.Type) []lox.Type {
+func ts_(ts ...lox.Type) []lox.Type {
 	return ts
 }
 
-func ref_(value lox.Type) *lox.RefType {
+// Unbound ref
+func uref_(constraints ...lox.Constraint) *lox.RefType {
+	return &lox.RefType{}
+}
+
+// Bound ref
+func bref_(value lox.Type) *lox.RefType {
 	return &lox.RefType{Value: value}
 }
 

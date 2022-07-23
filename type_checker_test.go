@@ -15,26 +15,36 @@ func TestCheck(t *testing.T) {
 		paths map[string]lox.Type
 	}{
 		{
-			"var a = 1; print a;",
+			`
+            var a = 1;
+            print a;`,
 			map[string]lox.Type{
-				"$.1.Expression": num_,
+				"$.1.Expression": num_, // line 2: a
 			},
 		},
 		{
-			"var a = true; var b = a; print b;",
+			`
+            var a = true;
+            var b = a;
+            print b;`,
 			map[string]lox.Type{
-				"$.1.Init":       bool_,
-				"$.2.Expression": bool_,
+				"$.1.Init":       bool_, // line 2: a
+				"$.2.Expression": bool_, // line 3: b
 			},
 		},
 		{
-			"var a = 1; while (a < 4) { var b = a + 1; a = b; }",
+			`
+            var a = 1;
+            while (a < 4) {
+                var b = a + 1;
+                a = b;
+            }`,
 			map[string]lox.Type{
-				"$.1.Condition":                          func_(types(num_, num_), bool_),
-				"$.1.Condition.Left":                     num_,
-				"$.1.Body.Statements.0.Init":             func_(types(ref_(num_), ref_(num_)), ref_(num_)),
-				"$.1.Body.Statements.0.Init.Left":        num_,
-				"$.1.Body.Statements.1.Expression.Value": ref_(num_),
+				"$.1.Condition":                          func_(ts_(num_, num_), bool_),                     // line 2: a < 4
+				"$.1.Condition.Left":                     num_,                                              // line 2: a
+				"$.1.Body.Statements.0.Init":             func_(ts_(bref_(num_), bref_(num_)), bref_(num_)), // line 3: a + 1
+				"$.1.Body.Statements.0.Init.Left":        num_,                                              // line 3: a
+				"$.1.Body.Statements.1.Expression.Value": bref_(num_),                                       // line 4: b
 			},
 		},
 		{
@@ -43,16 +53,15 @@ func TestCheck(t *testing.T) {
                 return a + b + c;
             }
             print add3(1, 2, 3);
-            print add3("x", "y", "z");
-            `,
+            print add3("x", "y", "z");`,
 			map[string]lox.Type{
-				"$.0.Body.0.Result.Left.Left":  ref_(num_),
-				"$.0.Body.0.Result.Left.Right": ref_(num_),
-				"$.0.Body.0.Result.Left":       ref_(func_(types(ref_(num_), ref_(num_)), ref_(num_))),
-				"$.0.Body.0.Result.Right":      ref_(num_),
-				"$.0.Body.0.Result":            ref_(func_(types(ref_(num_), ref_(num_)), ref_(num_))),
-				"$.1.Expression.Callee":        func_(types(num_, num_), num_),
-				"$.2.Expression.Callee":        func_(types(str_, str_), str_),
+				"$.0.Body.0.Result":            func_(ts_(uref_(), uref_()), uref_()),                  // line 2: a+b+c
+				"$.0.Body.0.Result.Left":       func_(ts_(uref_(), uref_()), uref_()),                  // line 2: a+b
+				"$.0.Body.0.Result.Left.Left":  uref_(),                                                // line 2: a
+				"$.0.Body.0.Result.Left.Right": bref_(num_),                                            // line 2: b
+				"$.0.Body.0.Result.Right":      bref_(num_),                                            // line 2: c
+				"$.1.Expression.Callee":        func_(ts_(uref_(), bref_(num_), bref_(num_)), uref_()), // line 4: add3
+				"$.2.Expression.Callee":        func_(ts_(uref_(), bref_(num_), bref_(num_)), uref_()), // line 5: add3
 			},
 		},
 	}
