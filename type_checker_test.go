@@ -48,7 +48,11 @@ func TestCheck(t *testing.T) {
 			map[string]lox.Type{
 				"$.0.Body.0.Result.Left.Left":  ref_(num_),
 				"$.0.Body.0.Result.Left.Right": ref_(num_),
+				"$.0.Body.0.Result.Left":       ref_(func_(types(ref_(num_), ref_(num_)), ref_(num_))),
 				"$.0.Body.0.Result.Right":      ref_(num_),
+				"$.0.Body.0.Result":            ref_(func_(types(ref_(num_), ref_(num_)), ref_(num_))),
+				"$.1.Expression.Callee":        func_(types(num_, num_), num_),
+				"$.2.Expression.Callee":        func_(types(str_, str_), str_),
 			},
 		},
 	}
@@ -76,7 +80,7 @@ func TestCheck(t *testing.T) {
 			cmpopts.IgnoreFields(lox.RefType{}, "id", "constraints"),
 		}
 		if diff := cmp.Diff(want, types, opts); diff != "" {
-			t.Errorf("%q: (-want,+got):%s", test.text, diff)
+			t.Errorf("type(`%s`) (-want,+got):\n%s", test.text, diff)
 		}
 	}
 }

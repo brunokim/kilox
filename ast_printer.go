@@ -5,9 +5,15 @@ import (
 	"strings"
 )
 
-type ASTPrinter struct {
+type astPrinter struct {
 	indentation int
 	str         *strings.Builder
+}
+
+func newASTPrinter() *astPrinter {
+	return &astPrinter{
+		str: new(strings.Builder),
+	}
 }
 
 type writeStyle int
@@ -19,8 +25,8 @@ const (
 
 // ----
 
-func (p *ASTPrinter) PrintStmts(stmts []Stmt) string {
-	p.str = new(strings.Builder)
+func PrintStmts(stmts ...Stmt) string {
+	p := newASTPrinter()
 	for _, stmt := range stmts {
 		stmt.accept(p)
 		p.str.WriteRune('\n')
@@ -28,29 +34,62 @@ func (p *ASTPrinter) PrintStmts(stmts []Stmt) string {
 	return p.str.String()
 }
 
-func (p *ASTPrinter) PrintExpr(expr Expr) string {
-	p.str = new(strings.Builder)
+func PrintExpr(expr Expr) string {
+	p := newASTPrinter()
 	expr.accept(p)
 	return p.str.String()
 }
 
-func (p *ASTPrinter) indent() {
-	for i := 0; i < p.indentation; i++ {
-		p.str.WriteString("  ")
-	}
+func PrintType(t Type) string {
+	p := newASTPrinter()
+	t.accept(p)
+	return p.str.String()
 }
 
-// ----
+// ---- String
 
-func (p *ASTPrinter) visitBinaryExpr(expr *BinaryExpr) {
+func (e *BinaryExpr) String() string     { return PrintExpr(e) }
+func (e *GroupingExpr) String() string   { return PrintExpr(e) }
+func (e *LiteralExpr) String() string    { return PrintExpr(e) }
+func (e *UnaryExpr) String() string      { return PrintExpr(e) }
+func (e *VariableExpr) String() string   { return PrintExpr(e) }
+func (e *AssignmentExpr) String() string { return PrintExpr(e) }
+func (e *CallExpr) String() string       { return PrintExpr(e) }
+func (e *FunctionExpr) String() string   { return PrintExpr(e) }
+func (e *GetExpr) String() string        { return PrintExpr(e) }
+func (e *SetExpr) String() string        { return PrintExpr(e) }
+func (e *ThisExpr) String() string       { return PrintExpr(e) }
+
+func (s ExpressionStmt) String() string { return PrintStmts(s) }
+func (s PrintStmt) String() string      { return PrintStmts(s) }
+func (s VarStmt) String() string        { return PrintStmts(s) }
+func (s IfStmt) String() string         { return PrintStmts(s) }
+func (s BlockStmt) String() string      { return PrintStmts(s) }
+func (s LoopStmt) String() string       { return PrintStmts(s) }
+func (s BreakStmt) String() string      { return PrintStmts(s) }
+func (s ContinueStmt) String() string   { return PrintStmts(s) }
+func (s FunctionStmt) String() string   { return PrintStmts(s) }
+func (s ReturnStmt) String() string     { return PrintStmts(s) }
+func (s ClassStmt) String() string      { return PrintStmts(s) }
+
+func (t NilType) String() string      { return PrintType(t) }
+func (t BoolType) String() string     { return PrintType(t) }
+func (t NumberType) String() string   { return PrintType(t) }
+func (t StringType) String() string   { return PrintType(t) }
+func (t FunctionType) String() string { return PrintType(t) }
+func (t *RefType) String() string     { return PrintType(t) }
+
+// ---- Expr
+
+func (p *astPrinter) visitBinaryExpr(expr *BinaryExpr) {
 	p.parenthesize(multiLine, expr.Operator, expr.Left, expr.Right)
 }
 
-func (p *ASTPrinter) visitGroupingExpr(expr *GroupingExpr) {
+func (p *astPrinter) visitGroupingExpr(expr *GroupingExpr) {
 	p.parenthesize(singleLine, "group", expr.Expression)
 }
 
-func (p *ASTPrinter) visitLiteralExpr(expr *LiteralExpr) {
+func (p *astPrinter) visitLiteralExpr(expr *LiteralExpr) {
 	value := "nil"
 	if expr.Value != nil {
 		value = fmt.Sprintf("%v", expr.Value)
@@ -58,57 +97,57 @@ func (p *ASTPrinter) visitLiteralExpr(expr *LiteralExpr) {
 	p.printStuff(value)
 }
 
-func (p *ASTPrinter) visitUnaryExpr(expr *UnaryExpr) {
+func (p *astPrinter) visitUnaryExpr(expr *UnaryExpr) {
 	p.parenthesize(singleLine, expr.Operator, expr.Right)
 }
 
-func (p *ASTPrinter) visitVariableExpr(expr *VariableExpr) {
+func (p *astPrinter) visitVariableExpr(expr *VariableExpr) {
 	p.printStuff(expr.Name)
 }
 
-func (p *ASTPrinter) visitAssignmentExpr(expr *AssignmentExpr) {
+func (p *astPrinter) visitAssignmentExpr(expr *AssignmentExpr) {
 	p.parenthesize(singleLine, "assign", expr.Name, expr.Value)
 }
 
-func (p *ASTPrinter) visitLogicExpr(expr *LogicExpr) {
+func (p *astPrinter) visitLogicExpr(expr *LogicExpr) {
 	p.parenthesize(multiLine, expr.Operator, expr.Left, expr.Right)
 }
 
-func (p *ASTPrinter) visitCallExpr(expr *CallExpr) {
+func (p *astPrinter) visitCallExpr(expr *CallExpr) {
 	parts := []any{expr.Callee}
 	parts = append(parts, moveArray[Expr](expr.Args...)...)
 	p.parenthesize(multiLine, parts...)
 }
 
-func (p *ASTPrinter) visitFunctionExpr(expr *FunctionExpr) {
+func (p *astPrinter) visitFunctionExpr(expr *FunctionExpr) {
 	parts := []any{"fun", expr.Params}
 	parts = append(parts, moveArray[Stmt](expr.Body...)...)
 	p.parenthesize(multiLine, parts...)
 }
 
-func (p *ASTPrinter) visitGetExpr(expr *GetExpr) {
+func (p *astPrinter) visitGetExpr(expr *GetExpr) {
 	p.parenthesize(singleLine, "get", expr.Object, expr.Name)
 }
 
-func (p *ASTPrinter) visitSetExpr(expr *SetExpr) {
+func (p *astPrinter) visitSetExpr(expr *SetExpr) {
 	p.parenthesize(singleLine, "set", expr.Object, expr.Name, expr.Value)
 }
 
-func (p *ASTPrinter) visitThisExpr(expr *ThisExpr) {
+func (p *astPrinter) visitThisExpr(expr *ThisExpr) {
 	p.str.WriteString("this")
 }
 
-// ----
+// ---- Stmt
 
-func (p *ASTPrinter) visitExpressionStmt(stmt ExpressionStmt) {
+func (p *astPrinter) visitExpressionStmt(stmt ExpressionStmt) {
 	p.parenthesize(singleLine, "expr", stmt.Expression)
 }
 
-func (p *ASTPrinter) visitPrintStmt(stmt PrintStmt) {
+func (p *astPrinter) visitPrintStmt(stmt PrintStmt) {
 	p.parenthesize(singleLine, "print", stmt.Expression)
 }
 
-func (p *ASTPrinter) visitVarStmt(stmt VarStmt) {
+func (p *astPrinter) visitVarStmt(stmt VarStmt) {
 	if stmt.Init == nil {
 		p.parenthesize(singleLine, "var", stmt.Name)
 	} else {
@@ -116,7 +155,7 @@ func (p *ASTPrinter) visitVarStmt(stmt VarStmt) {
 	}
 }
 
-func (p *ASTPrinter) visitIfStmt(stmt IfStmt) {
+func (p *astPrinter) visitIfStmt(stmt IfStmt) {
 	if stmt.Else == nil {
 		p.parenthesize(multiLine, "if", stmt.Condition, stmt.Then)
 	} else {
@@ -124,13 +163,13 @@ func (p *ASTPrinter) visitIfStmt(stmt IfStmt) {
 	}
 }
 
-func (p *ASTPrinter) visitBlockStmt(stmt BlockStmt) {
+func (p *astPrinter) visitBlockStmt(stmt BlockStmt) {
 	parts := []any{"block"}
 	parts = append(parts, moveArray[Stmt](stmt.Statements...)...)
 	p.parenthesize(multiLine, parts...)
 }
 
-func (p *ASTPrinter) visitLoopStmt(stmt LoopStmt) {
+func (p *astPrinter) visitLoopStmt(stmt LoopStmt) {
 	if stmt.OnLoop == nil {
 		p.parenthesize(multiLine, "loop", stmt.Condition, stmt.Body)
 	} else {
@@ -138,31 +177,68 @@ func (p *ASTPrinter) visitLoopStmt(stmt LoopStmt) {
 	}
 }
 
-func (p *ASTPrinter) visitBreakStmt(stmt BreakStmt) {
+func (p *astPrinter) visitBreakStmt(stmt BreakStmt) {
 	p.str.WriteString("break")
 }
 
-func (p *ASTPrinter) visitContinueStmt(stmt ContinueStmt) {
+func (p *astPrinter) visitContinueStmt(stmt ContinueStmt) {
 	p.str.WriteString("continue")
 }
 
-func (p *ASTPrinter) visitFunctionStmt(stmt FunctionStmt) {
+func (p *astPrinter) visitFunctionStmt(stmt FunctionStmt) {
 	parts := []any{"defun", stmt.Name, stmt.Params}
 	parts = append(parts, moveArray[Stmt](stmt.Body...)...)
 	p.parenthesize(multiLine, parts...)
 }
 
-func (p *ASTPrinter) visitReturnStmt(stmt ReturnStmt) {
+func (p *astPrinter) visitReturnStmt(stmt ReturnStmt) {
 	p.parenthesize(singleLine, "return", stmt.Result)
 }
 
-func (p *ASTPrinter) visitClassStmt(stmt ClassStmt) {
+func (p *astPrinter) visitClassStmt(stmt ClassStmt) {
 	panic("lox.(*ASTPrinter).visitClassStmt is not implemented")
+}
+
+// ---- Type
+
+func (p *astPrinter) visitNilType(t NilType) {
+	p.str.WriteString("Nil")
+}
+
+func (p *astPrinter) visitBoolType(t BoolType) {
+	p.str.WriteString("Bool")
+}
+
+func (p *astPrinter) visitNumberType(t NumberType) {
+	p.str.WriteString("Number")
+}
+
+func (p *astPrinter) visitStringType(t StringType) {
+	p.str.WriteString("String")
+}
+
+func (p *astPrinter) visitFunctionType(t FunctionType) {
+	p.parenthesize(singleLine, "Fun", t.Params, t.Return)
+}
+
+func (p *astPrinter) visitRefType(x *RefType) {
+	if x.Value == nil {
+		fmt.Fprintf(p.str, "_%d", x.id)
+	} else {
+		p.str.WriteRune('&')
+		p.printStuff(x.Value)
+	}
 }
 
 // ----
 
-func (p *ASTPrinter) parenthesize(style writeStyle, parts ...any) {
+func (p *astPrinter) indent() {
+	for i := 0; i < p.indentation; i++ {
+		p.str.WriteString("  ")
+	}
+}
+
+func (p *astPrinter) parenthesize(style writeStyle, parts ...any) {
 	if len(parts) <= 2 {
 		style = singleLine
 	}
@@ -190,14 +266,19 @@ func (p *ASTPrinter) parenthesize(style writeStyle, parts ...any) {
 	p.str.WriteRune(')')
 }
 
-func (p *ASTPrinter) printStuff(x any) {
+func (p *astPrinter) printStuff(x any) {
 	switch stuff := x.(type) {
 	case Expr:
 		stuff.accept(p)
 	case Stmt:
 		stuff.accept(p)
+	case Type:
+		stuff.accept(p)
 	case []Token:
 		parts := moveArray[Token](stuff...)
+		p.parenthesize(singleLine, parts...)
+	case []Type:
+		parts := moveArray[Type](stuff...)
 		p.parenthesize(singleLine, parts...)
 	case Token:
 		p.str.WriteString(stuff.Lexeme)

@@ -10,8 +10,8 @@ fun f(x_, y_) {
     fun g(z_) {}
     print type(g);
 }
-f(1, 2);       // output: (_1) -> _2
-print type(f); // output: (_1, _2) -> _3
+f(1, 2);       // output: (Fun (_1) _2)
+print type(f); // output: (Fun (_1 _2) _3)
 
 print type(nil);  // output: Nil
 print type(true); // output: Bool
@@ -24,4 +24,4 @@ print type(type(Foo));       // output: <meta meta>
 print type(type(type(Foo))); // output: <meta meta>
 
 
-print type(foo.method); // output: (_1, _2, _3) -> _4
+print type(foo.method); // output: (Fun (_1 _2 _3) _4)

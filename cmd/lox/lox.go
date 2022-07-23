@@ -71,8 +71,7 @@ func (r *runner) run(text string) bool {
 		}
 		stmts = []lox.Stmt{lox.PrintStmt{expr}}
 	}
-	p := &lox.ASTPrinter{}
-	fmt.Println(p.PrintStmts(stmts))
+	fmt.Println(lox.PrintStmts(stmts...))
 	resolver := lox.NewResolver(r.i)
 	err = resolver.Resolve(stmts)
 	if err != nil {

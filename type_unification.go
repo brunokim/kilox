@@ -219,7 +219,7 @@ func (u *unifier) applyConstraint(x *RefType, t Type, constraint Constraint) {
 
 func (u *unifier) bindRef(x *RefType, t Type) {
 	if x.Value != nil {
-		panic(fmt.Sprintf("compiler error: expecting to be called on an unbound ref, got %v", TypePrint(x)))
+		panic(fmt.Sprintf("compiler error: expecting to be called on an unbound ref, got %v", PrintType(x)))
 	}
 	x.Value = t
 	u.peek().addToTrail(x)
