@@ -48,16 +48,16 @@ func makeBuiltinTypes() typeScope {
 		x := newRef()
 		scope["+"] = func_(types(x, x), x)
 		x.constraints = []Constraint{
-			Constraint{x: num_},
-			Constraint{x: str_},
+			Constraint1(x, num_),
+			Constraint1(x, str_),
 		}
 	}
 	{
 		x := newRef()
 		scope["-"] = x
 		x.constraints = []Constraint{
-			Constraint{x: func_(types(num_, num_), num_)},
-			Constraint{x: func_(types(num_), num_)},
+			Constraint1(x, func_(types(num_, num_), num_)),
+			Constraint1(x, func_(types(num_), num_)),
 		}
 	}
 	scope["*"] = func_(types(num_, num_), num_)
@@ -77,16 +77,16 @@ func makeBuiltinTypes() typeScope {
 		x := newRef()
 		scope["and"] = func_(types(t1, t2), x)
 		x.constraints = []Constraint{
-			Constraint{x: t1},
-			Constraint{x: t2},
+			Constraint1(x, t1),
+			Constraint1(x, t2),
 		}
 	}
 	{
 		x := newRef()
 		scope["or"] = func_(types(t1, t2), x)
 		x.constraints = []Constraint{
-			Constraint{x: t1},
-			Constraint{x: t2},
+			Constraint1(x, t1),
+			Constraint1(x, t2),
 		}
 	}
 

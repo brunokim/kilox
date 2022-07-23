@@ -78,20 +78,21 @@ func (u *unifier) unify(t1, t2 Type) ([]Constraint, error) {
 		return nil, errors[typeError](u.errors)
 	}
 	if len(u.constraints) == 1 {
-		for x, value := range u.constraints[0] {
+		for _, entry := range u.constraints[0].Entries() {
+			x, value := entry.Key, entry.Value
 			x.Value = value
 		}
 		return u.constraints, nil
 	}
 	// Delete existing constraints from refs.
 	for _, constraint := range u.constraints {
-		for x := range constraint {
+		for _, x := range constraint.Keys() {
 			x.constraints = nil
 		}
 	}
 	// Replace with constraint from unification.
 	for _, constraint := range u.constraints {
-		for x := range constraint {
+		for _, x := range constraint.Keys() {
 			x.constraints = append(x.constraints, constraint)
 		}
 	}
@@ -99,10 +100,10 @@ func (u *unifier) unify(t1, t2 Type) ([]Constraint, error) {
 }
 
 func (u *unifier) constraint() Constraint {
-	constraint := make(Constraint)
+	constraint := NewConstraint()
 	for _, choice := range u.choices {
 		for _, x := range choice.trail {
-			constraint[x] = x.Value
+			constraint.Put(x, x.Value)
 		}
 	}
 	return constraint
@@ -157,7 +158,7 @@ func (u *unifier) popConstraint() (*choicePoint, Constraint) {
 		// Pop choicepoint if it has no more constraints.
 		u.choices = u.choices[:i]
 	}
-	return nil, nil
+	return nil, Constraint{}
 }
 
 func (u *unifier) backtrack() error {
@@ -203,7 +204,8 @@ func (u *unifier) unifyRef(x *RefType, t Type) {
 }
 
 func (u *unifier) applyConstraint(x *RefType, t Type, constraint Constraint) {
-	for y, value := range constraint {
+	for _, entry := range constraint.Entries() {
+		y, value := entry.Key, entry.Value
 		u.bindRef(y, value)
 	}
 	if x.Value == nil {

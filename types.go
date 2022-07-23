@@ -5,7 +5,15 @@ import (
 )
 
 // Constraint is an instance of valid ref bindings.
-type Constraint map[*RefType]Type
+type Constraint struct{ *OMap[*RefType, Type] }
+
+func NewConstraint() Constraint {
+	return Constraint{MakeOMap[*RefType, Type]()}
+}
+
+func Constraint1(x1 *RefType, t1 Type) Constraint {
+	return Constraint{MakeOMap1(x1, t1)}
+}
 
 // Walk ref chain until finding an unbound ref, or another type.
 func deref(t Type) Type {
@@ -115,11 +123,11 @@ func (m *refMapper) visitRefType(t *RefType) {
 func (m *refMapper) visitConstraints(cnstrs []Constraint) []Constraint {
 	constraints := make([]Constraint, len(cnstrs))
 	for i, constraint := range cnstrs {
-		constraints[i] = make(Constraint)
-		for ref, value := range constraint {
-			ref = m.visit(ref).(*RefType)
-			value = m.visit(value)
-			constraints[i][ref] = value
+		constraints[i] = NewConstraint()
+		for _, entry := range constraint.Entries() {
+			ref := m.visit(entry.Key).(*RefType)
+			value := m.visit(entry.Value)
+			constraints[i].Put(ref, value)
 		}
 	}
 	return constraints

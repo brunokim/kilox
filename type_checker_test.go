@@ -37,6 +37,20 @@ func TestCheck(t *testing.T) {
 				"$.1.Body.Statements.1.Expression.Value": ref_(num_),
 			},
 		},
+		{
+			`
+            fun add3(a, b, c) {
+                return a + b + c;
+            }
+            print add3(1, 2, 3);
+            print add3("x", "y", "z");
+            `,
+			map[string]lox.Type{
+				"$.0.Body.0.Result.Left.Left":  ref_(num_),
+				"$.0.Body.0.Result.Left.Right": ref_(num_),
+				"$.0.Body.0.Result.Right":      ref_(num_),
+			},
+		},
 	}
 	for _, test := range tests {
 		stmts := parseStmts(t, test.text)
