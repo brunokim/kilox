@@ -41,15 +41,17 @@ func TestScanner(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		s := lox.NewScanner(test.text)
-		tokens, err := s.ScanTokens()
-		if err != nil {
-			t.Fatalf("want nil, got err: %v", err)
-		}
-		opts := cmp.Options{cmpopts.IgnoreFields(lox.Token{}, "Line")}
-		if d := cmp.Diff(test.want, tokens, opts); d != "" {
-			t.Errorf("(-want, +got)%s", d)
-		}
+		t.Run(test.text, func(t *testing.T) {
+			s := lox.NewScanner(test.text)
+			tokens, err := s.ScanTokens()
+			if err != nil {
+				t.Fatalf("want nil, got err: %v", err)
+			}
+			opts := cmp.Options{cmpopts.IgnoreFields(lox.Token{}, "Line")}
+			if d := cmp.Diff(test.want, tokens, opts); d != "" {
+				t.Errorf("(-want, +got)%s", d)
+			}
+		})
 	}
 }
 
@@ -74,13 +76,15 @@ line 3: unterminated string`},
 	}
 
 	for _, test := range tests {
-		s := lox.NewScanner(test.text)
-		tokens, err := s.ScanTokens()
-		if err == nil {
-			t.Fatalf("want err, got tokens %v for text %q", tokens, test.text)
-		}
-		if d := cmp.Diff(test.want, err.Error()); d != "" {
-			t.Errorf("(-want, +got)%s", d)
-		}
+		t.Run(test.text, func(t *testing.T) {
+			s := lox.NewScanner(test.text)
+			tokens, err := s.ScanTokens()
+			if err == nil {
+				t.Fatalf("want err, got tokens %v for text %q", tokens, test.text)
+			}
+			if d := cmp.Diff(test.want, err.Error()); d != "" {
+				t.Errorf("(-want, +got)%s", d)
+			}
+		})
 	}
 }

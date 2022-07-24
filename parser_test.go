@@ -163,14 +163,16 @@ func TestParserExpression(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		got := parseExpr(t, test.text)
-		opts := cmp.Options{
-			cmpopts.IgnoreFields(lox.Token{}, "Line"),
-			cmpopts.IgnoreFields(lox.LiteralExpr{}, "Token.Lexeme"),
-		}
-		if diff := cmp.Diff(test.want, got, opts); diff != "" {
-			t.Errorf("%s: (-want, +got)%s", test.text, diff)
-		}
+		t.Run(test.text, func(t *testing.T) {
+			got := parseExpr(t, test.text)
+			opts := cmp.Options{
+				cmpopts.IgnoreFields(lox.Token{}, "Line"),
+				cmpopts.IgnoreFields(lox.LiteralExpr{}, "Token.Lexeme"),
+			}
+			if diff := cmp.Diff(test.want, got, opts); diff != "" {
+				t.Errorf("(-want, +got)%s", diff)
+			}
+		})
 	}
 }
 

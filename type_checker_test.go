@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/lithammer/dedent"
 )
 
 func TestCheck(t *testing.T) {
@@ -15,30 +16,30 @@ func TestCheck(t *testing.T) {
 		paths map[string]lox.Type
 	}{
 		{
-			`
+			dedent.Dedent(`
             var a = 1;
-            print a;`,
+            print a;`),
 			map[string]lox.Type{
 				"$.1.Expression": num_, // line 2: a
 			},
 		},
 		{
-			`
+			dedent.Dedent(`
             var a = true;
             var b = a;
-            print b;`,
+            print b;`),
 			map[string]lox.Type{
 				"$.1.Init":       bool_, // line 2: a
 				"$.2.Expression": bool_, // line 3: b
 			},
 		},
 		{
-			`
+			dedent.Dedent(`
             var a = 1;
             while (a < 4) {
                 var b = a + 1;
                 a = b;
-            }`,
+            }`),
 			map[string]lox.Type{
 				"$.1.Condition":                          func_(ts_(num_, num_), bool_),                     // line 2: a < 4
 				"$.1.Condition.Left":                     num_,                                              // line 2: a
@@ -48,12 +49,12 @@ func TestCheck(t *testing.T) {
 			},
 		},
 		{
-			`
+			dedent.Dedent(`
             fun add3(a, b, c) {
                 return a + b + c;
             }
             print add3(1, 2, 3);
-            print add3("x", "y", "z");`,
+            print add3("x", "y", "z");`),
 			map[string]lox.Type{
 				"$.0.Body.0.Result":            func_(ts_(uref_(), uref_()), uref_()),                  // line 2: a+b+c
 				"$.0.Body.0.Result.Left":       func_(ts_(uref_(), uref_()), uref_()),                  // line 2: a+b
@@ -66,30 +67,32 @@ func TestCheck(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		stmts := parseStmts(t, test.text)
-		c := lox.NewTypeChecker()
-		types, err := c.Check(stmts)
-		if err != nil {
-			t.Errorf("%q: got err: %v", test.text, err)
-			continue
-		}
-		want := make(map[lox.Expr]lox.Type)
-		for path, type_ := range test.paths {
-			elem, err := walkPath(path, stmts)
+		t.Run(test.text, func(t *testing.T) {
+			stmts := parseStmts(t, test.text)
+			c := lox.NewTypeChecker()
+			types, err := c.Check(stmts)
 			if err != nil {
-				t.Fatalf("%q: invalid path %q for %v: %v", test.text, path, stmts, err)
+				t.Errorf("%q: got err: %v", test.text, err)
+				return
 			}
-			want[elem.(lox.Expr)] = type_
-		}
-		opts := cmp.Options{
-			cmpopts.IgnoreFields(nil_, "Token"),
-			cmpopts.IgnoreFields(num_, "Token"),
-			cmpopts.IgnoreFields(bool_, "Token"),
-			cmpopts.IgnoreFields(str_, "Token"),
-			cmpopts.IgnoreFields(lox.RefType{}, "id", "constraints"),
-		}
-		if diff := cmp.Diff(want, types, opts); diff != "" {
-			t.Errorf("type(`%s`) (-want,+got):\n%s", test.text, diff)
-		}
+			want := make(map[lox.Expr]lox.Type)
+			for path, type_ := range test.paths {
+				elem, err := walkPath(path, stmts)
+				if err != nil {
+					t.Fatalf("%q: invalid path %q for %v: %v", test.text, path, stmts, err)
+				}
+				want[elem.(lox.Expr)] = type_
+			}
+			opts := cmp.Options{
+				cmpopts.IgnoreFields(nil_, "Token"),
+				cmpopts.IgnoreFields(num_, "Token"),
+				cmpopts.IgnoreFields(bool_, "Token"),
+				cmpopts.IgnoreFields(str_, "Token"),
+				cmpopts.IgnoreFields(lox.RefType{}, "id", "constraints"),
+			}
+			if diff := cmp.Diff(want, types, opts); diff != "" {
+				t.Errorf("(-want,+got):\n%s", diff)
+			}
+		})
 	}
 }
