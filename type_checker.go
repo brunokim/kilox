@@ -10,13 +10,6 @@ func types(ts ...Type) []Type {
 	return ts
 }
 
-func ref_(value Type, constraints ...Constraint) *RefType {
-	return &RefType{
-		Value:       value,
-		constraints: constraints,
-	}
-}
-
 func func_(params []Type, result Type) FunctionType {
 	return FunctionType{
 		Params: params,
@@ -46,19 +39,19 @@ func makeBuiltinTypes() typeScope {
 	// Arithmetic operators
 	{
 		x := newRef()
-		scope["+"] = func_(types(x, x), x)
 		x.constraints = []Constraint{
 			Constraint1(x, num_),
 			Constraint1(x, str_),
 		}
+		scope["+"] = func_(types(x, x), x)
 	}
 	{
 		x := newRef()
-		scope["-"] = x
 		x.constraints = []Constraint{
 			Constraint1(x, func_(types(num_, num_), num_)),
 			Constraint1(x, func_(types(num_), num_)),
 		}
+		scope["-"] = x
 	}
 	scope["*"] = func_(types(num_, num_), num_)
 	scope["/"] = func_(types(num_, num_), num_)
@@ -75,19 +68,19 @@ func makeBuiltinTypes() typeScope {
 	// Logic control
 	{
 		x := newRef()
-		scope["and"] = func_(types(t1, t2), x)
 		x.constraints = []Constraint{
 			Constraint1(x, t1),
 			Constraint1(x, t2),
 		}
+		scope["and"] = func_(types(t1, t2), x)
 	}
 	{
 		x := newRef()
-		scope["or"] = func_(types(t1, t2), x)
 		x.constraints = []Constraint{
 			Constraint1(x, t1),
 			Constraint1(x, t2),
 		}
+		scope["or"] = func_(types(t1, t2), x)
 	}
 
 	// Builtin
@@ -123,10 +116,6 @@ func (c *TypeChecker) Check(stmts []Stmt) (map[Expr]Type, error) {
 		return nil, errors[typeError](c.errors)
 	}
 	return c.types, nil
-}
-
-func (c *TypeChecker) addErrors(errs ...typeError) {
-	c.errors = append(c.errors, errs...)
 }
 
 func (c *TypeChecker) newRefType() *RefType {
