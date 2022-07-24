@@ -2,6 +2,7 @@ package lox
 
 import (
 	"fmt"
+	"math/rand"
 	"time"
 )
 
@@ -10,6 +11,8 @@ var builtin = NewEnvironment(dynamicEnvironment)
 func init() {
 	builtin.Define("clock", clockFunc{})
 	builtin.Define("type", typeFunc{})
+	builtin.Define("random", randomFunc{})
+	builtin.Define("randomSeed", randomSeedFunc{})
 }
 
 // ----
@@ -61,3 +64,29 @@ func (f typeFunc) Call(i *Interpreter, args []any) any {
 	}
 }
 func (f typeFunc) String() string { return "<native fn type>" }
+
+// ----
+
+type randomFunc struct{}
+
+func (f randomFunc) Arity() int { return 0 }
+func (f randomFunc) Call(i *Interpreter, args []any) any {
+	return rand.Float64()
+}
+func (f randomFunc) String() string { return "<native fn random>" }
+
+// ----
+
+type randomSeedFunc struct{}
+
+func (f randomSeedFunc) Arity() int { return 1 }
+func (f randomSeedFunc) Call(i *Interpreter, args []any) any {
+	arg := args[0]
+	seed, ok := arg.(float64)
+	if !ok {
+		panic(runtimeError{Token{}, fmt.Sprintf("unhandled randomSeed(%[1]v) (%[1]T)", arg)})
+	}
+	rand.Seed(int64(seed))
+	return nil
+}
+func (f randomSeedFunc) String() string { return "<native fn randomSeed>" }

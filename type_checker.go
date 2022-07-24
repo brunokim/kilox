@@ -85,6 +85,9 @@ func makeBuiltinTypes() typeScope {
 
 	// Builtin
 	scope["clock"] = func_(types(), num_)
+	scope["type"] = func_(types(t), t1)
+	scope["random"] = func_(types(), num_)
+	scope["randomSeed"] = func_(types(num_), nil_)
 
 	return scope
 }
@@ -95,7 +98,7 @@ type TypeChecker struct {
 	types  map[Expr]Type
 
 	currType   Type
-	returnType Type
+	returnType *RefType
 
 	refID int
 }
@@ -178,7 +181,7 @@ func (c *TypeChecker) checkStmt(stmt Stmt) {
 }
 
 func (c *TypeChecker) checkFunctionType(name string, params []Token, body []Stmt) Type {
-	defer func(old Type) { c.returnType = old }(c.returnType)
+	defer func(old *RefType) { c.returnType = old }(c.returnType)
 	c.returnType = c.newRefType()
 	refs := make([]Type, len(params))
 	for i := 0; i < len(refs); i++ {
@@ -198,7 +201,7 @@ func (c *TypeChecker) checkFunctionType(name string, params []Token, body []Stmt
 	}
 	c.checkStmts(body)
 	c.endScope()
-	c.currType = t
+	c.currType = simplifyType(t)
 	return t
 }
 
@@ -211,6 +214,11 @@ func (c *TypeChecker) checkCall(callee Type, args ...Type) Type {
 	c.unify(Copy(callee, c.newRefType), callType)
 	c.currType = result
 	return result
+}
+
+func (c *TypeChecker) constraintReturn(t Type) {
+	x := c.returnType
+	x.constraints = append(x.constraints, Constraint1(x, t))
 }
 
 // ----
@@ -277,10 +285,10 @@ func (c *TypeChecker) visitFunctionStmt(stmt FunctionStmt) {
 
 func (c *TypeChecker) visitReturnStmt(stmt ReturnStmt) {
 	if stmt.Result == nil {
-		c.returnType = NilType{}
+		c.constraintReturn(NilType{})
 		return
 	}
-	c.returnType = c.checkExpr(stmt.Result)
+	c.constraintReturn(c.checkExpr(stmt.Result))
 }
 
 func (c *TypeChecker) visitClassStmt(stmt ClassStmt) {
