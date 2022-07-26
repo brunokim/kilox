@@ -28,7 +28,7 @@ func (p *Parser) Parse() ([]Stmt, error) {
 		stmts = append(stmts, p.declaration())
 	}
 	if len(p.errors) > 0 {
-		return nil, errlist.Errors[parseError](p.errors)
+		return nil, errlist.Of[parseError](p.errors)
 	}
 	return stmts, nil
 }

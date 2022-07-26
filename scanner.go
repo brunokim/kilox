@@ -51,7 +51,7 @@ func (s *Scanner) ScanTokens() ([]Token, error) {
 		s.scanToken()
 	}
 	if len(s.errors) > 0 {
-		return nil, errlist.Errors[scanError](s.errors)
+		return nil, errlist.Of[scanError](s.errors)
 	}
 	s.tokens = append(s.tokens, Token{EOF, "", nil, s.line})
 	return s.tokens, nil

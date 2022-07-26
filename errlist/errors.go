@@ -4,9 +4,9 @@ import (
 	"strings"
 )
 
-type Errors[T error] []T
+type Of[T error] []T
 
-func (errs Errors[T]) Error() string {
+func (errs Of[T]) Error() string {
 	if len(errs) == 1 {
 		return errs[0].Error()
 	}

@@ -77,7 +77,7 @@ func (u *unifier) unify(t1, t2 Type) ([]Constraint, error) {
 		u.backtrack()
 	}
 	if len(u.constraints) == 0 {
-		return nil, errlist.Errors[typeError](u.errors)
+		return nil, errlist.Of[typeError](u.errors)
 	}
 	if len(u.constraints) == 1 {
 		for _, entry := range u.constraints[0].Entries() {

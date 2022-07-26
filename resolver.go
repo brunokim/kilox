@@ -70,7 +70,7 @@ func NewResolver(interpreter *Interpreter) *Resolver {
 func (r *Resolver) Resolve(stmts []Stmt) error {
 	r.resolveStmts(stmts)
 	if len(r.errors) > 0 {
-		return errlist.Errors[resolveError](r.errors)
+		return errlist.Of[resolveError](r.errors)
 	}
 	return nil
 }
