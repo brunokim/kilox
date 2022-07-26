@@ -3,18 +3,18 @@ package lox
 import (
 	"fmt"
 
-	"github.com/brunokim/lox/omap"
+	"github.com/brunokim/lox/ordered"
 )
 
 // Constraint is an instance of valid ref bindings.
-type Constraint struct{ *omap.OMap[*RefType, Type] }
+type Constraint struct{ *ordered.Map[*RefType, Type] }
 
 func NewConstraint() Constraint {
-	return Constraint{omap.MakeOMap[*RefType, Type]()}
+	return Constraint{ordered.MakeMap[*RefType, Type]()}
 }
 
 func Constraint1(x1 *RefType, t1 Type) Constraint {
-	return Constraint{omap.MakeOMap1(x1, t1)}
+	return Constraint{ordered.MakeMap1(x1, t1)}
 }
 
 // Walk ref chain until finding an unbound ref, or another type.
