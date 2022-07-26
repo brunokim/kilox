@@ -2,6 +2,8 @@ package lox
 
 import (
 	"fmt"
+
+	"github.com/brunokim/lox/errlist"
 )
 
 const (
@@ -26,7 +28,7 @@ func (p *Parser) Parse() ([]Stmt, error) {
 		stmts = append(stmts, p.declaration())
 	}
 	if len(p.errors) > 0 {
-		return nil, errors[parseError](p.errors)
+		return nil, errlist.Errors[parseError](p.errors)
 	}
 	return stmts, nil
 }

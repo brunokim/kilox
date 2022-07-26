@@ -2,6 +2,8 @@ package lox
 
 import (
 	"fmt"
+
+	"github.com/brunokim/lox/errlist"
 )
 
 type typeScope map[string]Type
@@ -116,7 +118,7 @@ func NewTypeChecker() *TypeChecker {
 func (c *TypeChecker) Check(stmts []Stmt) (map[Expr]Type, error) {
 	c.checkStmts(stmts)
 	if len(c.errors) > 0 {
-		return nil, errors[typeError](c.errors)
+		return nil, errlist.Errors[typeError](c.errors)
 	}
 	return c.types, nil
 }

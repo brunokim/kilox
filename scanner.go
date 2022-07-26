@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+
+	"github.com/brunokim/lox/errlist"
 )
 
 var keywords = map[string]TokenType{
@@ -49,7 +51,7 @@ func (s *Scanner) ScanTokens() ([]Token, error) {
 		s.scanToken()
 	}
 	if len(s.errors) > 0 {
-		return nil, errors[scanError](s.errors)
+		return nil, errlist.Errors[scanError](s.errors)
 	}
 	s.tokens = append(s.tokens, Token{EOF, "", nil, s.line})
 	return s.tokens, nil

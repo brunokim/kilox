@@ -3,6 +3,8 @@ package lox
 import (
 	"fmt"
 	"strings"
+
+	"github.com/brunokim/lox/errlist"
 )
 
 type funcType int
@@ -68,7 +70,7 @@ func NewResolver(interpreter *Interpreter) *Resolver {
 func (r *Resolver) Resolve(stmts []Stmt) error {
 	r.resolveStmts(stmts)
 	if len(r.errors) > 0 {
-		return errors[resolveError](r.errors)
+		return errlist.Errors[resolveError](r.errors)
 	}
 	return nil
 }

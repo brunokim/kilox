@@ -1,12 +1,12 @@
-package lox
+package errlist
 
 import (
 	"strings"
 )
 
-type errors[T error] []T
+type Errors[T error] []T
 
-func (errs errors[T]) Error() string {
+func (errs Errors[T]) Error() string {
 	if len(errs) == 1 {
 		return errs[0].Error()
 	}
