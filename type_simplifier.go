@@ -10,7 +10,7 @@ func simplifyType(t Type) Type {
 }
 
 func (s *simplifier) simplify(t Type) Type {
-	t.accept(s)
+	t.Accept(s)
 	return s.currType
 }
 

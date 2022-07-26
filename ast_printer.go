@@ -28,7 +28,7 @@ const (
 func PrintStmts(stmts ...Stmt) string {
 	p := newASTPrinter()
 	for _, stmt := range stmts {
-		stmt.accept(p)
+		stmt.Accept(p)
 		p.str.WriteRune('\n')
 	}
 	return p.str.String()
@@ -36,13 +36,13 @@ func PrintStmts(stmts ...Stmt) string {
 
 func PrintExpr(expr Expr) string {
 	p := newASTPrinter()
-	expr.accept(p)
+	expr.Accept(p)
 	return p.str.String()
 }
 
 func PrintType(t Type) string {
 	p := newASTPrinter()
-	t.accept(p)
+	t.Accept(p)
 	return p.str.String()
 }
 
@@ -236,11 +236,11 @@ func (p *astPrinter) parenthesize(style writeStyle, parts ...any) {
 func (p *astPrinter) printStuff(x any) {
 	switch stuff := x.(type) {
 	case Expr:
-		stuff.accept(p)
+		stuff.Accept(p)
 	case Stmt:
-		stuff.accept(p)
+		stuff.Accept(p)
 	case Type:
-		stuff.accept(p)
+		stuff.Accept(p)
 	case []Token:
 		parts := moveArray[Token](stuff...)
 		p.parenthesize(singleLine, parts...)

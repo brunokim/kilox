@@ -3,8 +3,8 @@
 package lox
 
 type Expr interface {
-	accept(v exprVisitor)
-	typeName() string
+	Accept(v exprVisitor)
+	TypeName() string
 }
 
 type exprVisitor interface {
@@ -84,63 +84,63 @@ type ThisExpr struct {
 	Keyword Token
 }
 
-func (e *BinaryExpr) accept(v exprVisitor) {
+func (e *BinaryExpr) Accept(v exprVisitor) {
 	v.visitBinaryExpr(e)
 }
 
-func (e *GroupingExpr) accept(v exprVisitor) {
+func (e *GroupingExpr) Accept(v exprVisitor) {
 	v.visitGroupingExpr(e)
 }
 
-func (e *LiteralExpr) accept(v exprVisitor) {
+func (e *LiteralExpr) Accept(v exprVisitor) {
 	v.visitLiteralExpr(e)
 }
 
-func (e *UnaryExpr) accept(v exprVisitor) {
+func (e *UnaryExpr) Accept(v exprVisitor) {
 	v.visitUnaryExpr(e)
 }
 
-func (e *VariableExpr) accept(v exprVisitor) {
+func (e *VariableExpr) Accept(v exprVisitor) {
 	v.visitVariableExpr(e)
 }
 
-func (e *AssignmentExpr) accept(v exprVisitor) {
+func (e *AssignmentExpr) Accept(v exprVisitor) {
 	v.visitAssignmentExpr(e)
 }
 
-func (e *LogicExpr) accept(v exprVisitor) {
+func (e *LogicExpr) Accept(v exprVisitor) {
 	v.visitLogicExpr(e)
 }
 
-func (e *CallExpr) accept(v exprVisitor) {
+func (e *CallExpr) Accept(v exprVisitor) {
 	v.visitCallExpr(e)
 }
 
-func (e *FunctionExpr) accept(v exprVisitor) {
+func (e *FunctionExpr) Accept(v exprVisitor) {
 	v.visitFunctionExpr(e)
 }
 
-func (e *GetExpr) accept(v exprVisitor) {
+func (e *GetExpr) Accept(v exprVisitor) {
 	v.visitGetExpr(e)
 }
 
-func (e *SetExpr) accept(v exprVisitor) {
+func (e *SetExpr) Accept(v exprVisitor) {
 	v.visitSetExpr(e)
 }
 
-func (e *ThisExpr) accept(v exprVisitor) {
+func (e *ThisExpr) Accept(v exprVisitor) {
 	v.visitThisExpr(e)
 }
 
-func (*BinaryExpr) typeName() string     { return "binary" }
-func (*GroupingExpr) typeName() string   { return "grouping" }
-func (*LiteralExpr) typeName() string    { return "literal" }
-func (*UnaryExpr) typeName() string      { return "unary" }
-func (*VariableExpr) typeName() string   { return "variable" }
-func (*AssignmentExpr) typeName() string { return "assignment" }
-func (*LogicExpr) typeName() string      { return "logic" }
-func (*CallExpr) typeName() string       { return "call" }
-func (*FunctionExpr) typeName() string   { return "function" }
-func (*GetExpr) typeName() string        { return "get" }
-func (*SetExpr) typeName() string        { return "set" }
-func (*ThisExpr) typeName() string       { return "this" }
+func (*BinaryExpr) TypeName() string     { return "binary" }
+func (*GroupingExpr) TypeName() string   { return "grouping" }
+func (*LiteralExpr) TypeName() string    { return "literal" }
+func (*UnaryExpr) TypeName() string      { return "unary" }
+func (*VariableExpr) TypeName() string   { return "variable" }
+func (*AssignmentExpr) TypeName() string { return "assignment" }
+func (*LogicExpr) TypeName() string      { return "logic" }
+func (*CallExpr) TypeName() string       { return "call" }
+func (*FunctionExpr) TypeName() string   { return "function" }
+func (*GetExpr) TypeName() string        { return "get" }
+func (*SetExpr) TypeName() string        { return "set" }
+func (*ThisExpr) TypeName() string       { return "this" }

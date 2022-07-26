@@ -58,7 +58,7 @@ func (u *unifier) err(t1, t2 Type) {
 
 func (u *unifier) match(t1, t2 Type) {
 	u.t2 = t2
-	t1.accept(u)
+	t1.Accept(u)
 }
 
 func (u *unifier) unify(t1, t2 Type) ([]Constraint, error) {

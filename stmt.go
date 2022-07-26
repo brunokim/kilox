@@ -3,7 +3,7 @@
 package lox
 
 type Stmt interface {
-	accept(v stmtVisitor)
+	Accept(v stmtVisitor)
 }
 
 type stmtVisitor interface {
@@ -76,46 +76,46 @@ type ClassStmt struct {
 	StaticVars    []VarStmt
 }
 
-func (s ExpressionStmt) accept(v stmtVisitor) {
+func (s ExpressionStmt) Accept(v stmtVisitor) {
 	v.visitExpressionStmt(s)
 }
 
-func (s PrintStmt) accept(v stmtVisitor) {
+func (s PrintStmt) Accept(v stmtVisitor) {
 	v.visitPrintStmt(s)
 }
 
-func (s VarStmt) accept(v stmtVisitor) {
+func (s VarStmt) Accept(v stmtVisitor) {
 	v.visitVarStmt(s)
 }
 
-func (s IfStmt) accept(v stmtVisitor) {
+func (s IfStmt) Accept(v stmtVisitor) {
 	v.visitIfStmt(s)
 }
 
-func (s BlockStmt) accept(v stmtVisitor) {
+func (s BlockStmt) Accept(v stmtVisitor) {
 	v.visitBlockStmt(s)
 }
 
-func (s LoopStmt) accept(v stmtVisitor) {
+func (s LoopStmt) Accept(v stmtVisitor) {
 	v.visitLoopStmt(s)
 }
 
-func (s BreakStmt) accept(v stmtVisitor) {
+func (s BreakStmt) Accept(v stmtVisitor) {
 	v.visitBreakStmt(s)
 }
 
-func (s ContinueStmt) accept(v stmtVisitor) {
+func (s ContinueStmt) Accept(v stmtVisitor) {
 	v.visitContinueStmt(s)
 }
 
-func (s FunctionStmt) accept(v stmtVisitor) {
+func (s FunctionStmt) Accept(v stmtVisitor) {
 	v.visitFunctionStmt(s)
 }
 
-func (s ReturnStmt) accept(v stmtVisitor) {
+func (s ReturnStmt) Accept(v stmtVisitor) {
 	v.visitReturnStmt(s)
 }
 
-func (s ClassStmt) accept(v stmtVisitor) {
+func (s ClassStmt) Accept(v stmtVisitor) {
 	v.visitClassStmt(s)
 }

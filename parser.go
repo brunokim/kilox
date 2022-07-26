@@ -292,7 +292,7 @@ func (p *Parser) assignment() Expr {
 		value := p.assignment()
 		return &SetExpr{e.Object, e.Name, value}
 	default:
-		msg := fmt.Sprintf("invalid target for assignment: want variable or get expression, got %s expression", expr.typeName())
+		msg := fmt.Sprintf("invalid target for assignment: want variable or get expression, got %s expression", expr.TypeName())
 		p.addError(parseError{equals, msg})
 		p.assignment() // Keep consuming tokens after '=', but discard them.
 		return nil

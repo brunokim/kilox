@@ -153,7 +153,7 @@ func (i *Interpreter) lookupVariable(name Token, expr Expr) any {
 }
 
 func (i *Interpreter) execute(stmt Stmt) {
-	stmt.accept(i)
+	stmt.Accept(i)
 }
 
 func (i *Interpreter) executeBlock(stmts []Stmt, env *Environment) {
@@ -282,7 +282,7 @@ func (i *Interpreter) visitClassStmt(stmt ClassStmt) {
 // ----
 
 func (i *Interpreter) evaluate(expr Expr) any {
-	expr.accept(i)
+	expr.Accept(i)
 	return i.value
 }
 

@@ -159,11 +159,11 @@ func (r *Resolver) resolveStmts(stmts []Stmt) {
 }
 
 func (r *Resolver) resolveStmt(stmt Stmt) {
-	stmt.accept(r)
+	stmt.Accept(r)
 }
 
 func (r *Resolver) resolveExpr(expr Expr) {
-	expr.accept(r)
+	expr.Accept(r)
 }
 
 func (r *Resolver) resolveLocal(expr Expr, name Token) {

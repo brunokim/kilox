@@ -3,7 +3,7 @@
 package lox
 
 type Type interface {
-	accept(v typeVisitor)
+	Accept(v typeVisitor)
 }
 
 type typeVisitor interface {
@@ -42,26 +42,26 @@ type RefType struct {
 	constraints []Constraint
 }
 
-func (t NilType) accept(v typeVisitor) {
+func (t NilType) Accept(v typeVisitor) {
 	v.visitNilType(t)
 }
 
-func (t BoolType) accept(v typeVisitor) {
+func (t BoolType) Accept(v typeVisitor) {
 	v.visitBoolType(t)
 }
 
-func (t NumberType) accept(v typeVisitor) {
+func (t NumberType) Accept(v typeVisitor) {
 	v.visitNumberType(t)
 }
 
-func (t StringType) accept(v typeVisitor) {
+func (t StringType) Accept(v typeVisitor) {
 	v.visitStringType(t)
 }
 
-func (t FunctionType) accept(v typeVisitor) {
+func (t FunctionType) Accept(v typeVisitor) {
 	v.visitFunctionType(t)
 }
 
-func (t *RefType) accept(v typeVisitor) {
+func (t *RefType) Accept(v typeVisitor) {
 	v.visitRefType(t)
 }

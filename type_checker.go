@@ -166,7 +166,7 @@ func (c *TypeChecker) getBinding(expr Expr, name string) Type {
 // ----
 
 func (c *TypeChecker) checkExpr(expr Expr) Type {
-	expr.accept(c)
+	expr.Accept(c)
 	return c.currType
 }
 
@@ -177,7 +177,7 @@ func (c *TypeChecker) checkStmts(stmts []Stmt) {
 }
 
 func (c *TypeChecker) checkStmt(stmt Stmt) {
-	stmt.accept(c)
+	stmt.Accept(c)
 }
 
 func (c *TypeChecker) checkFunctionType(name string, params []Token, body []Stmt) Type {

@@ -54,8 +54,8 @@ package lox
 
 {{block "interface declaration" . -}}
 type {{.Name}} interface {
-	accept(v {{.Name | lower}}Visitor)
-    {{if .Extensions.typename}}typeName() string{{end}}
+	Accept(v {{.Name | lower}}Visitor)
+    {{if .Extensions.typename}}TypeName() string{{end}}
 }
 {{- end}}
 
@@ -80,7 +80,7 @@ type {{.Name|lower}}Visitor interface{
 
 {{block "interface implementation" . -}}
 {{range .Schemas -}}
-    func ({{$.VarName}} {{schemaType $ .}}) accept(v {{$.Name | lower}}Visitor) {
+    func ({{$.VarName}} {{schemaType $ .}}) Accept(v {{$.Name | lower}}Visitor) {
         v.visit{{schemaName $ .}}({{$.VarName}})
     }
 
@@ -90,7 +90,7 @@ type {{.Name|lower}}Visitor interface{
 {{block "typename" . -}}
 {{if .Extensions.typename}}
     {{range .Schemas -}}
-        func ({{schemaType $ .}}) typeName() string { return "{{.Name | lower}}"; }
+        func ({{schemaType $ .}}) TypeName() string { return "{{.Name | lower}}"; }
     {{end -}}
 {{end}}
 {{- end}}

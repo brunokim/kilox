@@ -88,7 +88,7 @@ type refMapper struct {
 }
 
 func (m *refMapper) visit(t Type) Type {
-	t.accept(m)
+	t.Accept(m)
 	return m.state
 }
 
