@@ -1,4 +1,4 @@
-package lox
+package omap
 
 // OMap is a map sorted by insertion order.
 type OMap[K comparable, V any] struct {
