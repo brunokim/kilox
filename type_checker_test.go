@@ -88,7 +88,7 @@ func TestCheck(t *testing.T) {
 				cmpopts.IgnoreFields(num_, "Token"),
 				cmpopts.IgnoreFields(bool_, "Token"),
 				cmpopts.IgnoreFields(str_, "Token"),
-				cmpopts.IgnoreFields(lox.RefType{}, "id", "constraints"),
+				cmpopts.IgnoreFields(lox.RefType{}, "ID"),
 			}
 			if diff := cmp.Diff(want, types, opts); diff != "" {
 				t.Errorf("(-want,+got):\n%s", diff)

@@ -86,18 +86,6 @@ func (u *unifier) unify(t1, t2 Type) ([]Constraint, error) {
 		}
 		return u.constraints, nil
 	}
-	// Delete existing constraints from refs.
-	for _, constraint := range u.constraints {
-		for _, x := range constraint.Keys() {
-			x.constraints = nil
-		}
-	}
-	// Replace with constraint from unification.
-	for _, constraint := range u.constraints {
-		for _, x := range constraint.Keys() {
-			x.constraints = append(x.constraints, constraint)
-		}
-	}
 	return u.constraints, nil
 }
 
@@ -196,13 +184,7 @@ func (u *unifier) peek() *choicePoint {
 }
 
 func (u *unifier) unifyRef(x *RefType, t Type) {
-	if len(x.constraints) == 0 {
-		u.bindRef(x, t)
-		return
-	}
-	constraint := x.constraints[0]
-	u.pushChoicePoint(x, x.constraints[1:])
-	u.applyConstraint(x, t, constraint)
+	u.bindRef(x, t)
 }
 
 func (u *unifier) applyConstraint(x *RefType, t Type, constraint Constraint) {
@@ -232,7 +214,7 @@ func (cp *choicePoint) addToTrail(x *RefType) {
 	if cp == nil {
 		return
 	}
-	if cp.topRefID < x.id {
+	if cp.topRefID < x.ID {
 		// Unconditional ref: x is newer than current choice point, so it will
 		// be recreated if we backtrack. There's no need to add it to the trail.
 		return
@@ -297,9 +279,9 @@ func (u *unifier) visitRefType(x *RefType) {
 		u.unifyRef(x, u.t2)
 		return
 	}
-	if x.id < y.id {
+	if x.ID < y.ID {
 		u.unifyRef(y, x)
-	} else if x.id > y.id {
+	} else if x.ID > y.ID {
 		u.unifyRef(x, y)
 	}
 }

@@ -190,7 +190,7 @@ func (p *astPrinter) visitFunctionType(t FunctionType) {
 
 func (p *astPrinter) visitRefType(x *RefType) {
 	if x.Value == nil {
-		fmt.Fprintf(p.str, "_%d", x.id)
+		fmt.Fprintf(p.str, "_%d", x.ID)
 	} else {
 		p.str.WriteRune('&')
 		p.printStuff(x.Value)

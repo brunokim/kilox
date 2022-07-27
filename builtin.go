@@ -50,11 +50,11 @@ func (f typeFunc) Call(i *Interpreter, args []any) any {
 	case function:
 		params := make([]Type, v.Arity())
 		for i := 0; i < v.Arity(); i++ {
-			params[i] = &RefType{id: i + 1}
+			params[i] = &RefType{ID: i + 1}
 		}
 		return FunctionType{
 			Params: params,
-			Return: &RefType{id: v.Arity() + 1},
+			Return: &RefType{ID: v.Arity() + 1},
 		}
 	default:
 		if arg == nil {

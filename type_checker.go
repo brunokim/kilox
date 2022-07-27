@@ -32,7 +32,7 @@ func makeBuiltinTypes() typeScope {
 	var id int
 	newRef := func() *RefType {
 		id--
-		return &RefType{id: id}
+		return &RefType{ID: id}
 	}
 	t := newRef()
 	t1 := newRef()
@@ -41,7 +41,7 @@ func makeBuiltinTypes() typeScope {
 	// Arithmetic operators
 	{
 		x := newRef()
-		x.constraints = []Constraint{
+		_ = []Constraint{
 			Constraint1(x, num_),
 			Constraint1(x, str_),
 		}
@@ -49,7 +49,7 @@ func makeBuiltinTypes() typeScope {
 	}
 	{
 		x := newRef()
-		x.constraints = []Constraint{
+		_ = []Constraint{
 			Constraint1(x, func_(types(num_, num_), num_)),
 			Constraint1(x, func_(types(num_), num_)),
 		}
@@ -70,7 +70,7 @@ func makeBuiltinTypes() typeScope {
 	// Logic control
 	{
 		x := newRef()
-		x.constraints = []Constraint{
+		_ = []Constraint{
 			Constraint1(x, t1),
 			Constraint1(x, t2),
 		}
@@ -78,7 +78,7 @@ func makeBuiltinTypes() typeScope {
 	}
 	{
 		x := newRef()
-		x.constraints = []Constraint{
+		_ = []Constraint{
 			Constraint1(x, t1),
 			Constraint1(x, t2),
 		}
@@ -125,7 +125,7 @@ func (c *TypeChecker) Check(stmts []Stmt) (map[Expr]Type, error) {
 
 func (c *TypeChecker) newRefType() *RefType {
 	c.refID++
-	return &RefType{id: c.refID}
+	return &RefType{ID: c.refID}
 }
 
 func (c *TypeChecker) getRefID() int   { return c.refID }
@@ -219,8 +219,7 @@ func (c *TypeChecker) checkCall(callee Type, args ...Type) Type {
 }
 
 func (c *TypeChecker) constraintReturn(t Type) {
-	x := c.returnType
-	x.constraints = append(x.constraints, Constraint1(x, t))
+	c.returnType.Value = t
 }
 
 // ----

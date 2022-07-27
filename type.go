@@ -37,9 +37,8 @@ type FunctionType struct {
 }
 
 type RefType struct {
-	Value       Type
-	id          int
-	constraints []Constraint
+	Value Type
+	ID    int
 }
 
 func (t NilType) Accept(v typeVisitor) {

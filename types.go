@@ -64,7 +64,6 @@ func Copy(t Type, newRef func() *RefType) Type {
 		y, ok := table[x]
 		if !ok {
 			y = newRef()
-			y.constraints = constraints
 			table[x] = y
 		}
 		return y
@@ -117,8 +116,8 @@ func (m *refMapper) visitRefType(t *RefType) {
 	if t.Value != nil {
 		m.visit(t.Value)
 	} else {
-		constraints := m.visitConstraints(t.constraints)
-		m.state = m.transform(t, constraints)
+		m.state = m.transform(t, nil)
+		// TODO
 	}
 }
 
