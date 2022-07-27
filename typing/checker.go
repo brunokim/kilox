@@ -129,8 +129,8 @@ func (c *Checker) newRefType() *lox.RefType {
 	return &lox.RefType{ID: c.refID}
 }
 
-func (c *Checker) getRefID() int   { return c.refID }
-func (c *Checker) setRefID(id int) { c.refID = id }
+func (c *Checker) GetRefID() int   { return c.refID }
+func (c *Checker) SetRefID(id int) { c.refID = id }
 
 // ----
 
@@ -151,8 +151,8 @@ func (c *Checker) bind(name string, type_ lox.Type) {
 }
 
 func (c *Checker) unify(t1, t2 lox.Type) {
-	u := newUnifier(c)
-	u.unify(t1, t2)
+	u := NewUnifier(c)
+	u.Unify(t1, t2)
 }
 
 func (c *Checker) getBinding(expr lox.Expr, name string) lox.Type {

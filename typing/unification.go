@@ -21,13 +21,13 @@ type choicePoint struct {
 }
 
 // Interface to decouple unifier from type checker.
-type unificationCtx interface {
-	getRefID() int
-	setRefID(id int)
+type UnificationCtx interface {
+	GetRefID() int
+	SetRefID(id int)
 }
 
-type unifier struct {
-	ctx         unificationCtx
+type Unifier struct {
+	ctx         UnificationCtx
 	stack       []typePair
 	choices     []*choicePoint
 	errors      []typeError
@@ -36,22 +36,22 @@ type unifier struct {
 	t2 lox.Type
 }
 
-func newUnifier(ctx unificationCtx) *unifier {
-	return &unifier{ctx: ctx}
+func NewUnifier(ctx UnificationCtx) *Unifier {
+	return &Unifier{ctx: ctx}
 }
 
-func (u *unifier) reset() {
+func (u *Unifier) reset() {
 	u.stack = nil
 	u.choices = nil
 	u.errors = nil
 	u.constraints = nil
 }
 
-func (u *unifier) push(t1, t2 lox.Type) {
+func (u *Unifier) push(t1, t2 lox.Type) {
 	u.stack = append(u.stack, typePair{t1, t2})
 }
 
-func (u *unifier) err(t1, t2 lox.Type) {
+func (u *Unifier) err(t1, t2 lox.Type) {
 	if len(u.constraints) == 0 {
 		// Keep track of errors only if we don't have any solution.
 		u.errors = append(u.errors, typeError{t1, t2})
@@ -59,12 +59,12 @@ func (u *unifier) err(t1, t2 lox.Type) {
 	u.backtrack()
 }
 
-func (u *unifier) match(t1, t2 lox.Type) {
+func (u *Unifier) match(t1, t2 lox.Type) {
 	u.t2 = t2
 	t1.Accept(u)
 }
 
-func (u *unifier) unify(t1, t2 lox.Type) ([]Constraint, error) {
+func (u *Unifier) Unify(t1, t2 lox.Type) ([]Constraint, error) {
 	u.reset()
 	u.stack = []typePair{{t1, t2}}
 	for len(u.stack) > 0 || len(u.choices) > 0 {
@@ -77,20 +77,20 @@ func (u *unifier) unify(t1, t2 lox.Type) ([]Constraint, error) {
 		u.errors = nil
 		u.backtrack()
 	}
-	if len(u.constraints) == 0 {
+	if len(u.errors) > 0 {
 		return nil, errlist.Of[typeError](u.errors)
 	}
 	if len(u.constraints) == 1 {
+		// Single solution, bind vars already.
 		for _, entry := range u.constraints[0].Entries() {
 			x, value := entry.Key, entry.Value
 			x.Value = value
 		}
-		return u.constraints, nil
 	}
 	return u.constraints, nil
 }
 
-func (u *unifier) constraint() Constraint {
+func (u *Unifier) constraint() Constraint {
 	constraint := NewConstraint()
 	for _, choice := range u.choices {
 		for _, x := range choice.trail {
@@ -100,7 +100,7 @@ func (u *unifier) constraint() Constraint {
 	return constraint
 }
 
-func (u *unifier) unifyStep() {
+func (u *Unifier) unifyStep() {
 	n := len(u.stack)
 	var top typePair
 	top, u.stack = u.stack[n-1], u.stack[:n-1]
@@ -121,14 +121,14 @@ func (u *unifier) unifyStep() {
 	u.match(t1, t2)
 }
 
-func (u *unifier) pushChoicePoint(x *lox.RefType, constraints []Constraint) {
+func (u *Unifier) pushChoicePoint(x *lox.RefType, constraints []Constraint) {
 	// TODO: split stack in environments so that we don't need to copy everything?
 	stack := make([]typePair, len(u.stack))
 	copy(stack, u.stack)
 
 	choice := &choicePoint{
 		constraints: constraints,
-		topRefID:    u.ctx.getRefID(),
+		topRefID:    u.ctx.GetRefID(),
 		stack:       stack,
 		x:           x,
 		t:           u.t2,
@@ -136,7 +136,7 @@ func (u *unifier) pushChoicePoint(x *lox.RefType, constraints []Constraint) {
 	u.choices = append(u.choices, choice)
 }
 
-func (u *unifier) popConstraint() (*choicePoint, Constraint) {
+func (u *Unifier) popConstraint() (*choicePoint, Constraint) {
 	for i := len(u.choices) - 1; i >= 0; i-- {
 		choice := u.choices[i]
 		choice.unwindTrail()
@@ -152,14 +152,14 @@ func (u *unifier) popConstraint() (*choicePoint, Constraint) {
 	return nil, Constraint{}
 }
 
-func (u *unifier) backtrack() error {
+func (u *Unifier) backtrack() error {
 	choice, constraint := u.popConstraint()
 	if choice == nil {
 		return fmt.Errorf("no more choices")
 	}
 
 	// Reset ctx state.
-	u.ctx.setRefID(choice.topRefID)
+	u.ctx.SetRefID(choice.topRefID)
 
 	// Reset stack.
 	l1, l2 := len(u.stack), len(choice.stack)
@@ -176,7 +176,7 @@ func (u *unifier) backtrack() error {
 	return nil
 }
 
-func (u *unifier) peek() *choicePoint {
+func (u *Unifier) peek() *choicePoint {
 	n := len(u.choices)
 	if n == 0 {
 		return nil
@@ -184,11 +184,11 @@ func (u *unifier) peek() *choicePoint {
 	return u.choices[n-1]
 }
 
-func (u *unifier) unifyRef(x *lox.RefType, t lox.Type) {
+func (u *Unifier) unifyRef(x *lox.RefType, t lox.Type) {
 	u.bindRef(x, t)
 }
 
-func (u *unifier) applyConstraint(x *lox.RefType, t lox.Type, constraint Constraint) {
+func (u *Unifier) applyConstraint(x *lox.RefType, t lox.Type, constraint Constraint) {
 	for _, entry := range constraint.Entries() {
 		y, value := entry.Key, entry.Value
 		u.bindRef(y, value)
@@ -202,7 +202,7 @@ func (u *unifier) applyConstraint(x *lox.RefType, t lox.Type, constraint Constra
 	}
 }
 
-func (u *unifier) bindRef(x *lox.RefType, t lox.Type) {
+func (u *Unifier) bindRef(x *lox.RefType, t lox.Type) {
 	if x.Value != nil {
 		panic(fmt.Sprintf("compiler error: expecting to be called on an unbound ref, got %v", lox.PrintType(x)))
 	}
@@ -234,31 +234,31 @@ func (cp *choicePoint) unwindTrail() {
 	cp.trail = nil
 }
 
-// ----
+// ---- Type visitor
 
-func (u *unifier) VisitNilType(t1 lox.NilType) {
+func (u *Unifier) VisitNilType(t1 lox.NilType) {
 	// Nil unifies with anything.
 }
 
-func (u *unifier) VisitBoolType(t1 lox.BoolType) {
+func (u *Unifier) VisitBoolType(t1 lox.BoolType) {
 	if _, ok := u.t2.(lox.BoolType); !ok {
 		u.err(t1, u.t2)
 	}
 }
 
-func (u *unifier) VisitNumberType(t1 lox.NumberType) {
+func (u *Unifier) VisitNumberType(t1 lox.NumberType) {
 	if _, ok := u.t2.(lox.NumberType); !ok {
 		u.err(t1, u.t2)
 	}
 }
 
-func (u *unifier) VisitStringType(t1 lox.StringType) {
+func (u *Unifier) VisitStringType(t1 lox.StringType) {
 	if _, ok := u.t2.(lox.StringType); !ok {
 		u.err(t1, u.t2)
 	}
 }
 
-func (u *unifier) VisitFunctionType(t1 lox.FunctionType) {
+func (u *Unifier) VisitFunctionType(t1 lox.FunctionType) {
 	t2, ok := u.t2.(lox.FunctionType)
 	if !ok {
 		u.err(t1, u.t2)
@@ -274,7 +274,7 @@ func (u *unifier) VisitFunctionType(t1 lox.FunctionType) {
 	}
 }
 
-func (u *unifier) VisitRefType(x *lox.RefType) {
+func (u *Unifier) VisitRefType(x *lox.RefType) {
 	y, ok := u.t2.(*lox.RefType)
 	if !ok {
 		u.unifyRef(x, u.t2)
