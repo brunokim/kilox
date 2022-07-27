@@ -66,6 +66,7 @@ func (u *Unifier) match(t1, t2 lox.Type) {
 
 func (u *Unifier) Unify(t1, t2 lox.Type) ([]Constraint, error) {
 	u.reset()
+	u.pushChoicePoint(nil, nil)
 	u.stack = []typePair{{t1, t2}}
 	for len(u.stack) > 0 || len(u.choices) > 0 {
 		if len(u.stack) > 0 {

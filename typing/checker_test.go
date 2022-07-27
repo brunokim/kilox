@@ -107,33 +107,3 @@ func TestCheck(t *testing.T) {
 		})
 	}
 }
-
-// ---- type checker test
-
-func ts_(ts ...lox.Type) []lox.Type {
-	return ts
-}
-
-// Unbound ref
-func uref_(constraints ...typing.Constraint) *lox.RefType {
-	return &lox.RefType{}
-}
-
-// Bound ref
-func bref_(value lox.Type) *lox.RefType {
-	return &lox.RefType{Value: value}
-}
-
-func func_(params []lox.Type, result lox.Type) lox.FunctionType {
-	return lox.FunctionType{
-		Params: params,
-		Return: result,
-	}
-}
-
-var (
-	nil_  = lox.NilType{}
-	num_  = lox.NumberType{}
-	bool_ = lox.BoolType{}
-	str_  = lox.StringType{}
-)
