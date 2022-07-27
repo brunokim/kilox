@@ -48,15 +48,15 @@ func PrintType(t Type) string {
 
 // ---- Expr
 
-func (p *astPrinter) visitBinaryExpr(expr *BinaryExpr) {
+func (p *astPrinter) VisitBinaryExpr(expr *BinaryExpr) {
 	p.parenthesize(multiLine, expr.Operator, expr.Left, expr.Right)
 }
 
-func (p *astPrinter) visitGroupingExpr(expr *GroupingExpr) {
+func (p *astPrinter) VisitGroupingExpr(expr *GroupingExpr) {
 	p.parenthesize(singleLine, "group", expr.Expression)
 }
 
-func (p *astPrinter) visitLiteralExpr(expr *LiteralExpr) {
+func (p *astPrinter) VisitLiteralExpr(expr *LiteralExpr) {
 	value := "nil"
 	if expr.Value != nil {
 		value = fmt.Sprintf("%v", expr.Value)
@@ -64,57 +64,57 @@ func (p *astPrinter) visitLiteralExpr(expr *LiteralExpr) {
 	p.printStuff(value)
 }
 
-func (p *astPrinter) visitUnaryExpr(expr *UnaryExpr) {
+func (p *astPrinter) VisitUnaryExpr(expr *UnaryExpr) {
 	p.parenthesize(singleLine, expr.Operator, expr.Right)
 }
 
-func (p *astPrinter) visitVariableExpr(expr *VariableExpr) {
+func (p *astPrinter) VisitVariableExpr(expr *VariableExpr) {
 	p.printStuff(expr.Name)
 }
 
-func (p *astPrinter) visitAssignmentExpr(expr *AssignmentExpr) {
+func (p *astPrinter) VisitAssignmentExpr(expr *AssignmentExpr) {
 	p.parenthesize(singleLine, "assign", expr.Name, expr.Value)
 }
 
-func (p *astPrinter) visitLogicExpr(expr *LogicExpr) {
+func (p *astPrinter) VisitLogicExpr(expr *LogicExpr) {
 	p.parenthesize(multiLine, expr.Operator, expr.Left, expr.Right)
 }
 
-func (p *astPrinter) visitCallExpr(expr *CallExpr) {
+func (p *astPrinter) VisitCallExpr(expr *CallExpr) {
 	parts := []any{expr.Callee}
 	parts = append(parts, moveArray[Expr](expr.Args...)...)
 	p.parenthesize(multiLine, parts...)
 }
 
-func (p *astPrinter) visitFunctionExpr(expr *FunctionExpr) {
+func (p *astPrinter) VisitFunctionExpr(expr *FunctionExpr) {
 	parts := []any{"fun", expr.Params}
 	parts = append(parts, moveArray[Stmt](expr.Body...)...)
 	p.parenthesize(multiLine, parts...)
 }
 
-func (p *astPrinter) visitGetExpr(expr *GetExpr) {
+func (p *astPrinter) VisitGetExpr(expr *GetExpr) {
 	p.parenthesize(singleLine, "get", expr.Object, expr.Name)
 }
 
-func (p *astPrinter) visitSetExpr(expr *SetExpr) {
+func (p *astPrinter) VisitSetExpr(expr *SetExpr) {
 	p.parenthesize(singleLine, "set", expr.Object, expr.Name, expr.Value)
 }
 
-func (p *astPrinter) visitThisExpr(expr *ThisExpr) {
+func (p *astPrinter) VisitThisExpr(expr *ThisExpr) {
 	p.str.WriteString("this")
 }
 
 // ---- Stmt
 
-func (p *astPrinter) visitExpressionStmt(stmt ExpressionStmt) {
+func (p *astPrinter) VisitExpressionStmt(stmt ExpressionStmt) {
 	p.parenthesize(singleLine, "expr", stmt.Expression)
 }
 
-func (p *astPrinter) visitPrintStmt(stmt PrintStmt) {
+func (p *astPrinter) VisitPrintStmt(stmt PrintStmt) {
 	p.parenthesize(singleLine, "print", stmt.Expression)
 }
 
-func (p *astPrinter) visitVarStmt(stmt VarStmt) {
+func (p *astPrinter) VisitVarStmt(stmt VarStmt) {
 	if stmt.Init == nil {
 		p.parenthesize(singleLine, "var", stmt.Name)
 	} else {
@@ -122,7 +122,7 @@ func (p *astPrinter) visitVarStmt(stmt VarStmt) {
 	}
 }
 
-func (p *astPrinter) visitIfStmt(stmt IfStmt) {
+func (p *astPrinter) VisitIfStmt(stmt IfStmt) {
 	if stmt.Else == nil {
 		p.parenthesize(multiLine, "if", stmt.Condition, stmt.Then)
 	} else {
@@ -130,13 +130,13 @@ func (p *astPrinter) visitIfStmt(stmt IfStmt) {
 	}
 }
 
-func (p *astPrinter) visitBlockStmt(stmt BlockStmt) {
+func (p *astPrinter) VisitBlockStmt(stmt BlockStmt) {
 	parts := []any{"block"}
 	parts = append(parts, moveArray[Stmt](stmt.Statements...)...)
 	p.parenthesize(multiLine, parts...)
 }
 
-func (p *astPrinter) visitLoopStmt(stmt LoopStmt) {
+func (p *astPrinter) VisitLoopStmt(stmt LoopStmt) {
 	if stmt.OnLoop == nil {
 		p.parenthesize(multiLine, "loop", stmt.Condition, stmt.Body)
 	} else {
@@ -144,51 +144,51 @@ func (p *astPrinter) visitLoopStmt(stmt LoopStmt) {
 	}
 }
 
-func (p *astPrinter) visitBreakStmt(stmt BreakStmt) {
+func (p *astPrinter) VisitBreakStmt(stmt BreakStmt) {
 	p.str.WriteString("break")
 }
 
-func (p *astPrinter) visitContinueStmt(stmt ContinueStmt) {
+func (p *astPrinter) VisitContinueStmt(stmt ContinueStmt) {
 	p.str.WriteString("continue")
 }
 
-func (p *astPrinter) visitFunctionStmt(stmt FunctionStmt) {
+func (p *astPrinter) VisitFunctionStmt(stmt FunctionStmt) {
 	parts := []any{"defun", stmt.Name, stmt.Params}
 	parts = append(parts, moveArray[Stmt](stmt.Body...)...)
 	p.parenthesize(multiLine, parts...)
 }
 
-func (p *astPrinter) visitReturnStmt(stmt ReturnStmt) {
+func (p *astPrinter) VisitReturnStmt(stmt ReturnStmt) {
 	p.parenthesize(singleLine, "return", stmt.Result)
 }
 
-func (p *astPrinter) visitClassStmt(stmt ClassStmt) {
+func (p *astPrinter) VisitClassStmt(stmt ClassStmt) {
 	panic("lox.(*ASTPrinter).visitClassStmt is not implemented")
 }
 
 // ---- Type
 
-func (p *astPrinter) visitNilType(t NilType) {
+func (p *astPrinter) VisitNilType(t NilType) {
 	p.str.WriteString("Nil")
 }
 
-func (p *astPrinter) visitBoolType(t BoolType) {
+func (p *astPrinter) VisitBoolType(t BoolType) {
 	p.str.WriteString("Bool")
 }
 
-func (p *astPrinter) visitNumberType(t NumberType) {
+func (p *astPrinter) VisitNumberType(t NumberType) {
 	p.str.WriteString("Number")
 }
 
-func (p *astPrinter) visitStringType(t StringType) {
+func (p *astPrinter) VisitStringType(t StringType) {
 	p.str.WriteString("String")
 }
 
-func (p *astPrinter) visitFunctionType(t FunctionType) {
+func (p *astPrinter) VisitFunctionType(t FunctionType) {
 	p.parenthesize(singleLine, "Fun", t.Params, t.Return)
 }
 
-func (p *astPrinter) visitRefType(x *RefType) {
+func (p *astPrinter) VisitRefType(x *RefType) {
 	if x.Value == nil {
 		fmt.Fprintf(p.str, "_%d", x.ID)
 	} else {

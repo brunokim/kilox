@@ -7,12 +7,12 @@ type Type interface {
 }
 
 type typeVisitor interface {
-	visitNilType(t NilType)
-	visitBoolType(t BoolType)
-	visitNumberType(t NumberType)
-	visitStringType(t StringType)
-	visitFunctionType(t FunctionType)
-	visitRefType(t *RefType)
+	VisitNilType(t NilType)
+	VisitBoolType(t BoolType)
+	VisitNumberType(t NumberType)
+	VisitStringType(t StringType)
+	VisitFunctionType(t FunctionType)
+	VisitRefType(t *RefType)
 }
 
 type NilType struct {
@@ -42,25 +42,25 @@ type RefType struct {
 }
 
 func (t NilType) Accept(v typeVisitor) {
-	v.visitNilType(t)
+	v.VisitNilType(t)
 }
 
 func (t BoolType) Accept(v typeVisitor) {
-	v.visitBoolType(t)
+	v.VisitBoolType(t)
 }
 
 func (t NumberType) Accept(v typeVisitor) {
-	v.visitNumberType(t)
+	v.VisitNumberType(t)
 }
 
 func (t StringType) Accept(v typeVisitor) {
-	v.visitStringType(t)
+	v.VisitStringType(t)
 }
 
 func (t FunctionType) Accept(v typeVisitor) {
-	v.visitFunctionType(t)
+	v.VisitFunctionType(t)
 }
 
 func (t *RefType) Accept(v typeVisitor) {
-	v.visitRefType(t)
+	v.VisitRefType(t)
 }

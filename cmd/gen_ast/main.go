@@ -62,7 +62,7 @@ type {{.Name}} interface {
 {{block "visitor declaration" . -}}
 type {{.Name|lower}}Visitor interface{
 	{{range .Schemas -}}
-		visit{{schemaName $ .}}({{$.VarName}} {{schemaType $ .}})
+		Visit{{schemaName $ .}}({{$.VarName}} {{schemaType $ .}})
 	{{end -}}
 }
 {{- end}}
@@ -81,7 +81,7 @@ type {{.Name|lower}}Visitor interface{
 {{block "interface implementation" . -}}
 {{range .Schemas -}}
     func ({{$.VarName}} {{schemaType $ .}}) Accept(v {{$.Name | lower}}Visitor) {
-        v.visit{{schemaName $ .}}({{$.VarName}})
+        v.Visit{{schemaName $ .}}({{$.VarName}})
     }
 
 {{end -}}

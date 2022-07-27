@@ -8,18 +8,18 @@ type Expr interface {
 }
 
 type exprVisitor interface {
-	visitBinaryExpr(e *BinaryExpr)
-	visitGroupingExpr(e *GroupingExpr)
-	visitLiteralExpr(e *LiteralExpr)
-	visitUnaryExpr(e *UnaryExpr)
-	visitVariableExpr(e *VariableExpr)
-	visitAssignmentExpr(e *AssignmentExpr)
-	visitLogicExpr(e *LogicExpr)
-	visitCallExpr(e *CallExpr)
-	visitFunctionExpr(e *FunctionExpr)
-	visitGetExpr(e *GetExpr)
-	visitSetExpr(e *SetExpr)
-	visitThisExpr(e *ThisExpr)
+	VisitBinaryExpr(e *BinaryExpr)
+	VisitGroupingExpr(e *GroupingExpr)
+	VisitLiteralExpr(e *LiteralExpr)
+	VisitUnaryExpr(e *UnaryExpr)
+	VisitVariableExpr(e *VariableExpr)
+	VisitAssignmentExpr(e *AssignmentExpr)
+	VisitLogicExpr(e *LogicExpr)
+	VisitCallExpr(e *CallExpr)
+	VisitFunctionExpr(e *FunctionExpr)
+	VisitGetExpr(e *GetExpr)
+	VisitSetExpr(e *SetExpr)
+	VisitThisExpr(e *ThisExpr)
 }
 
 type BinaryExpr struct {
@@ -85,51 +85,51 @@ type ThisExpr struct {
 }
 
 func (e *BinaryExpr) Accept(v exprVisitor) {
-	v.visitBinaryExpr(e)
+	v.VisitBinaryExpr(e)
 }
 
 func (e *GroupingExpr) Accept(v exprVisitor) {
-	v.visitGroupingExpr(e)
+	v.VisitGroupingExpr(e)
 }
 
 func (e *LiteralExpr) Accept(v exprVisitor) {
-	v.visitLiteralExpr(e)
+	v.VisitLiteralExpr(e)
 }
 
 func (e *UnaryExpr) Accept(v exprVisitor) {
-	v.visitUnaryExpr(e)
+	v.VisitUnaryExpr(e)
 }
 
 func (e *VariableExpr) Accept(v exprVisitor) {
-	v.visitVariableExpr(e)
+	v.VisitVariableExpr(e)
 }
 
 func (e *AssignmentExpr) Accept(v exprVisitor) {
-	v.visitAssignmentExpr(e)
+	v.VisitAssignmentExpr(e)
 }
 
 func (e *LogicExpr) Accept(v exprVisitor) {
-	v.visitLogicExpr(e)
+	v.VisitLogicExpr(e)
 }
 
 func (e *CallExpr) Accept(v exprVisitor) {
-	v.visitCallExpr(e)
+	v.VisitCallExpr(e)
 }
 
 func (e *FunctionExpr) Accept(v exprVisitor) {
-	v.visitFunctionExpr(e)
+	v.VisitFunctionExpr(e)
 }
 
 func (e *GetExpr) Accept(v exprVisitor) {
-	v.visitGetExpr(e)
+	v.VisitGetExpr(e)
 }
 
 func (e *SetExpr) Accept(v exprVisitor) {
-	v.visitSetExpr(e)
+	v.VisitSetExpr(e)
 }
 
 func (e *ThisExpr) Accept(v exprVisitor) {
-	v.visitThisExpr(e)
+	v.VisitThisExpr(e)
 }
 
 func (*BinaryExpr) TypeName() string     { return "binary" }

@@ -1,38 +1,39 @@
-package lox
+package typing
 
 import (
 	"fmt"
 
+	"github.com/brunokim/lox"
 	"github.com/brunokim/lox/errlist"
 )
 
-type typeScope map[string]Type
+type typeScope map[string]lox.Type
 
-func types(ts ...Type) []Type {
+func types(ts ...lox.Type) []lox.Type {
 	return ts
 }
 
-func func_(params []Type, result Type) FunctionType {
-	return FunctionType{
+func func_(params []lox.Type, result lox.Type) lox.FunctionType {
+	return lox.FunctionType{
 		Params: params,
 		Return: result,
 	}
 }
 
 var (
-	nil_  = NilType{}
-	num_  = NumberType{}
-	bool_ = BoolType{}
-	str_  = StringType{}
+	nil_  = lox.NilType{}
+	num_  = lox.NumberType{}
+	bool_ = lox.BoolType{}
+	str_  = lox.StringType{}
 )
 
 func makeBuiltinTypes() typeScope {
 	scope := make(typeScope)
 
 	var id int
-	newRef := func() *RefType {
+	newRef := func() *lox.RefType {
 		id--
-		return &RefType{ID: id}
+		return &lox.RefType{ID: id}
 	}
 	t := newRef()
 	t1 := newRef()
@@ -94,28 +95,28 @@ func makeBuiltinTypes() typeScope {
 	return scope
 }
 
-type TypeChecker struct {
+type Checker struct {
 	errors []typeError
 	scopes []typeScope
-	types  map[Expr]Type
+	types  map[lox.Expr]lox.Type
 
-	currType   Type
-	returnType *RefType
+	currType   lox.Type
+	returnType *lox.RefType
 
 	refID int
 }
 
-func NewTypeChecker() *TypeChecker {
-	return &TypeChecker{
+func NewChecker() *Checker {
+	return &Checker{
 		scopes: []typeScope{
 			makeBuiltinTypes(),
 			make(typeScope), // Top-level scope
 		},
-		types: make(map[Expr]Type),
+		types: make(map[lox.Expr]lox.Type),
 	}
 }
 
-func (c *TypeChecker) Check(stmts []Stmt) (map[Expr]Type, error) {
+func (c *Checker) Check(stmts []lox.Stmt) (map[lox.Expr]lox.Type, error) {
 	c.checkStmts(stmts)
 	if len(c.errors) > 0 {
 		return nil, errlist.Of[typeError](c.errors)
@@ -123,25 +124,25 @@ func (c *TypeChecker) Check(stmts []Stmt) (map[Expr]Type, error) {
 	return c.types, nil
 }
 
-func (c *TypeChecker) newRefType() *RefType {
+func (c *Checker) newRefType() *lox.RefType {
 	c.refID++
-	return &RefType{ID: c.refID}
+	return &lox.RefType{ID: c.refID}
 }
 
-func (c *TypeChecker) getRefID() int   { return c.refID }
-func (c *TypeChecker) setRefID(id int) { c.refID = id }
+func (c *Checker) getRefID() int   { return c.refID }
+func (c *Checker) setRefID(id int) { c.refID = id }
 
 // ----
 
-func (c *TypeChecker) beginScope() {
+func (c *Checker) beginScope() {
 	c.scopes = append(c.scopes, make(typeScope))
 }
 
-func (c *TypeChecker) endScope() {
+func (c *Checker) endScope() {
 	c.scopes = c.scopes[:len(c.scopes)-1]
 }
 
-func (c *TypeChecker) bind(name string, type_ Type) {
+func (c *Checker) bind(name string, type_ lox.Type) {
 	scope := c.scopes[len(c.scopes)-1]
 	if prevType, ok := scope[name]; ok {
 		c.unify(prevType, type_)
@@ -149,12 +150,12 @@ func (c *TypeChecker) bind(name string, type_ Type) {
 	scope[name] = type_
 }
 
-func (c *TypeChecker) unify(t1, t2 Type) {
+func (c *Checker) unify(t1, t2 lox.Type) {
 	u := newUnifier(c)
 	u.unify(t1, t2)
 }
 
-func (c *TypeChecker) getBinding(expr Expr, name string) Type {
+func (c *Checker) getBinding(expr lox.Expr, name string) lox.Type {
 	for i := len(c.scopes) - 1; i >= 0; i-- {
 		scope := c.scopes[i]
 		if t, ok := scope[name]; ok {
@@ -167,29 +168,29 @@ func (c *TypeChecker) getBinding(expr Expr, name string) Type {
 
 // ----
 
-func (c *TypeChecker) checkExpr(expr Expr) Type {
+func (c *Checker) checkExpr(expr lox.Expr) lox.Type {
 	expr.Accept(c)
 	return c.currType
 }
 
-func (c *TypeChecker) checkStmts(stmts []Stmt) {
+func (c *Checker) checkStmts(stmts []lox.Stmt) {
 	for _, stmt := range stmts {
 		c.checkStmt(stmt)
 	}
 }
 
-func (c *TypeChecker) checkStmt(stmt Stmt) {
+func (c *Checker) checkStmt(stmt lox.Stmt) {
 	stmt.Accept(c)
 }
 
-func (c *TypeChecker) checkFunctionType(name string, params []Token, body []Stmt) Type {
-	defer func(old *RefType) { c.returnType = old }(c.returnType)
+func (c *Checker) checkFunctionType(name string, params []lox.Token, body []lox.Stmt) lox.Type {
+	defer func(old *lox.RefType) { c.returnType = old }(c.returnType)
 	c.returnType = c.newRefType()
-	refs := make([]Type, len(params))
+	refs := make([]lox.Type, len(params))
 	for i := 0; i < len(refs); i++ {
 		refs[i] = c.newRefType()
 	}
-	t := FunctionType{
+	t := lox.FunctionType{
 		Params: refs,
 		Return: c.returnType,
 	}
@@ -207,9 +208,9 @@ func (c *TypeChecker) checkFunctionType(name string, params []Token, body []Stmt
 	return t
 }
 
-func (c *TypeChecker) checkCall(callee Type, args ...Type) Type {
+func (c *Checker) checkCall(callee lox.Type, args ...lox.Type) lox.Type {
 	result := c.newRefType()
-	callType := FunctionType{
+	callType := lox.FunctionType{
 		Params: args,
 		Return: result,
 	}
@@ -218,25 +219,25 @@ func (c *TypeChecker) checkCall(callee Type, args ...Type) Type {
 	return result
 }
 
-func (c *TypeChecker) constraintReturn(t Type) {
+func (c *Checker) constraintReturn(t lox.Type) {
 	c.returnType.Value = t
 }
 
 // ----
 
-func (c *TypeChecker) visitExpressionStmt(stmt ExpressionStmt) {
+func (c *Checker) VisitExpressionStmt(stmt lox.ExpressionStmt) {
 	c.checkExpr(stmt.Expression)
 }
 
-func (c *TypeChecker) visitPrintStmt(stmt PrintStmt) {
+func (c *Checker) VisitPrintStmt(stmt lox.PrintStmt) {
 	c.checkExpr(stmt.Expression)
 }
 
 // If var is not initialized, its type may be initialized on first assignment.
 // TODO: handle case where an uninitialized variable is read/returned before first
 // assignment, in which case it should be nil.
-func (c *TypeChecker) visitVarStmt(stmt VarStmt) {
-	var t Type
+func (c *Checker) VisitVarStmt(stmt lox.VarStmt) {
+	var t lox.Type
 	if stmt.Init != nil {
 		t = c.checkExpr(stmt.Init)
 	} else {
@@ -245,7 +246,7 @@ func (c *TypeChecker) visitVarStmt(stmt VarStmt) {
 	c.bind(stmt.Name.Lexeme, t)
 }
 
-func (c *TypeChecker) visitIfStmt(stmt IfStmt) {
+func (c *Checker) VisitIfStmt(stmt lox.IfStmt) {
 	// stmt.Condition is always valid.
 	c.checkExpr(stmt.Condition)
 	c.checkStmt(stmt.Then)
@@ -254,7 +255,7 @@ func (c *TypeChecker) visitIfStmt(stmt IfStmt) {
 	}
 }
 
-func (c *TypeChecker) visitBlockStmt(stmt BlockStmt) {
+func (c *Checker) VisitBlockStmt(stmt lox.BlockStmt) {
 	c.beginScope()
 	for _, stmt := range stmt.Statements {
 		c.checkStmt(stmt)
@@ -262,7 +263,7 @@ func (c *TypeChecker) visitBlockStmt(stmt BlockStmt) {
 	c.endScope()
 }
 
-func (c *TypeChecker) visitLoopStmt(stmt LoopStmt) {
+func (c *Checker) VisitLoopStmt(stmt lox.LoopStmt) {
 	// stmt.Condition is always valid.
 	c.checkExpr(stmt.Condition)
 	c.checkStmt(stmt.Body)
@@ -271,105 +272,105 @@ func (c *TypeChecker) visitLoopStmt(stmt LoopStmt) {
 	}
 }
 
-func (c *TypeChecker) visitBreakStmt(stmt BreakStmt) {
+func (c *Checker) VisitBreakStmt(stmt lox.BreakStmt) {
 	// Do nothing.
 }
 
-func (c *TypeChecker) visitContinueStmt(stmt ContinueStmt) {
+func (c *Checker) VisitContinueStmt(stmt lox.ContinueStmt) {
 	// Do nothing.
 }
 
-func (c *TypeChecker) visitFunctionStmt(stmt FunctionStmt) {
+func (c *Checker) VisitFunctionStmt(stmt lox.FunctionStmt) {
 	name := stmt.Name.Lexeme
 	c.checkFunctionType(name, stmt.Params, stmt.Body)
 }
 
-func (c *TypeChecker) visitReturnStmt(stmt ReturnStmt) {
+func (c *Checker) VisitReturnStmt(stmt lox.ReturnStmt) {
 	if stmt.Result == nil {
-		c.constraintReturn(NilType{})
+		c.constraintReturn(lox.NilType{})
 		return
 	}
 	c.constraintReturn(c.checkExpr(stmt.Result))
 }
 
-func (c *TypeChecker) visitClassStmt(stmt ClassStmt) {
-	panic("lox.(*TypeChecker).visitClassStmt is not implemented")
+func (c *Checker) VisitClassStmt(stmt lox.ClassStmt) {
+	panic("lox.(*Checker).visitClassStmt is not implemented")
 }
 
 // ----
 
-func (c *TypeChecker) visitBinaryExpr(expr *BinaryExpr) {
+func (c *Checker) VisitBinaryExpr(expr *lox.BinaryExpr) {
 	op := c.getBinding(expr, expr.Operator.Lexeme)
 	left := c.checkExpr(expr.Left)
 	right := c.checkExpr(expr.Right)
 	c.checkCall(op, left, right)
 }
 
-func (c *TypeChecker) visitGroupingExpr(expr *GroupingExpr) {
+func (c *Checker) VisitGroupingExpr(expr *lox.GroupingExpr) {
 	c.checkExpr(expr.Expression)
 }
 
-func (c *TypeChecker) visitLiteralExpr(expr *LiteralExpr) {
+func (c *Checker) VisitLiteralExpr(expr *lox.LiteralExpr) {
 	switch expr.Value.(type) {
 	case bool:
-		c.currType = BoolType{expr.Token}
+		c.currType = lox.BoolType{expr.Token}
 	case float64:
-		c.currType = NumberType{expr.Token}
+		c.currType = lox.NumberType{expr.Token}
 	case string:
-		c.currType = StringType{expr.Token}
+		c.currType = lox.StringType{expr.Token}
 	default:
 		if expr.Value == nil {
-			c.currType = NilType{expr.Token}
+			c.currType = lox.NilType{expr.Token}
 		} else {
 			panic(fmt.Sprintf("unhandled literal type %[1]T (%[1]v)", expr.Value))
 		}
 	}
 }
 
-func (c *TypeChecker) visitUnaryExpr(expr *UnaryExpr) {
+func (c *Checker) VisitUnaryExpr(expr *lox.UnaryExpr) {
 	op := c.getBinding(expr, expr.Operator.Lexeme)
 	right := c.checkExpr(expr.Right)
 	c.checkCall(op, right)
 }
 
-func (c *TypeChecker) visitVariableExpr(expr *VariableExpr) {
+func (c *Checker) VisitVariableExpr(expr *lox.VariableExpr) {
 	c.currType = c.getBinding(expr, expr.Name.Lexeme)
 }
 
-func (c *TypeChecker) visitAssignmentExpr(expr *AssignmentExpr) {
+func (c *Checker) VisitAssignmentExpr(expr *lox.AssignmentExpr) {
 	t := c.checkExpr(expr.Value)
 	c.bind(expr.Name.Lexeme, t)
 	c.currType = t
 }
 
-func (c *TypeChecker) visitLogicExpr(expr *LogicExpr) {
+func (c *Checker) VisitLogicExpr(expr *lox.LogicExpr) {
 	op := c.getBinding(expr, expr.Operator.Lexeme)
 	left := c.checkExpr(expr.Left)
 	right := c.checkExpr(expr.Right)
 	c.checkCall(op, left, right)
 }
 
-func (c *TypeChecker) visitCallExpr(expr *CallExpr) {
+func (c *Checker) VisitCallExpr(expr *lox.CallExpr) {
 	t := c.checkExpr(expr.Callee)
-	args := make([]Type, len(expr.Args))
+	args := make([]lox.Type, len(expr.Args))
 	for i, arg := range expr.Args {
 		args[i] = c.checkExpr(arg)
 	}
 	c.checkCall(t, args...)
 }
 
-func (c *TypeChecker) visitFunctionExpr(expr *FunctionExpr) {
+func (c *Checker) VisitFunctionExpr(expr *lox.FunctionExpr) {
 	c.checkFunctionType("", expr.Params, expr.Body)
 }
 
-func (c *TypeChecker) visitGetExpr(expr *GetExpr) {
-	panic("lox.(*TypeChecker).visitGetExpr is not implemented")
+func (c *Checker) VisitGetExpr(expr *lox.GetExpr) {
+	panic("typing.(*Checker).visitGetExpr is not implemented")
 }
 
-func (c *TypeChecker) visitSetExpr(expr *SetExpr) {
-	panic("lox.(*TypeChecker).visitSetExpr is not implemented")
+func (c *Checker) VisitSetExpr(expr *lox.SetExpr) {
+	panic("typing.(*Checker).visitSetExpr is not implemented")
 }
 
-func (c *TypeChecker) visitThisExpr(expr *ThisExpr) {
-	panic("lox.(*TypeChecker).visitThisExpr is not implemented")
+func (c *Checker) VisitThisExpr(expr *lox.ThisExpr) {
+	panic("typing.(*Checker).visitThisExpr is not implemented")
 }

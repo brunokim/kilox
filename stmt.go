@@ -7,17 +7,17 @@ type Stmt interface {
 }
 
 type stmtVisitor interface {
-	visitExpressionStmt(s ExpressionStmt)
-	visitPrintStmt(s PrintStmt)
-	visitVarStmt(s VarStmt)
-	visitIfStmt(s IfStmt)
-	visitBlockStmt(s BlockStmt)
-	visitLoopStmt(s LoopStmt)
-	visitBreakStmt(s BreakStmt)
-	visitContinueStmt(s ContinueStmt)
-	visitFunctionStmt(s FunctionStmt)
-	visitReturnStmt(s ReturnStmt)
-	visitClassStmt(s ClassStmt)
+	VisitExpressionStmt(s ExpressionStmt)
+	VisitPrintStmt(s PrintStmt)
+	VisitVarStmt(s VarStmt)
+	VisitIfStmt(s IfStmt)
+	VisitBlockStmt(s BlockStmt)
+	VisitLoopStmt(s LoopStmt)
+	VisitBreakStmt(s BreakStmt)
+	VisitContinueStmt(s ContinueStmt)
+	VisitFunctionStmt(s FunctionStmt)
+	VisitReturnStmt(s ReturnStmt)
+	VisitClassStmt(s ClassStmt)
 }
 
 type ExpressionStmt struct {
@@ -77,45 +77,45 @@ type ClassStmt struct {
 }
 
 func (s ExpressionStmt) Accept(v stmtVisitor) {
-	v.visitExpressionStmt(s)
+	v.VisitExpressionStmt(s)
 }
 
 func (s PrintStmt) Accept(v stmtVisitor) {
-	v.visitPrintStmt(s)
+	v.VisitPrintStmt(s)
 }
 
 func (s VarStmt) Accept(v stmtVisitor) {
-	v.visitVarStmt(s)
+	v.VisitVarStmt(s)
 }
 
 func (s IfStmt) Accept(v stmtVisitor) {
-	v.visitIfStmt(s)
+	v.VisitIfStmt(s)
 }
 
 func (s BlockStmt) Accept(v stmtVisitor) {
-	v.visitBlockStmt(s)
+	v.VisitBlockStmt(s)
 }
 
 func (s LoopStmt) Accept(v stmtVisitor) {
-	v.visitLoopStmt(s)
+	v.VisitLoopStmt(s)
 }
 
 func (s BreakStmt) Accept(v stmtVisitor) {
-	v.visitBreakStmt(s)
+	v.VisitBreakStmt(s)
 }
 
 func (s ContinueStmt) Accept(v stmtVisitor) {
-	v.visitContinueStmt(s)
+	v.VisitContinueStmt(s)
 }
 
 func (s FunctionStmt) Accept(v stmtVisitor) {
-	v.visitFunctionStmt(s)
+	v.VisitFunctionStmt(s)
 }
 
 func (s ReturnStmt) Accept(v stmtVisitor) {
-	v.visitReturnStmt(s)
+	v.VisitReturnStmt(s)
 }
 
 func (s ClassStmt) Accept(v stmtVisitor) {
-	v.visitClassStmt(s)
+	v.VisitClassStmt(s)
 }

@@ -1,14 +1,12 @@
 package lox_test
 
 import (
-	"fmt"
-	"reflect"
 	"regexp"
-	"strconv"
 	"strings"
 	"testing"
 
 	"github.com/brunokim/lox"
+	"github.com/brunokim/lox/typing"
 )
 
 func runLox(text string, experiments map[string]bool) (string, error) {
@@ -29,7 +27,7 @@ func runLox(text string, experiments map[string]bool) (string, error) {
 		return "", err
 	}
 	if experiments["typing"] {
-		c := lox.NewTypeChecker()
+		c := typing.NewChecker()
 		_, err := c.Check(stmts)
 		if err != nil {
 			return "", err
@@ -142,99 +140,4 @@ func extractExperiments(text string) map[string]bool {
 		}
 	}
 	return exps
-}
-
-// ---- type checker test
-
-func ts_(ts ...lox.Type) []lox.Type {
-	return ts
-}
-
-// Unbound ref
-func uref_(constraints ...lox.Constraint) *lox.RefType {
-	return &lox.RefType{}
-}
-
-// Bound ref
-func bref_(value lox.Type) *lox.RefType {
-	return &lox.RefType{Value: value}
-}
-
-func func_(params []lox.Type, result lox.Type) lox.FunctionType {
-	return lox.FunctionType{
-		Params: params,
-		Return: result,
-	}
-}
-
-var (
-	nil_  = lox.NilType{}
-	num_  = lox.NumberType{}
-	bool_ = lox.BoolType{}
-	str_  = lox.StringType{}
-)
-
-func walkPath(path string, obj any) (any, error) {
-	steps := strings.Split(path, ".")
-	if (steps[0] != "") && (steps[0] != "$") {
-		return nil, fmt.Errorf("%q: at 0: invalid root object %q", path, steps[0])
-	}
-	value := reflect.ValueOf(obj)
-	for i, step := range steps[1:] {
-		// Dereference value until hitting a concrete type.
-		for value.Kind() == reflect.Pointer || value.Kind() == reflect.Interface {
-			value = value.Elem()
-		}
-		// If step is a valid integer, consider it an index.
-		if idx, err := strconv.Atoi(step); err == nil {
-			value, err = getIndex(value, idx)
-			if err != nil {
-				return nil, fmt.Errorf("%q at %d: %w", path, i, err)
-			}
-			continue
-		}
-		var err error
-		value, err = getKey(value, step)
-		if err != nil {
-			return nil, fmt.Errorf("%q at %d: %w", path, i, err)
-		}
-	}
-	return value.Interface(), nil
-}
-
-func getIndex(value reflect.Value, idx int) (reflect.Value, error) {
-	switch value.Kind() {
-	case reflect.Map:
-		v := value.MapIndex(reflect.ValueOf(idx))
-		if !v.IsValid() {
-			return reflect.Value{}, fmt.Errorf("key %d not found in map", idx)
-		}
-		return v, nil
-	case reflect.Array, reflect.Slice, reflect.String:
-		if idx < 0 || idx >= value.Len() {
-			return reflect.Value{}, fmt.Errorf("index %d is out of range [0,%d)", idx, value.Len())
-		}
-		return value.Index(idx), nil
-	default:
-		return reflect.Value{}, fmt.Errorf("can't access member %d of %v", idx, value.Type())
-	}
-}
-
-func getKey(value reflect.Value, key string) (reflect.Value, error) {
-	switch value.Kind() {
-	case reflect.Map:
-		v := value.MapIndex(reflect.ValueOf(key))
-		if !v.IsValid() {
-			return reflect.Value{}, fmt.Errorf("key %q not found in map with type %v", key, value.Type())
-		}
-		return v, nil
-	case reflect.Struct:
-		v := value.FieldByName(key)
-		if !v.IsValid() {
-			return reflect.Value{}, fmt.Errorf("field %q not found in struct with type %v", key, value.Type())
-		}
-		return v, nil
-	default:
-		return reflect.Value{}, fmt.Errorf("can't access member %q of %v", key, value.Type())
-	}
 }

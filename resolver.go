@@ -234,19 +234,19 @@ func (r *Resolver) checkVariables(scope *scope) {
 
 // ----
 
-func (r *Resolver) visitExpressionStmt(stmt ExpressionStmt) {
+func (r *Resolver) VisitExpressionStmt(stmt ExpressionStmt) {
 	r.resolveExpr(stmt.Expression)
 }
 
-func (r *Resolver) visitPrintStmt(stmt PrintStmt) {
+func (r *Resolver) VisitPrintStmt(stmt PrintStmt) {
 	r.resolveExpr(stmt.Expression)
 }
 
-func (r *Resolver) visitVarStmt(stmt VarStmt) {
+func (r *Resolver) VisitVarStmt(stmt VarStmt) {
 	r.resolveVarDeclaration(stmt.Name, stmt.Init, local)
 }
 
-func (r *Resolver) visitIfStmt(stmt IfStmt) {
+func (r *Resolver) VisitIfStmt(stmt IfStmt) {
 	r.resolveExpr(stmt.Condition)
 	r.resolveStmt(stmt.Then)
 	if stmt.Else != nil {
@@ -254,13 +254,13 @@ func (r *Resolver) visitIfStmt(stmt IfStmt) {
 	}
 }
 
-func (r *Resolver) visitBlockStmt(stmt BlockStmt) {
+func (r *Resolver) VisitBlockStmt(stmt BlockStmt) {
 	r.beginScope()
 	r.resolveStmts(stmt.Statements)
 	r.endScope()
 }
 
-func (r *Resolver) visitLoopStmt(stmt LoopStmt) {
+func (r *Resolver) VisitLoopStmt(stmt LoopStmt) {
 	defer func(old bool) { r.isInLoop = old }(r.isInLoop)
 	r.isInLoop = true
 	r.resolveExpr(stmt.Condition)
@@ -270,26 +270,26 @@ func (r *Resolver) visitLoopStmt(stmt LoopStmt) {
 	}
 }
 
-func (r *Resolver) visitBreakStmt(stmt BreakStmt) {
+func (r *Resolver) VisitBreakStmt(stmt BreakStmt) {
 	if !r.isInLoop {
 		r.addError(resolveError{stmt.Keyword, "'break' can only be used within loops"})
 	}
 }
 
-func (r *Resolver) visitContinueStmt(stmt ContinueStmt) {
+func (r *Resolver) VisitContinueStmt(stmt ContinueStmt) {
 	if !r.isInLoop {
 		r.addError(resolveError{stmt.Keyword, "'continue' can only be used within loops"})
 	}
 }
 
-func (r *Resolver) visitFunctionStmt(stmt FunctionStmt) {
+func (r *Resolver) VisitFunctionStmt(stmt FunctionStmt) {
 	r.declare(stmt.Name, funcName)
 	r.define(stmt.Name)
 
 	r.resolveFunction(stmt.Params, stmt.Body, namedFunc)
 }
 
-func (r *Resolver) visitReturnStmt(stmt ReturnStmt) {
+func (r *Resolver) VisitReturnStmt(stmt ReturnStmt) {
 	if r.currFunc == noFunc {
 		r.addError(resolveError{stmt.Keyword, "'return' can only be used within functions"})
 	}
@@ -301,7 +301,7 @@ func (r *Resolver) visitReturnStmt(stmt ReturnStmt) {
 	}
 }
 
-func (r *Resolver) visitClassStmt(stmt ClassStmt) {
+func (r *Resolver) VisitClassStmt(stmt ClassStmt) {
 	defer func(oldType classType) { r.currClass = oldType }(r.currClass)
 	r.currClass = someClass
 
@@ -343,22 +343,22 @@ func (r *Resolver) visitClassStmt(stmt ClassStmt) {
 
 // ----
 
-func (r *Resolver) visitBinaryExpr(expr *BinaryExpr) {
+func (r *Resolver) VisitBinaryExpr(expr *BinaryExpr) {
 	r.resolveExpr(expr.Left)
 	r.resolveExpr(expr.Right)
 }
 
-func (r *Resolver) visitGroupingExpr(expr *GroupingExpr) {
+func (r *Resolver) VisitGroupingExpr(expr *GroupingExpr) {
 	r.resolveExpr(expr.Expression)
 }
 
-func (r *Resolver) visitLiteralExpr(expr *LiteralExpr) {}
+func (r *Resolver) VisitLiteralExpr(expr *LiteralExpr) {}
 
-func (r *Resolver) visitUnaryExpr(expr *UnaryExpr) {
+func (r *Resolver) VisitUnaryExpr(expr *UnaryExpr) {
 	r.resolveExpr(expr.Right)
 }
 
-func (r *Resolver) visitVariableExpr(expr *VariableExpr) {
+func (r *Resolver) VisitVariableExpr(expr *VariableExpr) {
 	if len(r.scopes) == 0 {
 		return
 	}
@@ -370,38 +370,38 @@ func (r *Resolver) visitVariableExpr(expr *VariableExpr) {
 	r.resolveLocal(expr, expr.Name)
 }
 
-func (r *Resolver) visitAssignmentExpr(expr *AssignmentExpr) {
+func (r *Resolver) VisitAssignmentExpr(expr *AssignmentExpr) {
 	r.resolveExpr(expr.Value)
 	r.resolveLocal(expr, expr.Name)
 }
 
-func (r *Resolver) visitLogicExpr(expr *LogicExpr) {
+func (r *Resolver) VisitLogicExpr(expr *LogicExpr) {
 	r.resolveExpr(expr.Left)
 	r.resolveExpr(expr.Right)
 }
 
-func (r *Resolver) visitCallExpr(expr *CallExpr) {
+func (r *Resolver) VisitCallExpr(expr *CallExpr) {
 	r.resolveExpr(expr.Callee)
 	for _, arg := range expr.Args {
 		r.resolveExpr(arg)
 	}
 }
 
-func (r *Resolver) visitFunctionExpr(expr *FunctionExpr) {
+func (r *Resolver) VisitFunctionExpr(expr *FunctionExpr) {
 	r.resolveFunction(expr.Params, expr.Body, anonymousFunc)
 }
 
-func (r *Resolver) visitGetExpr(expr *GetExpr) {
+func (r *Resolver) VisitGetExpr(expr *GetExpr) {
 	r.resolveExpr(expr.Object)
 	// We don't resolve property access statically, only dinamically.
 }
 
-func (r *Resolver) visitSetExpr(expr *SetExpr) {
+func (r *Resolver) VisitSetExpr(expr *SetExpr) {
 	r.resolveExpr(expr.Value)
 	r.resolveExpr(expr.Object)
 }
 
-func (r *Resolver) visitThisExpr(expr *ThisExpr) {
+func (r *Resolver) VisitThisExpr(expr *ThisExpr) {
 	if r.currClass == noClass {
 		r.addError(resolveError{expr.Keyword, "'this' can only be used within classes"})
 	}

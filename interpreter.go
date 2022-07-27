@@ -166,11 +166,11 @@ func (i *Interpreter) executeBlock(stmts []Stmt, env *Environment) {
 
 // ----
 
-func (i *Interpreter) visitExpressionStmt(stmt ExpressionStmt) {
+func (i *Interpreter) VisitExpressionStmt(stmt ExpressionStmt) {
 	i.evaluate(stmt.Expression)
 }
 
-func (i *Interpreter) visitPrintStmt(stmt PrintStmt) {
+func (i *Interpreter) VisitPrintStmt(stmt PrintStmt) {
 	v := i.evaluate(stmt.Expression)
 	if v == nil {
 		v = "nil"
@@ -178,7 +178,7 @@ func (i *Interpreter) visitPrintStmt(stmt PrintStmt) {
 	fmt.Fprintln(i.stdout, v)
 }
 
-func (i *Interpreter) visitVarStmt(stmt VarStmt) {
+func (i *Interpreter) VisitVarStmt(stmt VarStmt) {
 	var value any
 	if stmt.Init != nil {
 		value = i.evaluate(stmt.Init)
@@ -186,7 +186,7 @@ func (i *Interpreter) visitVarStmt(stmt VarStmt) {
 	i.env.Define(stmt.Name.Lexeme, value)
 }
 
-func (i *Interpreter) visitIfStmt(stmt IfStmt) {
+func (i *Interpreter) VisitIfStmt(stmt IfStmt) {
 	cond := i.evaluate(stmt.Condition)
 	if isTruthy(cond) {
 		i.execute(stmt.Then)
@@ -195,11 +195,11 @@ func (i *Interpreter) visitIfStmt(stmt IfStmt) {
 	}
 }
 
-func (i *Interpreter) visitBlockStmt(stmt BlockStmt) {
+func (i *Interpreter) VisitBlockStmt(stmt BlockStmt) {
 	i.executeBlock(stmt.Statements, i.env.Child(staticEnvironment))
 }
 
-func (i *Interpreter) visitLoopStmt(stmt LoopStmt) {
+func (i *Interpreter) VisitLoopStmt(stmt LoopStmt) {
 	for isTruthy(i.evaluate(stmt.Condition)) {
 		state := i.runLoopBody(stmt.Body)
 		if state == breakLoop {
@@ -225,22 +225,22 @@ func (i *Interpreter) runLoopBody(stmt Stmt) (s loopState) {
 	return sequentialLoop
 }
 
-func (i *Interpreter) visitBreakStmt(stmt BreakStmt) {
+func (i *Interpreter) VisitBreakStmt(stmt BreakStmt) {
 	panic(loopSignal{breakLoop})
 }
 
-func (i *Interpreter) visitContinueStmt(stmt ContinueStmt) {
+func (i *Interpreter) VisitContinueStmt(stmt ContinueStmt) {
 	panic(loopSignal{continueLoop})
 }
 
-func (i *Interpreter) visitFunctionStmt(stmt FunctionStmt) {
+func (i *Interpreter) VisitFunctionStmt(stmt FunctionStmt) {
 	name := stmt.Name.Lexeme
 	isInit := false
 	f := function{name, stmt.Params, stmt.Body, i.env, isInit}
 	i.env.Define(name, f)
 }
 
-func (i *Interpreter) visitReturnStmt(stmt ReturnStmt) {
+func (i *Interpreter) VisitReturnStmt(stmt ReturnStmt) {
 	var value any
 	if stmt.Result != nil {
 		value = i.evaluate(stmt.Result)
@@ -248,7 +248,7 @@ func (i *Interpreter) visitReturnStmt(stmt ReturnStmt) {
 	panic(returnSignal{value})
 }
 
-func (i *Interpreter) visitClassStmt(stmt ClassStmt) {
+func (i *Interpreter) VisitClassStmt(stmt ClassStmt) {
 	className := stmt.Name.Lexeme
 	cl := newClass(newMetaClass(className))
 	for _, method := range stmt.StaticMethods {
@@ -286,30 +286,30 @@ func (i *Interpreter) evaluate(expr Expr) any {
 	return i.value
 }
 
-func (i *Interpreter) visitBinaryExpr(expr *BinaryExpr) {
+func (i *Interpreter) VisitBinaryExpr(expr *BinaryExpr) {
 	left := i.evaluate(expr.Left)
 	right := i.evaluate(expr.Right)
 	i.value = operate2(expr.Operator, left, right)
 }
 
-func (i *Interpreter) visitGroupingExpr(expr *GroupingExpr) {
+func (i *Interpreter) VisitGroupingExpr(expr *GroupingExpr) {
 	i.evaluate(expr.Expression)
 }
 
-func (i *Interpreter) visitLiteralExpr(expr *LiteralExpr) {
+func (i *Interpreter) VisitLiteralExpr(expr *LiteralExpr) {
 	i.value = expr.Value
 }
 
-func (i *Interpreter) visitUnaryExpr(expr *UnaryExpr) {
+func (i *Interpreter) VisitUnaryExpr(expr *UnaryExpr) {
 	right := i.evaluate(expr.Right)
 	i.value = operate1(expr.Operator, right)
 }
 
-func (i *Interpreter) visitVariableExpr(expr *VariableExpr) {
+func (i *Interpreter) VisitVariableExpr(expr *VariableExpr) {
 	i.value = i.lookupVariable(expr.Name, expr)
 }
 
-func (i *Interpreter) visitAssignmentExpr(expr *AssignmentExpr) {
+func (i *Interpreter) VisitAssignmentExpr(expr *AssignmentExpr) {
 	value := i.evaluate(expr.Value)
 	pos, ok := i.locals[expr]
 	if ok {
@@ -319,7 +319,7 @@ func (i *Interpreter) visitAssignmentExpr(expr *AssignmentExpr) {
 	}
 }
 
-func (i *Interpreter) visitLogicExpr(expr *LogicExpr) {
+func (i *Interpreter) VisitLogicExpr(expr *LogicExpr) {
 	left := i.evaluate(expr.Left)
 	if expr.Operator.TokenType == Or && isTruthy(left) {
 		return
@@ -330,7 +330,7 @@ func (i *Interpreter) visitLogicExpr(expr *LogicExpr) {
 	i.evaluate(expr.Right)
 }
 
-func (i *Interpreter) visitCallExpr(expr *CallExpr) {
+func (i *Interpreter) VisitCallExpr(expr *CallExpr) {
 	callee := i.evaluate(expr.Callee)
 	args := make([]any, len(expr.Args))
 	for index, arg := range expr.Args {
@@ -346,12 +346,12 @@ func (i *Interpreter) visitCallExpr(expr *CallExpr) {
 	i.value = f.Call(i, args)
 }
 
-func (i *Interpreter) visitFunctionExpr(expr *FunctionExpr) {
+func (i *Interpreter) VisitFunctionExpr(expr *FunctionExpr) {
 	isInit := false
 	i.value = function{"anonymous", expr.Params, expr.Body, i.env, isInit}
 }
 
-func (i *Interpreter) visitGetExpr(expr *GetExpr) {
+func (i *Interpreter) VisitGetExpr(expr *GetExpr) {
 	obj := i.evaluate(expr.Object)
 	is, ok := obj.(object)
 	if !ok {
@@ -360,7 +360,7 @@ func (i *Interpreter) visitGetExpr(expr *GetExpr) {
 	i.value = is.get(expr.Name)
 }
 
-func (i *Interpreter) visitSetExpr(expr *SetExpr) {
+func (i *Interpreter) VisitSetExpr(expr *SetExpr) {
 	obj := i.evaluate(expr.Object)
 	is, ok := obj.(object)
 	if !ok {
@@ -371,7 +371,7 @@ func (i *Interpreter) visitSetExpr(expr *SetExpr) {
 	i.value = value
 }
 
-func (i *Interpreter) visitThisExpr(expr *ThisExpr) {
+func (i *Interpreter) VisitThisExpr(expr *ThisExpr) {
 	i.value = i.lookupVariable(expr.Keyword, expr)
 }
 
