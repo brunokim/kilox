@@ -70,7 +70,16 @@ func TestCheck(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.text, func(t *testing.T) {
-			stmts := parseStmts(t, test.text)
+			s := lox.NewScanner(test.text)
+			tokens, err := s.ScanTokens()
+			if err != nil {
+				t.Fatalf("parser(%q): %v", test.text, err)
+			}
+			p := lox.NewParser(tokens)
+			stmts, err := p.Parse()
+			if err != nil {
+				t.Fatalf("parseStmts(%q): %v", test.text, err)
+			}
 			c := typing.NewChecker()
 			types, err := c.Check(stmts)
 			if err != nil {
@@ -97,26 +106,6 @@ func TestCheck(t *testing.T) {
 			}
 		})
 	}
-}
-
-// ----
-
-func parser(t *testing.T, text string) *lox.Parser {
-	s := lox.NewScanner(text)
-	tokens, err := s.ScanTokens()
-	if err != nil {
-		t.Fatalf("parser(%q): %v", text, err)
-	}
-	return lox.NewParser(tokens)
-}
-
-func parseStmts(t *testing.T, text string) []lox.Stmt {
-	p := parser(t, text)
-	stmts, err := p.Parse()
-	if err != nil {
-		t.Fatalf("parseStmts(%q): %v", text, err)
-	}
-	return stmts
 }
 
 // ---- type checker test
