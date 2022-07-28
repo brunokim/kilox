@@ -212,13 +212,12 @@ func (u *Unifier) bindRef(x *lox.RefType, t lox.Type) {
 }
 
 // Adds x to the trail, indicating that it was bound during the current choice point.
+//
+// NOTE: we usually don't store refs that would be recreated on backtrack (so called unconditional
+// refs), but since we also use the trail to build the constraint solution at the end, we do
+// trail all bound refs.
 func (cp *choicePoint) addToTrail(x *lox.RefType) {
 	if cp == nil {
-		return
-	}
-	if cp.topRefID < x.ID {
-		// Unconditional ref: x is newer than current choice point, so it will
-		// be recreated if we backtrack. There's no need to add it to the trail.
 		return
 	}
 	cp.trail = append(cp.trail, x)
