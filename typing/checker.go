@@ -151,8 +151,7 @@ func (c *Checker) bind(name string, type_ lox.Type) {
 }
 
 func (c *Checker) unify(t1, t2 lox.Type) {
-	u := NewUnifier(c)
-	u.Unify(t1, t2)
+	Unify(t1, t2)
 }
 
 func (c *Checker) getBinding(expr lox.Expr, name string) lox.Type {
