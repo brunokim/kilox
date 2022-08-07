@@ -1,6 +1,7 @@
 package typing_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/brunokim/lox"
@@ -52,6 +53,7 @@ func TestCheck(t *testing.T) {
 		},
 		{
 			dedent.Dedent(`
+            //test:skip
             fun add3(a, b, c) {
                 return a + b + c;
             }
@@ -70,6 +72,9 @@ func TestCheck(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.text, func(t *testing.T) {
+			if shouldSkip(test.text) {
+				t.Skip()
+			}
 			s := lox.NewScanner(test.text)
 			tokens, err := s.ScanTokens()
 			if err != nil {
@@ -106,4 +111,9 @@ func TestCheck(t *testing.T) {
 			}
 		})
 	}
+}
+
+func shouldSkip(text string) bool {
+	text = strings.TrimSpace(text)
+	return strings.HasPrefix(text, "//test:skip")
 }
