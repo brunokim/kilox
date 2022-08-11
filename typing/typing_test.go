@@ -2,9 +2,14 @@ package typing_test
 
 import (
 	"fmt"
+	"strings"
+	"testing"
 
 	"github.com/brunokim/lox"
 	"github.com/brunokim/lox/typing"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
 var (
@@ -50,4 +55,47 @@ func constr_(entries ...any) typing.Constraint {
 
 func constrs_(cs ...typing.Constraint) []typing.Constraint {
 	return cs
+}
+
+func clause_(head lox.FunctionType, body ...lox.FunctionType) typing.TypeClause {
+	return typing.TypeClause{head, body}
+}
+
+func clauses_(cls ...typing.TypeClause) []typing.TypeClause {
+	return cls
+}
+
+// ----
+
+func shouldSkip(text string) bool {
+	text = strings.TrimSpace(text)
+	return strings.HasPrefix(text, "//test:skip")
+}
+
+func parse(t *testing.T, text string) []lox.Stmt {
+	if shouldSkip(text) {
+		t.Skip()
+	}
+	s := lox.NewScanner(text)
+	tokens, err := s.ScanTokens()
+	if err != nil {
+		t.Fatalf("scanner: %v", err)
+	}
+	p := lox.NewParser(tokens)
+	stmts, err := p.Parse()
+	if err != nil {
+		t.Fatalf("parser: %v", err)
+	}
+	return stmts
+}
+
+// ----
+
+var ignoreTypeFields = cmp.Options{
+	cmpopts.IgnoreFields(nil_, "Token"),
+	cmpopts.IgnoreFields(num_, "Token"),
+	cmpopts.IgnoreFields(bool_, "Token"),
+	cmpopts.IgnoreFields(str_, "Token"),
+	cmpopts.IgnoreFields(lox.RefType{}, "ID"),
+	cmpopts.EquateEmpty(),
 }

@@ -1,7 +1,6 @@
 package typing_test
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/brunokim/lox"
@@ -9,7 +8,6 @@ import (
 	"github.com/brunokim/lox/valuepath"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/lithammer/dedent"
 )
 
@@ -72,19 +70,7 @@ func TestCheck(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.text, func(t *testing.T) {
-			if shouldSkip(test.text) {
-				t.Skip()
-			}
-			s := lox.NewScanner(test.text)
-			tokens, err := s.ScanTokens()
-			if err != nil {
-				t.Fatalf("parser(%q): %v", test.text, err)
-			}
-			p := lox.NewParser(tokens)
-			stmts, err := p.Parse()
-			if err != nil {
-				t.Fatalf("parseStmts(%q): %v", test.text, err)
-			}
+			stmts := parse(t, test.text)
 			c := typing.NewChecker()
 			types, err := c.Check(stmts)
 			if err != nil {
@@ -99,21 +85,9 @@ func TestCheck(t *testing.T) {
 				}
 				want[elem.(lox.Expr)] = type_
 			}
-			opts := cmp.Options{
-				cmpopts.IgnoreFields(nil_, "Token"),
-				cmpopts.IgnoreFields(num_, "Token"),
-				cmpopts.IgnoreFields(bool_, "Token"),
-				cmpopts.IgnoreFields(str_, "Token"),
-				cmpopts.IgnoreFields(lox.RefType{}, "ID"),
-			}
-			if diff := cmp.Diff(want, types, opts); diff != "" {
+			if diff := cmp.Diff(want, types, ignoreTypeFields); diff != "" {
 				t.Errorf("(-want,+got):\n%s", diff)
 			}
 		})
 	}
-}
-
-func shouldSkip(text string) bool {
-	text = strings.TrimSpace(text)
-	return strings.HasPrefix(text, "//test:skip")
 }
