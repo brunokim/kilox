@@ -9,24 +9,6 @@ import (
 
 type typeScope map[string]lox.Type
 
-func types(ts ...lox.Type) []lox.Type {
-	return ts
-}
-
-func func_(params []lox.Type, result lox.Type) lox.FunctionType {
-	return lox.FunctionType{
-		Params: params,
-		Return: result,
-	}
-}
-
-var (
-	nil_  = lox.NilType{}
-	num_  = lox.NumberType{}
-	bool_ = lox.BoolType{}
-	str_  = lox.StringType{}
-)
-
 func makeBuiltinTypes() typeScope {
 	scope := make(typeScope)
 

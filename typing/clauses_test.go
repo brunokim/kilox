@@ -17,6 +17,10 @@ func TestBuildClauses(t *testing.T) {
 			"fun foo() {}",
 			clauses_(clause_(func_(ts_(), bref_(nil_)))),
 		},
+		{
+			"fun answer() { return 42; }",
+			clauses_(clause_(func_(ts_(), bref_(num_)))),
+		},
 	}
 	for _, test := range tests {
 		t.Run(test.text, func(t *testing.T) {

@@ -7,6 +7,26 @@ import (
 	"github.com/brunokim/lox/ordered"
 )
 
+func types(ts ...lox.Type) []lox.Type {
+	return ts
+}
+
+func func_(params []lox.Type, result lox.Type) lox.FunctionType {
+	return lox.FunctionType{
+		Params: params,
+		Return: result,
+	}
+}
+
+var (
+	nil_  = lox.NilType{}
+	num_  = lox.NumberType{}
+	bool_ = lox.BoolType{}
+	str_  = lox.StringType{}
+)
+
+// ----
+
 // Constraint is an instance of valid ref bindings.
 type Constraint struct {
 	*ordered.Map[*lox.RefType, lox.Type]

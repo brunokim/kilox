@@ -1,6 +1,8 @@
 package typing
 
 import (
+	"fmt"
+
 	"github.com/brunokim/lox"
 	"github.com/brunokim/lox/errlist"
 )
@@ -105,7 +107,20 @@ func (m *logicModel) VisitGroupingExpr(e *lox.GroupingExpr) {
 }
 
 func (m *logicModel) VisitLiteralExpr(e *lox.LiteralExpr) {
-	panic("typing.(*logicModel).VisitLiteralExpr is not implemented")
+	switch e.Value.(type) {
+	case bool:
+		m.currType = bool_
+	case float64:
+		m.currType = num_
+	case string:
+		m.currType = str_
+	default:
+		if e.Value == nil {
+			m.currType = nil_
+		} else {
+			panic(fmt.Sprintf("unhandled literal type %[1]T (%[1]v)", e.Value))
+		}
+	}
 }
 
 func (m *logicModel) VisitUnaryExpr(e *lox.UnaryExpr) {
@@ -196,7 +211,9 @@ func (m *logicModel) VisitFunctionStmt(s lox.FunctionStmt) {
 }
 
 func (m *logicModel) VisitReturnStmt(s lox.ReturnStmt) {
-	panic("typing.(*logicModel).VisitReturnStmt is not implemented")
+	t := m.visitExpr(s.Result)
+	m.scope.ref("ret").Value = t
+	m.scope.hasReturn = true
 }
 
 func (m *logicModel) VisitClassStmt(s lox.ClassStmt) {
