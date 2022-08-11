@@ -30,8 +30,8 @@ func TestUnifier(t *testing.T) {
 		{x, y, constr_(y, x)},
 		{y, x, constr_(y, x)},
 		{
-			func_(ts_(str_, num_), bool_),
-			func_(ts_(str_, num_), bool_),
+			func_(types_(str_, num_), bool_),
+			func_(types_(str_, num_), bool_),
 			constr_(),
 		},
 		{nil_, num_, constr_()},
@@ -42,20 +42,20 @@ func TestUnifier(t *testing.T) {
 		{x, nil_, constr_(x, nil_)},
 		{
 			// x = Nil, Num = x.
-			func_(ts_(x, num_), num_),
-			func_(ts_(nil_, x), num_),
+			func_(types_(x, num_), num_),
+			func_(types_(nil_, x), num_),
 			constr_(x, nil_),
 		},
 		{
 			// Str = x, x = y, y = x.
-			func_(ts_(str_, x, y), num_),
-			func_(ts_(x, y, x), num_),
+			func_(types_(str_, x, y), num_),
+			func_(types_(x, y, x), num_),
 			constr_(x, str_, y, str_),
 		},
 		{
 			// y = x, x = y, Str = y.
-			func_(ts_(y, x, str_), num_),
-			func_(ts_(x, y, x), num_),
+			func_(types_(y, x, str_), num_),
+			func_(types_(x, y, x), num_),
 			constr_(y, x, x, str_),
 		},
 	}

@@ -19,7 +19,7 @@ var (
 	str_  = lox.StringType{}
 )
 
-func ts_(ts ...lox.Type) []lox.Type {
+func types_(ts ...lox.Type) []lox.Type {
 	return ts
 }
 

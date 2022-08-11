@@ -42,11 +42,11 @@ func TestCheck(t *testing.T) {
                 a = b;
             }`),
 			map[string]lox.Type{
-				"$.1.Condition":                          func_(ts_(num_, num_), bool_),                     // line 2: a < 4
-				"$.1.Condition.Left":                     num_,                                              // line 2: a
-				"$.1.Body.Statements.0.Init":             func_(ts_(bref_(num_), bref_(num_)), bref_(num_)), // line 3: a + 1
-				"$.1.Body.Statements.0.Init.Left":        num_,                                              // line 3: a
-				"$.1.Body.Statements.1.Expression.Value": bref_(num_),                                       // line 4: b
+				"$.1.Condition":                          func_(types_(num_, num_), bool_),                     // line 2: a < 4
+				"$.1.Condition.Left":                     num_,                                                 // line 2: a
+				"$.1.Body.Statements.0.Init":             func_(types_(bref_(num_), bref_(num_)), bref_(num_)), // line 3: a + 1
+				"$.1.Body.Statements.0.Init.Left":        num_,                                                 // line 3: a
+				"$.1.Body.Statements.1.Expression.Value": bref_(num_),                                          // line 4: b
 			},
 		},
 		{
@@ -58,13 +58,13 @@ func TestCheck(t *testing.T) {
             print add3(1, 2, 3);
             print add3("x", "y", "z");`),
 			map[string]lox.Type{
-				"$.0.Body.0.Result":            func_(ts_(uref_(), uref_()), uref_()),                  // line 2: a+b+c
-				"$.0.Body.0.Result.Left":       func_(ts_(uref_(), uref_()), uref_()),                  // line 2: a+b
-				"$.0.Body.0.Result.Left.Left":  uref_(),                                                // line 2: a
-				"$.0.Body.0.Result.Left.Right": bref_(num_),                                            // line 2: b
-				"$.0.Body.0.Result.Right":      bref_(num_),                                            // line 2: c
-				"$.1.Expression.Callee":        func_(ts_(uref_(), bref_(num_), bref_(num_)), uref_()), // line 4: add3
-				"$.2.Expression.Callee":        func_(ts_(uref_(), bref_(num_), bref_(num_)), uref_()), // line 5: add3
+				"$.0.Body.0.Result":            func_(types_(uref_(), uref_()), uref_()),                  // line 2: a+b+c
+				"$.0.Body.0.Result.Left":       func_(types_(uref_(), uref_()), uref_()),                  // line 2: a+b
+				"$.0.Body.0.Result.Left.Left":  uref_(),                                                   // line 2: a
+				"$.0.Body.0.Result.Left.Right": bref_(num_),                                               // line 2: b
+				"$.0.Body.0.Result.Right":      bref_(num_),                                               // line 2: c
+				"$.1.Expression.Callee":        func_(types_(uref_(), bref_(num_), bref_(num_)), uref_()), // line 4: add3
+				"$.2.Expression.Callee":        func_(types_(uref_(), bref_(num_), bref_(num_)), uref_()), // line 5: add3
 			},
 		},
 	}
