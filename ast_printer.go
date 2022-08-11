@@ -46,6 +46,12 @@ func PrintType(t Type) string {
 	return p.str.String()
 }
 
+func PrintTerm(t Term) string {
+	p := newASTPrinter()
+	t.Accept(p)
+	return p.str.String()
+}
+
 // ---- Expr
 
 func (p *astPrinter) VisitBinaryExpr(expr *BinaryExpr) {
@@ -197,6 +203,38 @@ func (p *astPrinter) VisitRefType(x *RefType) {
 	}
 }
 
+// ---- Term
+
+func (p *astPrinter) VisitVarTerm(t VarTerm) {
+	p.str.WriteString(t.Name)
+}
+
+func (p *astPrinter) VisitAtomTerm(t AtomTerm) {
+	p.str.WriteString(t.Name)
+}
+
+func (p *astPrinter) VisitFunctorTerm(t FunctorTerm) {
+	parts := []any{"functor", t.Name}
+	parts = append(parts, moveArray[Term](t.Args...)...)
+	p.parenthesize(multiLine, parts...)
+}
+
+func (p *astPrinter) VisitListTerm(t ListTerm) {
+	terms, tail := ListToTerms(t)
+	parts := []any{"list"}
+	parts = append(parts, moveArray[Term](terms...)...)
+	if tail != (ListTerm{}) {
+		parts = append(parts, tail)
+	}
+	p.parenthesize(multiLine, parts...)
+}
+
+func (p *astPrinter) VisitClauseTerm(t ClauseTerm) {
+	parts := []any{"clause", t.Head}
+	parts = append(parts, moveArray[FunctorTerm](t.Body...)...)
+	p.parenthesize(multiLine, parts...)
+}
+
 // ----
 
 func (p *astPrinter) indent() {
@@ -240,6 +278,8 @@ func (p *astPrinter) printStuff(x any) {
 	case Stmt:
 		stuff.Accept(p)
 	case Type:
+		stuff.Accept(p)
+	case Term:
 		stuff.Accept(p)
 	case []Token:
 		parts := moveArray[Token](stuff...)
