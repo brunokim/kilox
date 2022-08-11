@@ -33,6 +33,16 @@ func bref_(value lox.Type) *lox.RefType {
 	return &lox.RefType{Value: value}
 }
 
+// Unbound ref with known ID.
+func urefi_(id int) *lox.RefType {
+	return &lox.RefType{ID: id}
+}
+
+// Bound ref with known ID.
+func brefi_(id int, value lox.Type) *lox.RefType {
+	return &lox.RefType{ID: id, Value: value}
+}
+
 func func_(params []lox.Type, result lox.Type) lox.FunctionType {
 	return lox.FunctionType{
 		Params: params,
@@ -57,8 +67,12 @@ func constrs_(cs ...typing.Constraint) []typing.Constraint {
 	return cs
 }
 
-func clause_(head lox.FunctionType, body ...lox.FunctionType) typing.TypeClause {
-	return typing.TypeClause{head, body}
+func binding_(x *lox.RefType, value lox.Type) typing.BindingGoal {
+	return typing.BindingGoal{x, value}
+}
+
+func clause_(name string, head lox.FunctionType, body ...typing.Goal) typing.TypeClause {
+	return typing.TypeClause{name, head, body}
 }
 
 func clauses_(cls ...typing.TypeClause) []typing.TypeClause {

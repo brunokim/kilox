@@ -16,11 +16,13 @@ func TestBuildClauses(t *testing.T) {
 	}{
 		{
 			"fun foo() {}",
-			clauses_(clause_(func_(types_(), bref_(nil_)))),
+			clauses_(clause_("foo", func_(types_(), urefi_(1)),
+				binding_(urefi_(1), nil_))),
 		},
 		{
 			"fun answer() { return 42; }",
-			clauses_(clause_(func_(types_(), bref_(num_)))),
+			clauses_(clause_("answer", func_(types_(), urefi_(1)),
+				binding_(urefi_(1), num_))),
 		},
 		{
 			dedent.Dedent(`
@@ -28,8 +30,9 @@ func TestBuildClauses(t *testing.T) {
               var a = "test";
               return a;
             }`),
-			clauses_(clause_(
-				func_(types_(), bref_(bref_(str_))))),
+			clauses_(clause_("foo", func_(types_(), urefi_(1)),
+				// a: brefi_(2, str_)
+				binding_(urefi_(1), brefi_(2, str_)))),
 		},
 	}
 	for _, test := range tests {

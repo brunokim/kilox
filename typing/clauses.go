@@ -7,9 +7,21 @@ import (
 	"github.com/brunokim/lox/errlist"
 )
 
+type Goal interface {
+	isGoal()
+}
+
+type BindingGoal struct {
+	Ref  *lox.RefType
+	Type lox.Type
+}
+
+func (BindingGoal) isGoal() {}
+
 type TypeClause struct {
+	Name string
 	Head lox.FunctionType
-	Body []lox.FunctionType
+	Body []Goal
 }
 
 // ---- Error
@@ -221,17 +233,21 @@ func (m *logicModel) VisitFunctionStmt(s lox.FunctionStmt) {
 		params[i] = m.scope.ref("_" + param.Lexeme)
 	}
 
-	cl := TypeClause{Head: lox.FunctionType{params, m.scope.ref("ret")}}
+	cl := TypeClause{
+		Name: s.Name.Lexeme,
+		Head: lox.FunctionType{params, m.scope.ref("ret")},
+	}
+	m.scope.clause = &cl
 	m.visitStmts(s.Body)
 	if !m.scope.hasReturn {
-		m.scope.ref("ret").Value = lox.NilType{}
+		cl.Body = append(cl.Body, BindingGoal{m.scope.ref("ret"), nil_})
 	}
 	m.clauses = append(m.clauses, cl)
 }
 
 func (m *logicModel) VisitReturnStmt(s lox.ReturnStmt) {
 	t := m.visitExpr(s.Result)
-	m.scope.ref("ret").Value = t
+	m.scope.clause.Body = append(m.scope.clause.Body, BindingGoal{m.scope.ref("ret"), t})
 	m.scope.hasReturn = true
 }
 
