@@ -14,10 +14,12 @@ type TypeClause struct {
 
 // ---- Error
 
-type logicError struct{}
+type logicError struct {
+	msg string
+}
 
 func (err logicError) Error() string {
-	return "logic error"
+	return err.msg
 }
 
 // ---- Scope
@@ -37,6 +39,16 @@ func newScope(m *logicModel) *scope {
 		enclosing: m.scope,
 		refs:      make(map[string]*lox.RefType),
 	}
+}
+
+func (s *scope) search(name string) *lox.RefType {
+	for s != nil {
+		if x, ok := s.refs[name]; ok {
+			return x
+		}
+		s = s.enclosing
+	}
+	panic(fmt.Sprintf("unresolved variable %q, shouldn't happen after resolver", name))
 }
 
 func (s *scope) ref(name string) *lox.RefType {
@@ -72,6 +84,10 @@ func BuildClauses(stmts []lox.Stmt) ([]TypeClause, error) {
 		return nil, errlist.Of[logicError](m.errors)
 	}
 	return m.clauses, nil
+}
+
+func (m *logicModel) addError(err logicError) {
+	m.errors = append(m.errors, err)
 }
 
 // ----
@@ -128,7 +144,7 @@ func (m *logicModel) VisitUnaryExpr(e *lox.UnaryExpr) {
 }
 
 func (m *logicModel) VisitVariableExpr(e *lox.VariableExpr) {
-	panic("typing.(*logicModel).VisitVariableExpr is not implemented")
+	m.currType = m.scope.search("_" + e.Name.Lexeme)
 }
 
 func (m *logicModel) VisitAssignmentExpr(e *lox.AssignmentExpr) {
@@ -170,7 +186,10 @@ func (m *logicModel) VisitPrintStmt(s lox.PrintStmt) {
 }
 
 func (m *logicModel) VisitVarStmt(s lox.VarStmt) {
-	panic("typing.(*logicModel).VisitVarStmt is not implemented")
+	x := m.scope.ref("_" + s.Name.Lexeme)
+	if s.Init != nil {
+		x.Value = m.visitExpr(s.Init)
+	}
 }
 
 func (m *logicModel) VisitIfStmt(s lox.IfStmt) {

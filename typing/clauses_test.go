@@ -6,6 +6,7 @@ import (
 	"github.com/brunokim/lox/typing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/lithammer/dedent"
 )
 
 func TestBuildClauses(t *testing.T) {
@@ -20,6 +21,15 @@ func TestBuildClauses(t *testing.T) {
 		{
 			"fun answer() { return 42; }",
 			clauses_(clause_(func_(types_(), bref_(num_)))),
+		},
+		{
+			dedent.Dedent(`
+            fun foo() {
+              var a = "test";
+              return a;
+            }`),
+			clauses_(clause_(
+				func_(types_(), bref_(bref_(str_))))),
 		},
 	}
 	for _, test := range tests {
