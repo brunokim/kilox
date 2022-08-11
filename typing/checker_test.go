@@ -8,6 +8,7 @@ import (
 	"github.com/brunokim/lox/valuepath"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/lithammer/dedent"
 )
 
@@ -58,13 +59,13 @@ func TestCheck(t *testing.T) {
             print add3(1, 2, 3);
             print add3("x", "y", "z");`),
 			map[string]lox.Type{
-				"$.0.Body.0.Result":            func_(types_(uref_(), uref_()), uref_()),                  // line 2: a+b+c
-				"$.0.Body.0.Result.Left":       func_(types_(uref_(), uref_()), uref_()),                  // line 2: a+b
-				"$.0.Body.0.Result.Left.Left":  uref_(),                                                   // line 2: a
-				"$.0.Body.0.Result.Left.Right": bref_(num_),                                               // line 2: b
-				"$.0.Body.0.Result.Right":      bref_(num_),                                               // line 2: c
-				"$.1.Expression.Callee":        func_(types_(uref_(), bref_(num_), bref_(num_)), uref_()), // line 4: add3
-				"$.2.Expression.Callee":        func_(types_(uref_(), bref_(num_), bref_(num_)), uref_()), // line 5: add3
+				"$.0.Body.0.Result":            func_(types_(ref_(), ref_()), ref_()),                   // line 2: a+b+c
+				"$.0.Body.0.Result.Left":       func_(types_(ref_(), ref_()), ref_()),                   // line 2: a+b
+				"$.0.Body.0.Result.Left.Left":  ref_(),                                                  // line 2: a
+				"$.0.Body.0.Result.Left.Right": bref_(num_),                                             // line 2: b
+				"$.0.Body.0.Result.Right":      bref_(num_),                                             // line 2: c
+				"$.1.Expression.Callee":        func_(types_(ref_(), bref_(num_), bref_(num_)), ref_()), // line 4: add3
+				"$.2.Expression.Callee":        func_(types_(ref_(), bref_(num_), bref_(num_)), ref_()), // line 5: add3
 			},
 		},
 	}
@@ -85,7 +86,11 @@ func TestCheck(t *testing.T) {
 				}
 				want[elem.(lox.Expr)] = type_
 			}
-			if diff := cmp.Diff(want, types, ignoreTypeFields); diff != "" {
+			opts := cmp.Options{
+				ignoreTypeFields,
+				cmpopts.IgnoreFields(lox.RefType{}, "ID"),
+			}
+			if diff := cmp.Diff(want, types, opts); diff != "" {
 				t.Errorf("(-want,+got):\n%s", diff)
 			}
 		})

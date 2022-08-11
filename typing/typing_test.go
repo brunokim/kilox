@@ -24,7 +24,7 @@ func types_(ts ...lox.Type) []lox.Type {
 }
 
 // Unbound ref
-func uref_() *lox.RefType {
+func ref_() *lox.RefType {
 	return &lox.RefType{}
 }
 
@@ -34,7 +34,7 @@ func bref_(value lox.Type) *lox.RefType {
 }
 
 // Unbound ref with known ID.
-func urefi_(id int) *lox.RefType {
+func refi_(id int) *lox.RefType {
 	return &lox.RefType{ID: id}
 }
 
@@ -110,6 +110,5 @@ var ignoreTypeFields = cmp.Options{
 	cmpopts.IgnoreFields(num_, "Token"),
 	cmpopts.IgnoreFields(bool_, "Token"),
 	cmpopts.IgnoreFields(str_, "Token"),
-	cmpopts.IgnoreFields(lox.RefType{}, "ID"),
 	cmpopts.EquateEmpty(),
 }
