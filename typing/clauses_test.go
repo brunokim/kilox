@@ -17,7 +17,7 @@ func TestBuildClauses(t *testing.T) {
 	}{
 		{
 			"fun foo() {}",
-			`Type(foo, Fun([], ret)) :-
+			`Type("foo", Fun([], ret)) :-
                _foo = Fun([], ret),
                ret = Nil.`,
 			clauses_(clause_("foo", func_(types_(), refi_(1)),
@@ -29,10 +29,10 @@ func TestBuildClauses(t *testing.T) {
             fun foo() {}
             fun bar() {}
             `),
-			`Type(foo, Fun([], ret)) :-
+			`Type("foo", Fun([], ret)) :-
                _foo = Fun([], ret),
                ret = Nil.
-            Type(bar, Fun([], ret)) :-
+            Type("bar", Fun([], ret)) :-
                _bar = Fun([], ret),
                ret = Nil.`,
 			clauses_(
@@ -45,7 +45,7 @@ func TestBuildClauses(t *testing.T) {
 		},
 		{
 			"fun answer() { return 42; }",
-			`Type(foo, Fun([], ret)) :-
+			`Type("foo", Fun([], ret)) :-
                _foo = Fun([], ret),
                ret = Number.`,
 			clauses_(clause_("answer", func_(types_(), refi_(1)),
@@ -58,7 +58,7 @@ func TestBuildClauses(t *testing.T) {
               var a = "test";
               return a;
             }`),
-			`Type(foo, Fun([], ret)) :-
+			`Type("foo", Fun([], ret)) :-
                _foo = Fun([], ret),
                _a = String, % implicit
                ret = _a.`,
@@ -72,7 +72,7 @@ func TestBuildClauses(t *testing.T) {
                 foo;
                 print foo;
             }`),
-			`Type(foo, Fun([], ret)) :-
+			`Type("foo", Fun([], ret)) :-
                _foo = Fun([], ret),
                % foo;
                % print foo;
@@ -80,6 +80,15 @@ func TestBuildClauses(t *testing.T) {
 			clauses_(clause_("foo", func_(types_(), refi_(1)),
 				binding_(refi_(2), func_(types_(), refi_(1))),
 				binding_(refi_(1), nil_))),
+		},
+		{
+			"fun id(x) { return x; }",
+			`Type("id", Fun([_x], ret)) :-
+               _foo = Fun([_x], ret),
+               ret = _x.`,
+			clauses_(clause_("id", func_(types_(refi_(1)), refi_(2)),
+				binding_(refi_(3), func_(types_(refi_(1)), refi_(2))),
+				binding_(refi_(2), refi_(1)))),
 		},
 	}
 	for _, test := range tests {
