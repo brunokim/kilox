@@ -128,6 +128,11 @@ func (m *logicModel) localRef(name lox.Token) *lox.RefType {
 	return m.scope.ref("_" + name.Lexeme)
 }
 
+func (m *logicModel) appendBinding(x *lox.RefType, t lox.Type) {
+	cl := m.scope.clause
+	cl.Body = append(cl.Body, BindingGoal{x, t})
+}
+
 // ---- Expr
 
 func (m *logicModel) VisitBinaryExpr(e *lox.BinaryExpr) {
@@ -164,7 +169,10 @@ func (m *logicModel) VisitVariableExpr(e *lox.VariableExpr) {
 }
 
 func (m *logicModel) VisitAssignmentExpr(e *lox.AssignmentExpr) {
-	panic("typing.(*logicModel).VisitAssignmentExpr is not implemented")
+	t := m.visitExpr(e.Value)
+	x := m.localRef(e.Name)
+	m.appendBinding(x, t)
+	m.currType = t
 }
 
 func (m *logicModel) VisitLogicExpr(e *lox.LogicExpr) {
@@ -247,14 +255,14 @@ func (m *logicModel) VisitFunctionStmt(s lox.FunctionStmt) {
 	m.scope.clause = &cl
 	m.visitStmts(s.Body)
 	if !m.scope.hasReturn {
-		cl.Body = append(cl.Body, BindingGoal{m.scope.ref("ret"), nil_})
+		m.appendBinding(m.scope.ref("ret"), nil_)
 	}
 	m.clauses = append(m.clauses, cl)
 }
 
 func (m *logicModel) VisitReturnStmt(s lox.ReturnStmt) {
 	t := m.visitExpr(s.Result)
-	m.scope.clause.Body = append(m.scope.clause.Body, BindingGoal{m.scope.ref("ret"), t})
+	m.appendBinding(m.scope.ref("ret"), t)
 	m.scope.hasReturn = true
 }
 

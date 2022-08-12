@@ -90,6 +90,57 @@ func TestBuildClauses(t *testing.T) {
 				binding_(refi_(3), func_(types_(refi_(1)), refi_(2))),
 				binding_(refi_(2), refi_(1)))),
 		},
+		{
+			dedent.Dedent(`
+            fun f(x) {
+              var a;
+              a = x;
+              return a;
+            }`),
+			`Type("f", Fun([_x], ret)) :-
+               _f = Fun([_x], ret),
+               _a = _x,
+               ret = _a.`,
+			clauses_(clause_("f", func_(types_(refi_(1)), refi_(2)),
+				binding_(refi_(3), func_(types_(refi_(1)), refi_(2))),
+				binding_(refi_(4), refi_(1)),
+				binding_(refi_(2), refi_(4)))),
+		},
+		{
+			dedent.Dedent(`
+            fun f(x) {
+              var a;
+              a = 10;
+              return a = x;
+            }`),
+			`Type("f", Fun([_x], ret)) :-
+               _f = Fun([_x], ret),
+               _a = Number,
+               _a = _x,
+               ret = _x.`,
+			clauses_(clause_("f", func_(types_(refi_(1)), refi_(2)),
+				binding_(refi_(3), func_(types_(refi_(1)), refi_(2))),
+				binding_(refi_(4), num_),
+				binding_(refi_(4), refi_(1)),
+				binding_(refi_(2), refi_(1)))),
+		},
+		{
+			dedent.Dedent(`
+            fun foo() {
+              var a = 10;
+              a = "str";
+              return a;
+            }`),
+			`Type("foo", Fun([], ret)) :-
+               _foo = Fun([], ret),
+               _a = Number, % implicit
+               _a = String,
+               ret = _a.`,
+			clauses_(clause_("foo", func_(types_(), refi_(1)),
+				binding_(refi_(2), func_(types_(), refi_(1))),
+				binding_(brefi_(3, num_), str_),
+				binding_(refi_(1), brefi_(3, num_)))),
+		},
 	}
 	for _, test := range tests {
 		t.Run(test.text, func(t *testing.T) {
