@@ -18,11 +18,9 @@ func TestBuildClauses(t *testing.T) {
 		{
 			"fun foo() {}",
 			`Type("foo", Fun([], ret)) :-
-               _foo = Fun([], ret),
                ret = Nil.`,
-			clauses_(clause_("foo", func_(types_(), refi_(1)),
-				binding_(refi_(2), func_(types_(), refi_(1))),
-				binding_(refi_(1), nil_))),
+			clauses_(clause_("foo", func_(types_(), refi_(2)),
+				binding_(refi_(2), nil_))),
 		},
 		{
 			dedent.Dedent(`
@@ -30,27 +28,21 @@ func TestBuildClauses(t *testing.T) {
             fun bar() {}
             `),
 			`Type("foo", Fun([], ret)) :-
-               _foo = Fun([], ret),
                ret = Nil.
             Type("bar", Fun([], ret)) :-
-               _bar = Fun([], ret),
                ret = Nil.`,
 			clauses_(
-				clause_("foo", func_(types_(), refi_(1)),
-					binding_(refi_(2), func_(types_(), refi_(1))),
-					binding_(refi_(1), nil_)),
-				clause_("bar", func_(types_(), refi_(3)),
-					binding_(refi_(4), func_(types_(), refi_(3))),
-					binding_(refi_(3), nil_))),
+				clause_("foo", func_(types_(), refi_(2)),
+					binding_(refi_(2), nil_)),
+				clause_("bar", func_(types_(), refi_(4)),
+					binding_(refi_(4), nil_))),
 		},
 		{
 			"fun answer() { return 42; }",
 			`Type("foo", Fun([], ret)) :-
-               _foo = Fun([], ret),
                ret = Number.`,
-			clauses_(clause_("answer", func_(types_(), refi_(1)),
-				binding_(refi_(2), func_(types_(), refi_(1))),
-				binding_(refi_(1), num_))),
+			clauses_(clause_("answer", func_(types_(), refi_(2)),
+				binding_(refi_(2), num_))),
 		},
 		{
 			dedent.Dedent(`
@@ -59,12 +51,10 @@ func TestBuildClauses(t *testing.T) {
               return a;
             }`),
 			`Type("foo", Fun([], ret)) :-
-               _foo = Fun([], ret),
                _a = String, % implicit
                ret = _a.`,
-			clauses_(clause_("foo", func_(types_(), refi_(1)),
-				binding_(refi_(2), func_(types_(), refi_(1))),
-				binding_(refi_(1), brefi_(3, str_)))),
+			clauses_(clause_("foo", func_(types_(), refi_(2)),
+				binding_(refi_(2), brefi_(3, str_)))),
 		},
 		{
 			dedent.Dedent(`
@@ -73,22 +63,18 @@ func TestBuildClauses(t *testing.T) {
                 print foo;
             }`),
 			`Type("foo", Fun([], ret)) :-
-               _foo = Fun([], ret),
                % foo;
                % print foo;
                ret = Nil.`,
-			clauses_(clause_("foo", func_(types_(), refi_(1)),
-				binding_(refi_(2), func_(types_(), refi_(1))),
-				binding_(refi_(1), nil_))),
+			clauses_(clause_("foo", func_(types_(), refi_(2)),
+				binding_(refi_(2), nil_))),
 		},
 		{
 			"fun id(x) { return x; }",
 			`Type("id", Fun([_x], ret)) :-
-               _foo = Fun([_x], ret),
                ret = _x.`,
-			clauses_(clause_("id", func_(types_(refi_(1)), refi_(2)),
-				binding_(refi_(3), func_(types_(refi_(1)), refi_(2))),
-				binding_(refi_(2), refi_(1)))),
+			clauses_(clause_("id", func_(types_(refi_(2)), refi_(3)),
+				binding_(refi_(3), refi_(2)))),
 		},
 		{
 			dedent.Dedent(`
@@ -98,64 +84,56 @@ func TestBuildClauses(t *testing.T) {
               return a;
             }`),
 			`Type("f", Fun([_x], ret)) :-
-               _f = Fun([_x], ret),
                _a = _x,
                ret = _a.`,
-			clauses_(clause_("f", func_(types_(refi_(1)), refi_(2)),
-				binding_(refi_(3), func_(types_(refi_(1)), refi_(2))),
-				binding_(refi_(4), refi_(1)),
-				binding_(refi_(2), refi_(4)))),
+			clauses_(clause_("f", func_(types_(refi_(2)), refi_(3)),
+				binding_(refi_(4), refi_(2)),
+				binding_(refi_(3), refi_(4)))),
 		},
 		{
 			dedent.Dedent(`
             fun f(x) {
               var a;
-              a = 10;
+              a = 20;
               return a = x;
             }`),
 			`Type("f", Fun([_x], ret)) :-
-               _f = Fun([_x], ret),
                _a = Number,
                _a = _x,
                ret = _x.`,
-			clauses_(clause_("f", func_(types_(refi_(1)), refi_(2)),
-				binding_(refi_(3), func_(types_(refi_(1)), refi_(2))),
+			clauses_(clause_("f", func_(types_(refi_(2)), refi_(3)),
 				binding_(refi_(4), num_),
-				binding_(refi_(4), refi_(1)),
-				binding_(refi_(2), refi_(1)))),
+				binding_(refi_(4), refi_(2)),
+				binding_(refi_(3), refi_(2)))),
 		},
 		{
 			dedent.Dedent(`
             fun foo() {
-              var a = 10;
+              var a = 20;
               a = "str";
               return a;
             }`),
 			`Type("foo", Fun([], ret)) :-
-               _foo = Fun([], ret),
                _a = Number, % implicit
                _a = String,
                ret = _a.`,
-			clauses_(clause_("foo", func_(types_(), refi_(1)),
-				binding_(refi_(2), func_(types_(), refi_(1))),
+			clauses_(clause_("foo", func_(types_(), refi_(2)),
 				binding_(brefi_(3, num_), str_),
-				binding_(refi_(1), brefi_(3, num_)))),
+				binding_(refi_(2), brefi_(3, num_)))),
 		},
 		{
 			dedent.Dedent(`
-            fun callWith32(f, x) {
-                var a = 32;
+            fun callWith43(f, x) {
+                var a = 43;
                 return f(a, x);
             }`),
-			`Type("callWith32", Fun([_f, _x], ret)) :-
-               _callWith32 = Fun([_f, _x], ret),
+			`Type("callWith43", Fun([_f, _x], ret)) :-
                _a = Number, % implicit
                _f = Fun([_a, _x], r1),
                ret = r1.`,
-			clauses_(clause_("callWith32", func_(types_(refi_(1), refi_(2)), refi_(3)),
-				binding_(refi_(4), func_(types_(refi_(1), refi_(2)), refi_(3))),
-				unify_(refi_(1), func_(types_(brefi_(5, num_), refi_(2)), refi_(6))),
-				binding_(refi_(3), refi_(6)))),
+			clauses_(clause_("callWith43", func_(types_(refi_(2), refi_(3)), refi_(4)),
+				unify_(refi_(2), func_(types_(brefi_(5, num_), refi_(3)), refi_(6))),
+				binding_(refi_(4), refi_(6)))),
 		},
 		{
 			dedent.Dedent(`
@@ -167,33 +145,27 @@ func TestBuildClauses(t *testing.T) {
             fun l_if(cond, l_then, l_else) { return cond(l_then, l_else)(); }
 
             // Test it out.
-            fun l_10() { return 10; }
             fun l_20() { return 20; }
-            fun main() { print l_if(l_false, l_10, l_20); }
+            fun l_30() { return 30; }
+            fun main() { print l_if(l_false, l_20, l_30); }
             `),
 			`Type("l_true", Fun([_x, _y], ret)) :-
-               _l_true = Fun([_x, _y], ret),
                ret = _x.
              Type("l_false", Fun([_x, _y], ret)) :-
-               _l_false = Fun([_x, _y], ret),
                ret = _y.
              Type("l_if", Fun([_cond, _then, _else], ret)) :-
-               _l_if = Fun([_cond, _then, _else], ret),
                _cond = Fun([_then, _else], r1),
                r1 = Fun([], r2),
-               ret = _r2.
-             Type("l_10", Fun([], ret)) :-
-               _l_10 = Fun([], ret),
-               ret = Number.
+               ret = r2.
              Type("l_20", Fun([], ret)) :-
-               _l_20 = Fun([], ret),
+               ret = Number.
+             Type("l_30", Fun([], ret)) :-
                ret = Number.
              Type("main", Fun([], ret)) :-
-               _main = Fun([], ret),
-               Type("l_if", Fun([_l_false, _l_10, _l_20], r1)),
+               Type("l_if", Fun([_l_false, _l_20, _l_30], r1)),
                Type("l_false", _l_false),
-               Type("l_10", _l_10),
                Type("l_20", _l_20),
+               Type("l_30", _l_30),
                ret = r1.`,
 			nil,
 		},

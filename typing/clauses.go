@@ -65,7 +65,7 @@ func (s *scope) search(name string) *lox.RefType {
 		}
 		s = s.enclosing
 	}
-	panic(fmt.Sprintf("unresolved variable %q, shouldn't happen after resolver", name))
+	return nil
 }
 
 func (s *scope) ref(name string) *lox.RefType {
@@ -91,7 +91,9 @@ type logicModel struct {
 }
 
 func newLogicModel() *logicModel {
-	return &logicModel{}
+	m := &logicModel{}
+	m.scope = newScope(m)
+	return m
 }
 
 func BuildClauses(stmts []lox.Stmt) ([]TypeClause, error) {
@@ -256,6 +258,8 @@ func (m *logicModel) VisitContinueStmt(s lox.ContinueStmt) {
 
 func (m *logicModel) VisitFunctionStmt(s lox.FunctionStmt) {
 	defer func(old *scope) { m.scope = old }(m.scope)
+
+	funRef := m.localRef(s.Name)
 	m.scope = newScope(m)
 
 	params := make([]lox.Type, len(s.Params))
@@ -264,10 +268,10 @@ func (m *logicModel) VisitFunctionStmt(s lox.FunctionStmt) {
 	}
 
 	funType := lox.FunctionType{params, m.scope.ref("ret")}
+	funRef.Value = funType
 	cl := TypeClause{
 		Name: s.Name.Lexeme,
 		Head: funType,
-		Body: []Goal{BindingGoal{m.localRef(s.Name), funType}},
 	}
 
 	m.scope.clause = &cl
