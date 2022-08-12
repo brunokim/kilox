@@ -124,6 +124,10 @@ func (m *logicModel) newRef() *lox.RefType {
 	return &lox.RefType{ID: m.refID}
 }
 
+func (m *logicModel) localRef(name lox.Token) *lox.RefType {
+	return m.scope.ref("_" + name.Lexeme)
+}
+
 // ---- Expr
 
 func (m *logicModel) VisitBinaryExpr(e *lox.BinaryExpr) {
@@ -190,15 +194,15 @@ func (m *logicModel) VisitThisExpr(e *lox.ThisExpr) {
 // ---- Stmt
 
 func (m *logicModel) VisitExpressionStmt(s lox.ExpressionStmt) {
-	panic("typing.(*logicModel).VisitExpressionStmt is not implemented")
+	m.visitExpr(s.Expression)
 }
 
 func (m *logicModel) VisitPrintStmt(s lox.PrintStmt) {
-	panic("typing.(*logicModel).VisitPrintStmt is not implemented")
+	m.visitExpr(s.Expression)
 }
 
 func (m *logicModel) VisitVarStmt(s lox.VarStmt) {
-	x := m.scope.ref("_" + s.Name.Lexeme)
+	x := m.localRef(s.Name)
 	if s.Init != nil {
 		x.Value = m.visitExpr(s.Init)
 	}
@@ -230,13 +234,16 @@ func (m *logicModel) VisitFunctionStmt(s lox.FunctionStmt) {
 
 	params := make([]lox.Type, len(s.Params))
 	for i, param := range s.Params {
-		params[i] = m.scope.ref("_" + param.Lexeme)
+		params[i] = m.localRef(param)
 	}
 
+	funType := lox.FunctionType{params, m.scope.ref("ret")}
 	cl := TypeClause{
 		Name: s.Name.Lexeme,
-		Head: lox.FunctionType{params, m.scope.ref("ret")},
+		Head: funType,
+		Body: []Goal{BindingGoal{m.localRef(s.Name), funType}},
 	}
+
 	m.scope.clause = &cl
 	m.visitStmts(s.Body)
 	if !m.scope.hasReturn {

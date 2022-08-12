@@ -12,11 +12,16 @@ import (
 func TestBuildClauses(t *testing.T) {
 	tests := []struct {
 		text string
+		doc  string
 		want []typing.TypeClause
 	}{
 		{
 			"fun foo() {}",
+			`Type(foo, Fun([], ret)) :-
+               _foo = Fun([], ret),
+               ret = Nil.`,
 			clauses_(clause_("foo", func_(types_(), refi_(1)),
+				binding_(refi_(2), func_(types_(), refi_(1))),
 				binding_(refi_(1), nil_))),
 		},
 		{
@@ -24,15 +29,27 @@ func TestBuildClauses(t *testing.T) {
             fun foo() {}
             fun bar() {}
             `),
+			`Type(foo, Fun([], ret)) :-
+               _foo = Fun([], ret),
+               ret = Nil.
+            Type(bar, Fun([], ret)) :-
+               _bar = Fun([], ret),
+               ret = Nil.`,
 			clauses_(
 				clause_("foo", func_(types_(), refi_(1)),
+					binding_(refi_(2), func_(types_(), refi_(1))),
 					binding_(refi_(1), nil_)),
-				clause_("bar", func_(types_(), refi_(2)),
-					binding_(refi_(2), nil_))),
+				clause_("bar", func_(types_(), refi_(3)),
+					binding_(refi_(4), func_(types_(), refi_(3))),
+					binding_(refi_(3), nil_))),
 		},
 		{
 			"fun answer() { return 42; }",
+			`Type(foo, Fun([], ret)) :-
+               _foo = Fun([], ret),
+               ret = Number.`,
 			clauses_(clause_("answer", func_(types_(), refi_(1)),
+				binding_(refi_(2), func_(types_(), refi_(1))),
 				binding_(refi_(1), num_))),
 		},
 		{
@@ -41,9 +58,28 @@ func TestBuildClauses(t *testing.T) {
               var a = "test";
               return a;
             }`),
+			`Type(foo, Fun([], ret)) :-
+               _foo = Fun([], ret),
+               _a = String, % implicit
+               ret = _a.`,
 			clauses_(clause_("foo", func_(types_(), refi_(1)),
-				// a: brefi_(2, str_)
-				binding_(refi_(1), brefi_(2, str_)))),
+				binding_(refi_(2), func_(types_(), refi_(1))),
+				binding_(refi_(1), brefi_(3, str_)))),
+		},
+		{
+			dedent.Dedent(`
+            fun foo() {
+                foo;
+                print foo;
+            }`),
+			`Type(foo, Fun([], ret)) :-
+               _foo = Fun([], ret),
+               % foo;
+               % print foo;
+               ret = Nil.`,
+			clauses_(clause_("foo", func_(types_(), refi_(1)),
+				binding_(refi_(2), func_(types_(), refi_(1))),
+				binding_(refi_(1), nil_))),
 		},
 	}
 	for _, test := range tests {
