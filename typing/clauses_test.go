@@ -20,6 +20,17 @@ func TestBuildClauses(t *testing.T) {
 				binding_(refi_(1), nil_))),
 		},
 		{
+			dedent.Dedent(`
+            fun foo() {}
+            fun bar() {}
+            `),
+			clauses_(
+				clause_("foo", func_(types_(), refi_(1)),
+					binding_(refi_(1), nil_)),
+				clause_("bar", func_(types_(), refi_(2)),
+					binding_(refi_(2), nil_))),
+		},
+		{
 			"fun answer() { return 42; }",
 			clauses_(clause_("answer", func_(types_(), refi_(1)),
 				binding_(refi_(1), num_))),
