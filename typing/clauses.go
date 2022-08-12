@@ -16,7 +16,12 @@ type BindingGoal struct {
 	Type lox.Type
 }
 
-func (BindingGoal) isGoal() {}
+type UnificationGoal struct {
+	T1, T2 lox.Type
+}
+
+func (BindingGoal) isGoal()     {}
+func (UnificationGoal) isGoal() {}
 
 type TypeClause struct {
 	Name string
@@ -133,6 +138,11 @@ func (m *logicModel) appendBinding(x *lox.RefType, t lox.Type) {
 	cl.Body = append(cl.Body, BindingGoal{x, t})
 }
 
+func (m *logicModel) appendUnification(t1, t2 lox.Type) {
+	cl := m.scope.clause
+	cl.Body = append(cl.Body, UnificationGoal{t1, t2})
+}
+
 // ---- Expr
 
 func (m *logicModel) VisitBinaryExpr(e *lox.BinaryExpr) {
@@ -180,7 +190,15 @@ func (m *logicModel) VisitLogicExpr(e *lox.LogicExpr) {
 }
 
 func (m *logicModel) VisitCallExpr(e *lox.CallExpr) {
-	panic("typing.(*logicModel).VisitCallExpr is not implemented")
+	calleeType := m.visitExpr(e.Callee)
+	args := make([]lox.Type, len(e.Args))
+	for i, arg := range e.Args {
+		args[i] = m.visitExpr(arg)
+	}
+	returnType := m.newRef()
+	funcType := lox.FunctionType{Params: args, Return: returnType}
+	m.appendUnification(calleeType, funcType)
+	m.currType = returnType
 }
 
 func (m *logicModel) VisitFunctionExpr(e *lox.FunctionExpr) {

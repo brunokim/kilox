@@ -141,6 +141,62 @@ func TestBuildClauses(t *testing.T) {
 				binding_(brefi_(3, num_), str_),
 				binding_(refi_(1), brefi_(3, num_)))),
 		},
+		{
+			dedent.Dedent(`
+            fun callWith32(f, x) {
+                var a = 32;
+                return f(a, x);
+            }`),
+			`Type("callWith32", Fun([_f, _x], ret)) :-
+               _callWith32 = Fun([_f, _x], ret),
+               _a = Number, % implicit
+               _f = Fun([_a, _x], r1),
+               ret = r1.`,
+			clauses_(clause_("callWith32", func_(types_(refi_(1), refi_(2)), refi_(3)),
+				binding_(refi_(4), func_(types_(refi_(1), refi_(2)), refi_(3))),
+				unify_(refi_(1), func_(types_(brefi_(5, num_), refi_(2)), refi_(6))),
+				binding_(refi_(3), refi_(6)))),
+		},
+		{
+			dedent.Dedent(`
+            //test:skip
+            // Boolean primitives as functions.
+            // "l_" stands for "lambda calculus".
+            fun l_true(x, y) { return x; }
+            fun l_false(x, y) { return y; }
+            fun l_if(cond, l_then, l_else) { return cond(l_then, l_else)(); }
+
+            // Test it out.
+            fun l_10() { return 10; }
+            fun l_20() { return 20; }
+            fun main() { print l_if(l_false, l_10, l_20); }
+            `),
+			`Type("l_true", Fun([_x, _y], ret)) :-
+               _l_true = Fun([_x, _y], ret),
+               ret = _x.
+             Type("l_false", Fun([_x, _y], ret)) :-
+               _l_false = Fun([_x, _y], ret),
+               ret = _y.
+             Type("l_if", Fun([_cond, _then, _else], ret)) :-
+               _l_if = Fun([_cond, _then, _else], ret),
+               _cond = Fun([_then, _else], r1),
+               r1 = Fun([], r2),
+               ret = _r2.
+             Type("l_10", Fun([], ret)) :-
+               _l_10 = Fun([], ret),
+               ret = Number.
+             Type("l_20", Fun([], ret)) :-
+               _l_20 = Fun([], ret),
+               ret = Number.
+             Type("main", Fun([], ret)) :-
+               _main = Fun([], ret),
+               Type("l_if", Fun([_l_false, _l_10, _l_20], r1)),
+               Type("l_false", _l_false),
+               Type("l_10", _l_10),
+               Type("l_20", _l_20),
+               ret = r1.`,
+			nil,
+		},
 	}
 	for _, test := range tests {
 		t.Run(test.text, func(t *testing.T) {

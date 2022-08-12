@@ -71,6 +71,10 @@ func binding_(x *lox.RefType, value lox.Type) typing.BindingGoal {
 	return typing.BindingGoal{x, value}
 }
 
+func unify_(t1, t2 lox.Type) typing.UnificationGoal {
+	return typing.UnificationGoal{t1, t2}
+}
+
 func clause_(name string, head lox.FunctionType, body ...typing.Goal) typing.TypeClause {
 	return typing.TypeClause{name, head, body}
 }
