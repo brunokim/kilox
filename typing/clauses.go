@@ -160,14 +160,37 @@ func (m *logicModel) appendCall(name lox.Token, t lox.Type) {
 	cl.Body = append(cl.Body, CallGoal{name.Lexeme, t})
 }
 
+// ----
+
+func (m *logicModel) nameType(name lox.Token) lox.Type {
+	x, ok := m.search(name)
+	if !ok {
+		x = m.newRef()
+		m.appendCall(name, x)
+	}
+	return x
+}
+
+func (m *logicModel) callType(calleeType lox.Type, args ...lox.Expr) lox.Type {
+	argTypes := make([]lox.Type, len(args))
+	for i, arg := range args {
+		argTypes[i] = m.visitExpr(arg)
+	}
+	returnType := m.newRef()
+	funcType := lox.FunctionType{Params: argTypes, Return: returnType}
+	m.appendUnification(calleeType, funcType)
+	return returnType
+}
+
 // ---- Expr
 
 func (m *logicModel) VisitBinaryExpr(e *lox.BinaryExpr) {
-	panic("typing.(*logicModel).VisitBinaryExpr is not implemented")
+	opType := m.nameType(e.Operator)
+	m.currType = m.callType(opType, e.Left, e.Right)
 }
 
 func (m *logicModel) VisitGroupingExpr(e *lox.GroupingExpr) {
-	panic("typing.(*logicModel).VisitGroupingExpr is not implemented")
+	m.currType = m.visitExpr(e.Expression)
 }
 
 func (m *logicModel) VisitLiteralExpr(e *lox.LiteralExpr) {
@@ -188,16 +211,12 @@ func (m *logicModel) VisitLiteralExpr(e *lox.LiteralExpr) {
 }
 
 func (m *logicModel) VisitUnaryExpr(e *lox.UnaryExpr) {
-	panic("typing.(*logicModel).VisitUnaryExpr is not implemented")
+	opType := m.nameType(e.Operator)
+	m.currType = m.callType(opType, e.Right)
 }
 
 func (m *logicModel) VisitVariableExpr(e *lox.VariableExpr) {
-	x, ok := m.search(e.Name)
-	if !ok {
-		x = m.newRef()
-		m.appendCall(e.Name, x)
-	}
-	m.currType = x
+	m.currType = m.nameType(e.Name)
 }
 
 func (m *logicModel) VisitAssignmentExpr(e *lox.AssignmentExpr) {
@@ -208,19 +227,13 @@ func (m *logicModel) VisitAssignmentExpr(e *lox.AssignmentExpr) {
 }
 
 func (m *logicModel) VisitLogicExpr(e *lox.LogicExpr) {
-	panic("typing.(*logicModel).VisitLogicExpr is not implemented")
+	opType := m.nameType(e.Operator)
+	m.currType = m.callType(opType, e.Left, e.Right)
 }
 
 func (m *logicModel) VisitCallExpr(e *lox.CallExpr) {
 	calleeType := m.visitExpr(e.Callee)
-	args := make([]lox.Type, len(e.Args))
-	for i, arg := range e.Args {
-		args[i] = m.visitExpr(arg)
-	}
-	returnType := m.newRef()
-	funcType := lox.FunctionType{Params: args, Return: returnType}
-	m.appendUnification(calleeType, funcType)
-	m.currType = returnType
+	m.currType = m.callType(calleeType, e.Args...)
 }
 
 func (m *logicModel) VisitFunctionExpr(e *lox.FunctionExpr) {

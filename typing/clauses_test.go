@@ -189,6 +189,17 @@ func TestBuildClauses(t *testing.T) {
 					binding_(refi_(15), nil_)),
 			),
 		},
+		{
+			`fun foo() { return "a" + "b"; }`,
+			`Type("foo", Fun([], ret)) :-
+               Type("+", _plus),
+               _plus = Fun([String, String], r1),
+               ret = r1.`,
+			clauses_(clause_("foo", func_(types_(), refi_(1)),
+				call_("+", refi_(2)),
+				unify_(refi_(2), func_(types_(str_, str_), refi_(3))),
+				binding_(refi_(1), refi_(3)))),
+		},
 	}
 	for _, test := range tests {
 		t.Run(test.text, func(t *testing.T) {
