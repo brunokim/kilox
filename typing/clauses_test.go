@@ -200,6 +200,75 @@ func TestBuildClauses(t *testing.T) {
 				unify_(refi_(2), func_(types_(str_, str_), refi_(3))),
 				binding_(refi_(1), refi_(3)))),
 		},
+		{
+			dedent.Dedent(`
+            fun outer() {
+              var a = 10;
+              fun inner() {
+                return a;
+              }
+              a = 20;
+              inner();
+            }`),
+			`
+            :- dynamic _a.
+            Type("outer", Fun([], ret)) :-
+              _a = Number, % implicit
+              _a = Number,
+              Type("inner", Fun([], r1)),
+              ret = Nil.
+            Type("inner", Fun([], ret)) :-
+              ret = _a.`,
+			clauses_(
+				clause_("inner", func_(types_(), refi_(3)),
+					binding_(refi_(3), brefi_(2, num_))),
+				clause_("outer", func_(types_(), refi_(1)),
+					binding_(brefi_(2, num_), num_),
+					call_("inner", refi_(4)),
+					unify_(refi_(4), func_(types_(), refi_(5))),
+					binding_(refi_(1), nil_))),
+		},
+		{
+			dedent.Dedent(`
+            fun f1() {
+              fun g() { return 10; }
+              return g();
+            }
+            fun g() { return 30; }
+            fun f2() {
+              fun g() { return 20; }
+              return g();
+            }
+            `),
+			`
+            Type("f1", Fun([], ret)) :-
+              Type("f1/g", r1),
+              r1 = Fun([], r2),
+              ret = r2.
+            Type("f1/g", Fun([], ret)) :-
+              ret = Number.,
+            Type("g", Fun([], ret)) :-
+              ret = Number.
+            Type("f2", Fun([], ret)) :-
+              Type("f2/g", r1),
+              r1 = Fun([], r2),
+              ret = r2.
+            Type("f2/g", Fun([], ret)) :-
+              ret = Number.`,
+			clauses_(
+				clause_("g", func_(types_(), refi_(2)), binding_(refi_(2), num_)),
+				clause_("f1", func_(types_(), refi_(1)),
+					call_("g", refi_(3)),
+					unify_(refi_(3), func_(types_(), refi_(4))),
+					binding_(refi_(1), refi_(4))),
+				clause_("g", func_(types_(), refi_(5)), binding_(refi_(5), num_)),
+				clause_("g", func_(types_(), refi_(7)), binding_(refi_(7), num_)),
+				clause_("f2", func_(types_(), refi_(6)),
+					call_("g", refi_(8)),
+					unify_(refi_(8), func_(types_(), refi_(9))),
+					binding_(refi_(6), refi_(9))),
+			),
+		},
 	}
 	for _, test := range tests {
 		t.Run(test.text, func(t *testing.T) {
