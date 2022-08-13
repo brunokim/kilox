@@ -236,9 +236,11 @@ func TestBuildClauses(t *testing.T) {
             }
             fun g() { return 30; }
             fun f2() {
-              fun g() { return 20; }
+              var a = h();
+              fun g() { return a; }
               return g();
             }
+            fun h() { return 40; }
             `),
 			`
             Type("f1", Fun([], ret)) :-
@@ -247,26 +249,41 @@ func TestBuildClauses(t *testing.T) {
               ret = r2.
             Type("f1/g", Fun([], ret)) :-
               ret = Number.,
+
             Type("g", Fun([], ret)) :-
               ret = Number.
+
+            :- dynamic _a.
             Type("f2", Fun([], ret)) :-
+              Type("h", r1),
+              _a = r1, % implicit
               Type("f2/g", r1),
               r1 = Fun([], r2),
               ret = r2.
             Type("f2/g", Fun([], ret)) :-
+              ret = _a.
+
+            Type("h", Fun([], ret)) :-
               ret = Number.`,
 			clauses_(
-				clause_("g", func_(types_(), refi_(2)), binding_(refi_(2), num_)),
+				clause_("g", func_(types_(), refi_(2)),
+					binding_(refi_(2), num_)),
 				clause_("f1", func_(types_(), refi_(1)),
 					call_("g", refi_(3)),
 					unify_(refi_(3), func_(types_(), refi_(4))),
 					binding_(refi_(1), refi_(4))),
-				clause_("g", func_(types_(), refi_(5)), binding_(refi_(5), num_)),
-				clause_("g", func_(types_(), refi_(7)), binding_(refi_(7), num_)),
+				clause_("g", func_(types_(), refi_(5)),
+					binding_(refi_(5), num_)),
+				clause_("g", func_(types_(), refi_(10)),
+					binding_(refi_(10), brefi_(7, refi_(9)))),
 				clause_("f2", func_(types_(), refi_(6)),
-					call_("g", refi_(8)),
+					call_("h", refi_(8)),
 					unify_(refi_(8), func_(types_(), refi_(9))),
-					binding_(refi_(6), refi_(9))),
+					call_("g", refi_(11)),
+					unify_(refi_(11), func_(types_(), refi_(12))),
+					binding_(refi_(6), refi_(12))),
+				clause_("h", func_(types_(), refi_(13)),
+					binding_(refi_(13), num_)),
 			),
 		},
 	}
