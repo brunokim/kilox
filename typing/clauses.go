@@ -20,8 +20,14 @@ type UnificationGoal struct {
 	T1, T2 lox.Type
 }
 
+type CallGoal struct {
+	Name string
+	Type lox.Type
+}
+
 func (BindingGoal) isGoal()     {}
 func (UnificationGoal) isGoal() {}
+func (CallGoal) isGoal()        {}
 
 type TypeClause struct {
 	Name string
@@ -58,14 +64,14 @@ func newScope(m *logicModel) *scope {
 	}
 }
 
-func (s *scope) search(name string) *lox.RefType {
+func (s *scope) search(name string) (*lox.RefType, bool) {
 	for s != nil {
 		if x, ok := s.refs[name]; ok {
-			return x
+			return x, true
 		}
 		s = s.enclosing
 	}
-	return nil
+	return nil, false
 }
 
 func (s *scope) ref(name string) *lox.RefType {
@@ -135,6 +141,10 @@ func (m *logicModel) localRef(name lox.Token) *lox.RefType {
 	return m.scope.ref("_" + name.Lexeme)
 }
 
+func (m *logicModel) search(name lox.Token) (*lox.RefType, bool) {
+	return m.scope.search("_" + name.Lexeme)
+}
+
 func (m *logicModel) appendBinding(x *lox.RefType, t lox.Type) {
 	cl := m.scope.clause
 	cl.Body = append(cl.Body, BindingGoal{x, t})
@@ -143,6 +153,11 @@ func (m *logicModel) appendBinding(x *lox.RefType, t lox.Type) {
 func (m *logicModel) appendUnification(t1, t2 lox.Type) {
 	cl := m.scope.clause
 	cl.Body = append(cl.Body, UnificationGoal{t1, t2})
+}
+
+func (m *logicModel) appendCall(name lox.Token, t lox.Type) {
+	cl := m.scope.clause
+	cl.Body = append(cl.Body, CallGoal{name.Lexeme, t})
 }
 
 // ---- Expr
@@ -177,7 +192,12 @@ func (m *logicModel) VisitUnaryExpr(e *lox.UnaryExpr) {
 }
 
 func (m *logicModel) VisitVariableExpr(e *lox.VariableExpr) {
-	m.currType = m.scope.search("_" + e.Name.Lexeme)
+	x, ok := m.search(e.Name)
+	if !ok {
+		x = m.newRef()
+		m.appendCall(e.Name, x)
+	}
+	m.currType = x
 }
 
 func (m *logicModel) VisitAssignmentExpr(e *lox.AssignmentExpr) {
@@ -258,8 +278,6 @@ func (m *logicModel) VisitContinueStmt(s lox.ContinueStmt) {
 
 func (m *logicModel) VisitFunctionStmt(s lox.FunctionStmt) {
 	defer func(old *scope) { m.scope = old }(m.scope)
-
-	funRef := m.localRef(s.Name)
 	m.scope = newScope(m)
 
 	params := make([]lox.Type, len(s.Params))
@@ -268,7 +286,6 @@ func (m *logicModel) VisitFunctionStmt(s lox.FunctionStmt) {
 	}
 
 	funType := lox.FunctionType{params, m.scope.ref("ret")}
-	funRef.Value = funType
 	cl := TypeClause{
 		Name: s.Name.Lexeme,
 		Head: funType,
