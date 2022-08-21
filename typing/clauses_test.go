@@ -277,7 +277,7 @@ func TestBuildClauses(t *testing.T) {
 				clause_(5, "g", func_(types_(), refi_(18)),
 					binding_(refi_(18), brefi_(14, refi_(16)))),
 				clause_(4, "f2", func_(types_(), refi_(13)),
-					call_(0, refi_(15)),
+					call_(6, refi_(15)),
 					unify_(refi_(15), func_(types_(), refi_(16))),
 					unify_(brefi_(17, func_(types_(), refi_(18))), func_(types_(), refi_(19))),
 					binding_(refi_(13), refi_(19))),

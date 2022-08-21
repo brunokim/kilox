@@ -55,21 +55,29 @@ func (err logicError) Error() string {
 
 // ---- Scope
 
+type dynType int
+
+const (
+	dynamicScope dynType = iota
+	staticScope
+)
+
 type scope struct {
 	m         *logicModel
 	enclosing *scope
 	clause    *TypeClause
-	hasReturn bool
 
 	refs      map[string]*lox.RefType
 	clauseIDs map[string]int
 	forwards  map[string][]*CallGoal
 
 	returnRef *lox.RefType
+	hasReturn bool
+	dynType   dynType
 }
 
 func builtinScope(m *logicModel) *scope {
-	s := newScope(m)
+	s := newScope(m, dynamicScope)
 	for _, clause := range builtinClauses {
 		s.refs[clause.Name] = m.newRef()
 		s.refs[clause.Name].Value = clause.Head
@@ -78,13 +86,14 @@ func builtinScope(m *logicModel) *scope {
 	return s
 }
 
-func newScope(m *logicModel) *scope {
+func newScope(m *logicModel, dynType dynType) *scope {
 	return &scope{
 		m:         m,
 		enclosing: m.scope,
 		refs:      make(map[string]*lox.RefType),
 		clauseIDs: make(map[string]int),
 		forwards:  make(map[string][]*CallGoal),
+		dynType:   dynType,
 	}
 }
 
@@ -128,6 +137,7 @@ type logicModel struct {
 func newLogicModel() *logicModel {
 	m := &logicModel{}
 	m.scope = builtinScope(m)
+	m.scope = newScope(m, dynamicScope) // global scope
 	return m
 }
 
@@ -327,8 +337,17 @@ func (m *logicModel) VisitFunctionStmt(s lox.FunctionStmt) {
 	m.scope.clauseIDs[s.Name.Lexeme] = m.clauseID
 	funRef := m.localRef(s.Name)
 
+	if goals, ok := m.scope.forwards[s.Name.Lexeme]; ok && m.scope.dynType == dynamicScope {
+		// This statement defines a name forward-referenced before. Mutate those call goals to point
+		// to this newly created clause.
+		for _, goal := range goals {
+			goal.ClauseID = m.clauseID
+		}
+		delete(m.scope.forwards, s.Name.Lexeme)
+	}
+
 	// Push new scope.
-	m.scope = newScope(m)
+	m.scope = newScope(m, staticScope)
 
 	// Create clause with function type as head.
 	params := make([]lox.Type, len(s.Params))
@@ -350,7 +369,10 @@ func (m *logicModel) VisitFunctionStmt(s lox.FunctionStmt) {
 	}
 	m.clauses = append(m.clauses, cl)
 
-	// Restore past scope.
+	// Append forwards to enclosing scope and restore it.
+	for name, goals := range m.scope.forwards {
+		m.scope.enclosing.forwards[name] = append(m.scope.enclosing.forwards[name], goals...)
+	}
 	m.scope = m.scope.enclosing
 }
 
