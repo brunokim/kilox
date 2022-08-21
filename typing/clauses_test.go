@@ -110,10 +110,11 @@ func TestBuildClauses(t *testing.T) {
             fun l_if(cond, l_then, l_else) { return cond(l_then, l_else)(); }
 
             // Test it out.
-            fun l_20() { return 20; }
-            fun l_30() { return 30; }
-            fun main() { print l_if(l_false, l_20, l_30); }
-            `),
+            fun main() {
+                fun l_20() { return 20; }
+                fun l_30() { return 30; }
+                print l_if(l_false, l_20, l_30);
+            }`),
 			clauses_(
 				clause_(1, "l_true", func_(types_(refi_(6), refi_(7)), refi_(8)),
 					binding_(refi_(8), refi_(6))),
@@ -123,20 +124,20 @@ func TestBuildClauses(t *testing.T) {
 					unify_(refi_(14), func_(types_(refi_(15), refi_(16)), refi_(18))),
 					unify_(refi_(18), func_(types_(), refi_(19))),
 					binding_(refi_(17), refi_(19))),
-				clause_(4, "l_20", func_(types_(), refi_(21)),
-					binding_(refi_(21), num_)),
-				clause_(5, "l_30", func_(types_(), refi_(23)),
+				clause_(5, "l_20", func_(types_(), refi_(23)),
 					binding_(refi_(23), num_)),
-				clause_(6, "main", func_(types_(), refi_(25)),
+				clause_(6, "l_30", func_(types_(), refi_(25)),
+					binding_(refi_(25), num_)),
+				clause_(4, "main", func_(types_(), refi_(21)),
 					unify_(
 						brefi_(13, func_(types_(refi_(14), refi_(15), refi_(16)), refi_(17))),
 						func_(
 							types_(
 								brefi_(9, func_(types_(refi_(10), refi_(11)), refi_(12))),
-								brefi_(20, func_(types_(), refi_(21))),
-								brefi_(22, func_(types_(), refi_(23)))),
+								brefi_(22, func_(types_(), refi_(23))),
+								brefi_(24, func_(types_(), refi_(25)))),
 							refi_(26))),
-					binding_(refi_(25), nil_)),
+					binding_(refi_(21), nil_)),
 			),
 		},
 		{
