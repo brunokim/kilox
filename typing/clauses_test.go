@@ -285,6 +285,27 @@ func TestBuildClauses(t *testing.T) {
 					binding_(refi_(21), num_)),
 			),
 		},
+        {
+            dedent.Dedent(`
+            fun f() { g(); h(); }
+            fun g() { h(); }
+            fun h() {}`),
+            ``,
+            clauses_(
+                clause_(1, "f", func_(types_(), refi_(6)),
+                    call_(2, refi_(7)),
+                    unify_(refi_(7), func_(types_(), refi_(8))),
+                    call_(3, refi_(9)),
+                    unify_(refi_(9), func_(types_(), refi_(10))),
+                    binding_(refi_(6), nil_)),
+                clause_(2, "g", func_(types_(), refi_(12)),
+                    call_(3, refi_(13)),
+                    unify_(refi_(13), func_(types_(), refi_(14))),
+                    binding_(refi_(12), nil_)),
+                clause_(3, "h", func_(types_(), refi_(16)),
+                    binding_(refi_(16), nil_)),
+            ),
+        },
 	}
 	for _, test := range tests {
 		t.Run(test.text, func(t *testing.T) {
