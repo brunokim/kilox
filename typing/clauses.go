@@ -64,11 +64,15 @@ type scope struct {
 	refs      map[string]*lox.RefType
 	clauseIDs map[string]int
 	forwards  map[string][]*CallGoal
+
+	returnRef *lox.RefType
 }
 
 func builtinScope(m *logicModel) *scope {
 	s := newScope(m)
 	for _, clause := range builtinClauses {
+		s.refs[clause.Name] = m.newRef()
+		s.refs[clause.Name].Value = clause.Head
 		s.clauseIDs[clause.Name] = clause.ID
 	}
 	return s
@@ -163,11 +167,11 @@ func (m *logicModel) newRef() *lox.RefType {
 }
 
 func (m *logicModel) localRef(name lox.Token) *lox.RefType {
-	return m.scope.ref("_" + name.Lexeme)
+	return m.scope.ref(name.Lexeme)
 }
 
 func (m *logicModel) search(name lox.Token) (*lox.RefType, bool) {
-	return m.scope.search("_" + name.Lexeme)
+	return m.scope.search(name.Lexeme)
 }
 
 func (m *logicModel) appendBinding(x *lox.RefType, t lox.Type) {
@@ -331,7 +335,8 @@ func (m *logicModel) VisitFunctionStmt(s lox.FunctionStmt) {
 	for i, param := range s.Params {
 		params[i] = m.localRef(param)
 	}
-	funType := lox.FunctionType{params, m.scope.ref("ret")}
+	m.scope.returnRef = m.newRef()
+	funType := lox.FunctionType{params, m.scope.returnRef}
 	funRef.Value = funType
 	cl := TypeClause{
 		ID:   m.clauseID,
@@ -341,7 +346,7 @@ func (m *logicModel) VisitFunctionStmt(s lox.FunctionStmt) {
 	m.scope.clause = &cl
 	m.visitStmts(s.Body)
 	if !m.scope.hasReturn {
-		m.appendBinding(m.scope.ref("ret"), nil_)
+		m.appendBinding(m.scope.returnRef, nil_)
 	}
 	m.clauses = append(m.clauses, cl)
 
@@ -351,7 +356,7 @@ func (m *logicModel) VisitFunctionStmt(s lox.FunctionStmt) {
 
 func (m *logicModel) VisitReturnStmt(s lox.ReturnStmt) {
 	t := m.visitExpr(s.Result)
-	m.appendBinding(m.scope.ref("ret"), t)
+	m.appendBinding(m.scope.returnRef, t)
 	m.scope.hasReturn = true
 }
 
