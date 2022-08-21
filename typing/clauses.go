@@ -21,18 +21,26 @@ type UnificationGoal struct {
 }
 
 type CallGoal struct {
-	Name string
-	Type lox.Type
+	ClauseID int
+	Type     lox.Type
 }
 
 func (BindingGoal) isGoal()     {}
 func (UnificationGoal) isGoal() {}
-func (CallGoal) isGoal()        {}
+func (*CallGoal) isGoal()       {}
 
 type TypeClause struct {
+	ID   int
 	Name string
 	Head lox.FunctionType
 	Body []Goal
+}
+
+var builtinClauses = []TypeClause{
+	{-99, "+", func_(types(num_, num_), num_), nil},
+	{-98, "-", func_(types(num_, num_), num_), nil},
+	{-97, "*", func_(types(num_, num_), num_), nil},
+	{-96, "*", func_(types(num_, num_), num_), nil},
 }
 
 // ---- Error
@@ -53,7 +61,17 @@ type scope struct {
 	clause    *TypeClause
 	hasReturn bool
 
-	refs map[string]*lox.RefType
+	refs      map[string]*lox.RefType
+	clauseIDs map[string]int
+	forwards  map[string][]*CallGoal
+}
+
+func builtinScope(m *logicModel) *scope {
+	s := newScope(m)
+	for _, clause := range builtinClauses {
+		s.clauseIDs[clause.Name] = clause.ID
+	}
+	return s
 }
 
 func newScope(m *logicModel) *scope {
@@ -61,6 +79,8 @@ func newScope(m *logicModel) *scope {
 		m:         m,
 		enclosing: m.scope,
 		refs:      make(map[string]*lox.RefType),
+		clauseIDs: make(map[string]int),
+		forwards:  make(map[string][]*CallGoal),
 	}
 }
 
@@ -84,6 +104,10 @@ func (s *scope) ref(name string) *lox.RefType {
 	return s.refs[name]
 }
 
+func (s *scope) addForward(name string, call *CallGoal) {
+	s.forwards[name] = append(s.forwards[name], call)
+}
+
 // ---- Logic model
 
 type logicModel struct {
@@ -93,12 +117,13 @@ type logicModel struct {
 
 	currType lox.Type
 
-	refID int
+	refID    int
+	clauseID int
 }
 
 func newLogicModel() *logicModel {
 	m := &logicModel{}
-	m.scope = newScope(m)
+	m.scope = builtinScope(m)
 	return m
 }
 
@@ -155,9 +180,11 @@ func (m *logicModel) appendUnification(t1, t2 lox.Type) {
 	cl.Body = append(cl.Body, UnificationGoal{t1, t2})
 }
 
-func (m *logicModel) appendCall(name lox.Token, t lox.Type) {
+func (m *logicModel) appendCall(clauseID int, t lox.Type) *CallGoal {
 	cl := m.scope.clause
-	cl.Body = append(cl.Body, CallGoal{name.Lexeme, t})
+	call := &CallGoal{clauseID, t}
+	cl.Body = append(cl.Body, call)
+	return call
 }
 
 // ----
@@ -166,7 +193,8 @@ func (m *logicModel) nameType(name lox.Token) lox.Type {
 	x, ok := m.search(name)
 	if !ok {
 		x = m.newRef()
-		m.appendCall(name, x)
+		call := m.appendCall(0, x)
+		m.scope.addForward(name.Lexeme, call)
 	}
 	return x
 }
@@ -290,26 +318,35 @@ func (m *logicModel) VisitContinueStmt(s lox.ContinueStmt) {
 }
 
 func (m *logicModel) VisitFunctionStmt(s lox.FunctionStmt) {
-	defer func(old *scope) { m.scope = old }(m.scope)
+	// Declare clause in the surrounding scope.
+	m.clauseID++
+	m.scope.clauseIDs[s.Name.Lexeme] = m.clauseID
+	funRef := m.localRef(s.Name)
+
+	// Push new scope.
 	m.scope = newScope(m)
 
+	// Create clause with function type as head.
 	params := make([]lox.Type, len(s.Params))
 	for i, param := range s.Params {
 		params[i] = m.localRef(param)
 	}
-
 	funType := lox.FunctionType{params, m.scope.ref("ret")}
+	funRef.Value = funType
 	cl := TypeClause{
+		ID:   m.clauseID,
 		Name: s.Name.Lexeme,
 		Head: funType,
 	}
-
 	m.scope.clause = &cl
 	m.visitStmts(s.Body)
 	if !m.scope.hasReturn {
 		m.appendBinding(m.scope.ref("ret"), nil_)
 	}
 	m.clauses = append(m.clauses, cl)
+
+	// Restore past scope.
+	m.scope = m.scope.enclosing
 }
 
 func (m *logicModel) VisitReturnStmt(s lox.ReturnStmt) {

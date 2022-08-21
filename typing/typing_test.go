@@ -75,12 +75,12 @@ func unify_(t1, t2 lox.Type) typing.UnificationGoal {
 	return typing.UnificationGoal{t1, t2}
 }
 
-func call_(name string, t lox.Type) typing.CallGoal {
-	return typing.CallGoal{name, t}
+func call_(clauseID int, t lox.Type) *typing.CallGoal {
+	return &typing.CallGoal{clauseID, t}
 }
 
-func clause_(name string, head lox.FunctionType, body ...typing.Goal) typing.TypeClause {
-	return typing.TypeClause{name, head, body}
+func clause_(clauseID int, name string, head lox.FunctionType, body ...typing.Goal) typing.TypeClause {
+	return typing.TypeClause{clauseID, name, head, body}
 }
 
 func clauses_(cls ...typing.TypeClause) []typing.TypeClause {
