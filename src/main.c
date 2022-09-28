@@ -11,9 +11,9 @@ int main(int argc, const char *argv[]) {
     initChunk(&chunk);
     writeChunk(&chunk, OP_RETURN, 123);
 
-    int index = addConstant(&chunk, 1.2);
-    writeChunk(&chunk, OP_CONSTANT, 123);
-    writeChunk(&chunk, index, 123);
+    for (int i = 0; i < 260; i++) {
+        writeConstant(&chunk, 1.0 * i + 0.5, 123);
+    }
 
     disassembleChunk(&chunk, "test chunk");
     freeChunk(&chunk);
