@@ -9,24 +9,24 @@
 VM vm;
 
 static void resetStack() {
-    vm.stackTop = vm.stack;
+    freeValueArray(&vm.stack);
 }
 
 void initVM() {
-    resetStack();
+    initValueArray(&vm.stack);
 }
 
 void freeVM() {
+    freeValueArray(&vm.stack);
 }
 
 void push(Value value) {
-    *vm.stackTop = value;
-    vm.stackTop++;
+    writeValueArray(&vm.stack, value);
 }
 
 Value pop() {
-    vm.stackTop--;
-    return *vm.stackTop;
+    vm.stack.count--;
+    return vm.stack.values[vm.stack.count];
 }
 
 static InterpretResult run() {
@@ -44,9 +44,9 @@ static InterpretResult run() {
     for (;;) {
 #ifdef DEBUG_TRACE_EXECUTION
         printf("        ");
-        for (Value *slot = vm.stack; slot < vm.stackTop; slot++) {
+        for (int i = 0; i < vm.stack.count; i++) {
             printf("[ ");
-            printValue(*slot);
+            printValue(vm.stack.values[i]);
             printf(" ]");
         }
         printf("\n");
