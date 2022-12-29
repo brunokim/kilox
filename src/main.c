@@ -15,6 +15,11 @@ int main(int argc, const char *argv[]) {
     for (int i = 0; i < 260; i++) {
         writeConstant(&chunk, 1.0 * i + 0.5, 123);
     }
+    writeChunk(&chunk, OP_NEGATE, 123);
+    writeChunk(&chunk, OP_ADD, 123);
+    writeChunk(&chunk, OP_MULTIPLY, 123);
+    writeChunk(&chunk, OP_DIVIDE, 123);
+    writeChunk(&chunk, OP_SUBTRACT, 123);
     writeChunk(&chunk, OP_RETURN, 123);
 
     disassembleChunk(&chunk, "test chunk");
