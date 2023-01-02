@@ -9,7 +9,10 @@ typedef struct {
     Chunk *chunk;
     uint8_t *ip;
     ValueArray stack;
+
     Table strings;
+    Table globals;
+
     Obj *objects;
 } VM;
 
