@@ -51,7 +51,7 @@ static void errorAt(Token *token, const char *message) {
     fprintf(stderr, "[line %d] Error", token->line);
 
     if (token->type == TOKEN_EOF) {
-        fprintf(stderr, "at end");
+        fprintf(stderr, " at end");
     } else if (token->type == TOKEN_ERROR) {
         // Nothing.
     } else {
