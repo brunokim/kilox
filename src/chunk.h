@@ -23,6 +23,7 @@
     X(OP_POP) \
     X(OP_GET_GLOBAL) \
     X(OP_DEFINE_GLOBAL) \
+    X(OP_SET_GLOBAL) \
     X(OP_RETURN) \
 
 typedef enum {

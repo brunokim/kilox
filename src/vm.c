@@ -175,7 +175,7 @@ static InterpretResult run() {
                 Value name = READ_CONSTANT();
                 Value value;
                 if (!tableGet(&vm.globals, name, &value)) {
-                    runtimeError("Undefined variable '%s'\n", AS_CSTRING(name));
+                    runtimeError("Undefined variable '%s'.", AS_CSTRING(name));
                     return INTERPRET_RUNTIME_ERROR;
                 }
                 push(value);
@@ -185,6 +185,17 @@ static InterpretResult run() {
                 Value name = READ_CONSTANT();
                 tableSet(&vm.globals, name, peek(0));
                 pop();
+                break;
+            }
+            case OP_SET_GLOBAL: {
+                Value name = READ_CONSTANT();
+                if (tableSet(&vm.globals, name, peek(0))) {
+                    // Newly inserted key in globals table means that the variable was not
+                    // defined.
+                    tableDelete(&vm.globals, name);
+                    runtimeError("Undefined variable '%s'.", AS_CSTRING(name));
+                    return INTERPRET_RUNTIME_ERROR;
+                }
                 break;
             }
             case OP_RETURN:
