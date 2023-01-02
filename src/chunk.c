@@ -30,7 +30,20 @@ void writeChunk(Chunk *chunk, uint8_t byte, int line) {
     chunk->count++;
 }
 
+int findConstant(Chunk *chunk, Value value) {
+    for (int i = 0; i < chunk->constants.count; i++) {
+        if (valuesEqual(chunk->constants.values[i], value)) {
+            return i;
+        }
+    }
+    return -1;
+}
+
 int addConstant(Chunk *chunk, Value value) {
+    int index = findConstant(chunk, value);
+    if (index >= 0) {
+        return index;
+    }
     writeValueArray(&chunk->constants, value);
     return chunk->constants.count - 1;
 }
