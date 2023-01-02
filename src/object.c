@@ -3,6 +3,7 @@
 
 #include "memory.h"
 #include "object.h"
+#include "table.h"
 #include "value.h"
 #include "vm.h"
 
@@ -19,23 +20,46 @@ static Obj *allocateObject(size_t size, ObjType type) {
     return object;
 }
 
-static ObjString *allocateString(int length) {
+static ObjString *allocateString(int length, uint32_t hash) {
     ObjString *string = (ObjString *)allocateObject(
         sizeof(ObjString) + (length + 1) * sizeof(char),
         OBJ_STRING);
     string->length = length;
+    string->hash = hash;
+    tableSet(&vm.strings, OBJ_VAL(string), NIL_VAL); // Intern the string.
     return string;
 }
 
+// FNV-1a hash.
+static uint32_t hashString(const char *key, int length) {
+    uint32_t hash = 2166136261u;
+    for (int i = 0; i < length; i++) {
+        hash ^= (uint8_t)key[i];
+        hash *= 16777619;
+    }
+    return hash;
+}
+
 ObjString *takeString(char *chars, int length) {
-    ObjString *string = allocateString(length);
+    uint32_t hash = hashString(chars, length); 
+    ObjString *interned = tableFindString(&vm.strings, chars, length, hash);
+    if (interned != NULL) {
+        FREE(char, chars);
+        return interned;
+    }
+    ObjString *string = allocateString(length, hash);
     memcpy(string->chars, chars, length + 1);
     FREE(char, chars);
     return string;
 }
 
 ObjString *copyString(const char *chars, int length) {
-    ObjString *string = allocateString(length);
+    uint32_t hash = hashString(chars, length); 
+    ObjString *interned = tableFindString(&vm.strings, chars, length, hash);
+    if (interned != NULL) {
+        return interned;
+    }
+    ObjString *string = allocateString(length, hash);
     memcpy(string->chars, chars, length);
     string->chars[length] = '\0';
     return string;

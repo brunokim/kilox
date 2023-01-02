@@ -55,12 +55,31 @@ bool valuesEqual(Value a, Value b) {
         case VAL_BOOL: return AS_BOOL(a) == AS_BOOL(b);
         case VAL_NIL: return true;
         case VAL_NUMBER: return AS_NUMBER(a) == AS_NUMBER(b);
-        case VAL_OBJ: {
-            ObjString *aStr = AS_STRING(a);
-            ObjString *bStr = AS_STRING(b);
-            return aStr->length == bStr->length &&
-                memcmp(aStr->chars, bStr->chars, aStr->length) == 0;
-        }
+        case VAL_OBJ: return AS_OBJ(a) == AS_OBJ(b);
         default: return false; //unreachable
+    }
+}
+
+static uint32_t doubleHash(double x) {
+    // TODO: write efficient hash for doubles.
+    // See https://github.com/python/cpython/blob/f4c03484da59049eb62a9bf7777b963e2267d187/Python/pyhash.c
+    return 42u;
+}
+
+static uint32_t objectHash(Obj *obj) {
+    switch (obj->type) {
+        case OBJ_STRING:
+            return ((ObjString*)obj)->hash;
+        default: return 1000u; //unreachable
+    }
+}
+
+uint32_t valueHash(Value x) {
+    switch (x.type) {
+        case VAL_NIL: return 0;
+        case VAL_BOOL: return AS_BOOL(x) ? 1 : 2;
+        case VAL_NUMBER: return doubleHash(AS_NUMBER(x));
+        case VAL_OBJ: return objectHash(AS_OBJ(x));
+        default: return -1; //unreachable
     }
 }
