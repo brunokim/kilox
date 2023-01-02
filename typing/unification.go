@@ -3,7 +3,7 @@ package typing
 import (
 	"fmt"
 
-	"github.com/brunokim/lox"
+	"github.com/brunokim/kilox"
 )
 
 type typePair [2]lox.Type

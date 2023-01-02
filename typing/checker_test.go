@@ -3,9 +3,9 @@ package typing_test
 import (
 	"testing"
 
-	"github.com/brunokim/lox"
-	"github.com/brunokim/lox/typing"
-	"github.com/brunokim/lox/valuepath"
+	"github.com/brunokim/kilox"
+	"github.com/brunokim/kilox/typing"
+	"github.com/brunokim/kilox/valuepath"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"

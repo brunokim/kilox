@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/brunokim/lox/errlist"
+	"github.com/brunokim/kilox/errlist"
 )
 
 type funcType int

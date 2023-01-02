@@ -7,7 +7,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/brunokim/lox"
+	"github.com/brunokim/kilox"
 )
 
 func main() {

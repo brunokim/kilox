@@ -3,8 +3,8 @@ package typing
 import (
 	"fmt"
 
-	"github.com/brunokim/lox"
-	"github.com/brunokim/lox/ordered"
+	"github.com/brunokim/kilox"
+	"github.com/brunokim/kilox/ordered"
 )
 
 func types(ts ...lox.Type) []lox.Type {

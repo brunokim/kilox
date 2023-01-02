@@ -3,7 +3,7 @@ package lox_test
 import (
 	"testing"
 
-	"github.com/brunokim/lox"
+	"github.com/brunokim/kilox"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 )

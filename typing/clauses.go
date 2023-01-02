@@ -3,8 +3,8 @@ package typing
 import (
 	"fmt"
 
-	"github.com/brunokim/lox"
-	"github.com/brunokim/lox/errlist"
+	"github.com/brunokim/kilox"
+	"github.com/brunokim/kilox/errlist"
 )
 
 type Goal interface {

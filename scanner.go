@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/brunokim/lox/errlist"
+	"github.com/brunokim/kilox/errlist"
 )
 
 var keywords = map[string]TokenType{

@@ -1,7 +1,7 @@
 package typing
 
 import (
-	"github.com/brunokim/lox"
+	"github.com/brunokim/kilox"
 )
 
 type simplifier struct {

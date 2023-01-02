@@ -3,7 +3,7 @@ package typing_test
 import (
 	"testing"
 
-	"github.com/brunokim/lox/typing"
+	"github.com/brunokim/kilox/typing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/lithammer/dedent"

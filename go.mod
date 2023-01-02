@@ -1,4 +1,4 @@
-module github.com/brunokim/lox
+module github.com/brunokim/kilox
 
 go 1.18
 

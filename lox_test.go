@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/brunokim/lox"
-	"github.com/brunokim/lox/typing"
+	"github.com/brunokim/kilox"
+	"github.com/brunokim/kilox/typing"
 )
 
 func runLox(text string, experiments map[string]bool) (string, error) {

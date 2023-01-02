@@ -3,7 +3,7 @@ package lox
 import (
 	"fmt"
 
-	"github.com/brunokim/lox/errlist"
+	"github.com/brunokim/kilox/errlist"
 )
 
 const (

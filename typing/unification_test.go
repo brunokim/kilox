@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/brunokim/lox"
-	"github.com/brunokim/lox/ordered"
-	"github.com/brunokim/lox/typing"
+	"github.com/brunokim/kilox"
+	"github.com/brunokim/kilox/ordered"
+	"github.com/brunokim/kilox/typing"
 
 	"github.com/google/go-cmp/cmp"
 )
