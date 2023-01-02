@@ -161,14 +161,16 @@ static InterpretResult run() {
                 }
                 push(NUMBER_VAL(-AS_NUMBER(pop())));
                 break;
-            case OP_PRINT: {
+            case OP_PRINT:
                 printValue(pop());
                 printf("\n");
+                break;
+            case OP_POP:
+                pop();
                 break;
             case OP_RETURN:
                 // Exit interpreter.
                 return INTERPRET_OK;
-            }
         }
     }
 
