@@ -32,9 +32,11 @@ static void runtimeError(const char *format, ...) {
 
 void initVM() {
     initValueArray(&vm.stack);
+    vm.objects = NULL;
 }
 
 void freeVM() {
+    freeObjects();
     freeValueArray(&vm.stack);
 }
 
