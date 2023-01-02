@@ -46,7 +46,7 @@ void test_empty_map() {
     }
     num_tests++;
     if (table.capacity > 0) {
-        printf("table capacity = %d, want 0", table.capacity);
+        printf("test_empty_map: table capacity = %d, want 0", table.capacity);
     } else {
         num_pass++;
     }
@@ -117,7 +117,7 @@ void test_set_map() {
     // Test that capacity has increased.
     num_tests++;
     if (table.capacity < num_entries) {
-        printf("table capacity = %d, want >=%d", table.capacity, num_entries);
+        printf("test_set_map: table capacity = %d, want >=%d", table.capacity, num_entries);
     } else {
         num_pass++;
     }
@@ -195,7 +195,67 @@ void test_reset_map() {
     // Test that capacity has not increased.
     num_tests++;
     if (table.capacity != prevCapacity) {
-        printf("table capacity = %d, want ==%d", table.capacity, prevCapacity);
+        printf("test_reset_map: table capacity = %d, want ==%d", table.capacity, prevCapacity);
+    } else {
+        num_pass++;
+    }
+
+    freeTable(&table);
+    freeVM();
+}
+
+void test_rehash_map() {
+    initVM();
+
+    Table table;
+    initTable(&table);
+
+    num_tests++;
+    bool has_passed = true;
+    const int num_entries = 100;
+
+    // Test setting keys;
+    for (int i = 0;  i < num_entries; i++) {
+        Value key = NUMBER_VAL(i);
+
+        if(!tableSet(&table, key, key)) {
+            has_passed = false;
+            printf("test_rehash_map: table[");
+            printValue(key);
+            printf("] = ");
+            printValue(key);
+            printf(" => is not a new key\n");
+        }
+    }
+
+    // Test getting keys.
+    for (int i = 0;  i < num_entries; i++) {
+        Value key = NUMBER_VAL(i);
+        Value got;
+        if(!tableGet(&table, key, &got)) {
+            has_passed = false;
+            printf("test_rehash_map: table[");
+            printValue(key);
+            printf("] failed\n");
+        } else if (!valuesEqual(got, key)) {
+            has_passed = false;
+            printf("test_rehash_map: table[");
+            printValue(key);
+            printf("] = ");
+            printValue(got);
+            printf(" != ");
+            printValue(key);
+            printf("\n");
+        }
+    }
+    if (has_passed) {
+        num_pass++;
+    }
+
+    // Test that capacity has increased accordingly.
+    num_tests++;
+    if (table.capacity < num_entries) {
+        printf("test_rehash_map: table capacity = %d, want >=%d", table.capacity, num_entries);
     } else {
         num_pass++;
     }
@@ -208,6 +268,7 @@ int main() {
     test_empty_map();
     test_set_map();
     test_reset_map();
+    test_rehash_map();
 
     printf("PASS %d/%d", num_pass, num_tests);
 }
