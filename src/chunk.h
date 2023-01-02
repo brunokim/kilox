@@ -4,26 +4,32 @@
 #include "common.h"
 #include "value.h"
 
+#define OP_CODES \
+    X(OP_CONSTANT) \
+    X(OP_CONSTANT_LONG) \
+    X(OP_NIL) \
+    X(OP_TRUE) \
+    X(OP_FALSE) \
+    X(OP_EQUAL) \
+    X(OP_GREATER) \
+    X(OP_LESS) \
+    X(OP_ADD) \
+    X(OP_SUBTRACT) \
+    X(OP_MULTIPLY) \
+    X(OP_DIVIDE) \
+    X(OP_NOT) \
+    X(OP_NEGATE) \
+    X(OP_PRINT) \
+    X(OP_POP) \
+    X(OP_GET_GLOBAL) \
+    X(OP_DEFINE_GLOBAL) \
+    X(OP_RETURN) \
+
 typedef enum {
-    OP_CONSTANT,
-    OP_CONSTANT_LONG,
-    OP_NIL,
-    OP_TRUE,
-    OP_FALSE,
-    OP_EQUAL,
-    OP_GREATER,
-    OP_LESS,
-    OP_ADD,
-    OP_SUBTRACT,
-    OP_MULTIPLY,
-    OP_DIVIDE,
-    OP_NOT,
-    OP_NEGATE,
-    OP_PRINT,
-    OP_POP,
-    OP_GET_GLOBAL,
-    OP_DEFINE_GLOBAL,
-    OP_RETURN,
+    #define X(name) name,
+        OP_CODES
+    #undef X
+    NUM_OP_CODES,
 } OpCode;
 
 typedef struct {
