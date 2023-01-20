@@ -20,6 +20,8 @@
     X(OP_NEGATE) \
     X(OP_PRINT) \
     X(OP_POP) \
+    X(OP_GET_LOCAL) \
+    X(OP_SET_LOCAL) \
     X(OP_GET_GLOBAL) \
     X(OP_DEFINE_GLOBAL) \
     X(OP_SET_GLOBAL) \

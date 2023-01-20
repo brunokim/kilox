@@ -7,4 +7,6 @@
 
 #define DEBUG_TRACE_EXECUTION
 
+#define MAX_LOCALS (UINT8_MAX + 1)
+
 #endif

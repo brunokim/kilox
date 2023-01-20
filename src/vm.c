@@ -195,6 +195,16 @@ static InterpretResult run() {
                 vm.globals.values[index] = peek(0);
                 break;
             }
+            case OP_GET_LOCAL: {
+                uint32_t slot = READ_UINT24();
+                push(vm.stack.values[slot]);
+                break;
+            }
+            case OP_SET_LOCAL: {
+                uint32_t slot = READ_UINT24();
+                vm.stack.values[slot] = peek(0);
+                break;
+            }
             case OP_RETURN:
                 // Exit interpreter.
                 return INTERPRET_OK;

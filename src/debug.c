@@ -31,6 +31,15 @@ static int constantInstruction(const char *name, Chunk *chunk, int offset) {
     return offset + 4;
 }
 
+static int uint24Instruction(const char *name, Chunk *chunk, int offset) {
+    uint8_t b0 = chunk->code[offset + 1];
+    uint8_t b1 = chunk->code[offset + 2];
+    uint8_t b2 = chunk->code[offset + 3];
+    int index = (b0 << 0) | (b1 << 8) | (b2 << 16);
+    printf("%-16s %4d\n", name, index);
+    return offset + 4;
+}
+
 static int simpleInstruction(const char *name, int offset) {
     printf("%s\n", name);
     return offset + 1;
@@ -71,6 +80,9 @@ int disassembleInstruction(Chunk *chunk, int offset) {
     case OP_DEFINE_GLOBAL:
     case OP_SET_GLOBAL:
         return constantInstruction(op_code_names[instruction], chunk, offset);
+    case OP_GET_LOCAL:
+    case OP_SET_LOCAL:
+        return uint24Instruction(op_code_names[instruction], chunk, offset);
     default:
         printf("Unknown opcode %d\n", instruction);
         return offset + 1;
