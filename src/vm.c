@@ -34,11 +34,11 @@ void initVM() {
     initValueArray(&vm.stack);
     vm.objects = NULL;
     initTable(&vm.strings);
-    initTable(&vm.globals);
+    initValueArray(&vm.globals);
 }
 
 void freeVM() {
-    freeTable(&vm.globals);
+    freeValueArray(&vm.globals);
     freeTable(&vm.strings);
     freeObjects();
     freeValueArray(&vm.stack);
@@ -168,9 +168,10 @@ static InterpretResult run() {
                 pop();
                 break;
             case OP_GET_GLOBAL: {
-                Value name = READ_CONSTANT();
-                Value value;
-                if (!tableGet(&vm.globals, name, &value)) {
+                uint32_t index = READ_UINT24();
+                Value value = vm.globals.values[index];
+                if (IS_INVALID(value)) {
+                    Value name = vm.chunk->constants.values[index];
                     runtimeError("Undefined variable '%s'.", AS_CSTRING(name));
                     return INTERPRET_RUNTIME_ERROR;
                 }
@@ -178,20 +179,20 @@ static InterpretResult run() {
                 break;
             }
             case OP_DEFINE_GLOBAL: {
-                Value name = READ_CONSTANT();
-                tableSet(&vm.globals, name, peek(0));
+                uint32_t index = READ_UINT24();
+                vm.globals.values[index] = peek(0);
                 pop();
                 break;
             }
             case OP_SET_GLOBAL: {
-                Value name = READ_CONSTANT();
-                if (tableSet(&vm.globals, name, peek(0))) {
-                    // Newly inserted key in globals table means that the variable was not
-                    // defined.
-                    tableDelete(&vm.globals, name);
+                uint32_t index = READ_UINT24();
+                Value value = vm.globals.values[index];
+                if (IS_INVALID(value)) {
+                    Value name = vm.chunk->constants.values[index];
                     runtimeError("Undefined variable '%s'.", AS_CSTRING(name));
                     return INTERPRET_RUNTIME_ERROR;
                 }
+                vm.globals.values[index] = peek(0);
                 break;
             }
             case OP_RETURN:
@@ -218,6 +219,7 @@ InterpretResult interpret(const char *source) {
 
     vm.chunk = &chunk;
     vm.ip = vm.chunk->code;
+    growValueArray(&vm.globals, chunk.constants.count);
 
     InterpretResult result = run();
 

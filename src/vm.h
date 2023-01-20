@@ -11,7 +11,7 @@ typedef struct {
     ValueArray stack;
 
     Table strings;
-    Table globals;
+    ValueArray globals;
 
     Obj *objects;
 } VM;

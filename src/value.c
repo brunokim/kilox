@@ -18,11 +18,21 @@ void freeValueArray(ValueArray *array) {
     initValueArray(array);
 }
 
+void growValueArray(ValueArray *array, int capacity) {
+    if (array->capacity >= capacity) {
+        return;
+    }
+    int oldCapacity = array->capacity;
+    array->capacity = capacity;
+    array->values = GROW_ARRAY(Value, array->values, oldCapacity, array->capacity);
+    for (int i = oldCapacity; i < array->capacity; i++) {
+        array->values[i] = INVALID_VAL;
+    }
+}
+
 void writeValueArray(ValueArray *array, Value value) {
     if (array->capacity < array->count + 1) {
-        int oldCapacity = array->capacity;
-        array->capacity = GROW_CAPACITY(oldCapacity);
-        array->values = GROW_ARRAY(Value, array->values, oldCapacity, array->capacity);
+        growValueArray(array, GROW_CAPACITY(array->capacity));
     }
     array->values[array->count] = value;
     array->count++;
@@ -30,6 +40,9 @@ void writeValueArray(ValueArray *array, Value value) {
 
 void printValue(Value value) {
     switch (value.type) {
+        case VAL_INVALID:
+            printf("INVALID");
+            break;
         case VAL_BOOL:
             printf(AS_BOOL(value) ? "true" : "false");
             break;
@@ -76,6 +89,7 @@ static uint32_t objectHash(Obj *obj) {
 
 uint32_t valueHash(Value x) {
     switch (x.type) {
+        case VAL_INVALID: return -2;
         case VAL_NIL: return 0;
         case VAL_BOOL: return AS_BOOL(x) ? 1 : 2;
         case VAL_NUMBER: return doubleHash(AS_NUMBER(x));
