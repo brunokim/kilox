@@ -115,17 +115,25 @@ static void emitReturn() {
     emitByte(OP_RETURN);
 }
 
-static uint8_t makeConstant(Value value) {
-    int constant = addConstant(currentChunk(), value);
-    if (constant > UINT8_MAX) {
+static uint32_t makeConstant(Value value) {
+    int index = addConstant(currentChunk(), value);
+    if (index > (1 << 24)) {
         error("Too many constants in one chunk.");
         return 0;
     }
-    return (uint8_t)constant;
+    return (uint32_t)index;
+}
+
+static void emitUint24(uint32_t value) {
+    emitByte((value >> 0) & 0xff);
+    emitByte((value >> 8) & 0xff);
+    emitByte((value >> 16) & 0xff);
 }
 
 static void emitConstant(Value value) {
-    emitBytes(OP_CONSTANT, makeConstant(value));
+    uint32_t index = makeConstant(value);
+    emitByte(OP_CONSTANT);
+    emitUint24(index);
 }
 
 static void endCompiler() {
@@ -140,17 +148,18 @@ static void printStatement();
 static ParseRule* getRule(TokenType type);
 static void parsePrecedence(Precedence precedence);
 
-static uint8_t identifierConstant(Token *name) {
+static uint32_t identifierConstant(Token *name) {
     return makeConstant(OBJ_VAL(copyString(name->start, name->length)));
 }
 
-static uint8_t parseVariable(const char *errorMessage) {
+static uint32_t parseVariable(const char *errorMessage) {
     consume(TOKEN_IDENTIFIER, errorMessage);
     return identifierConstant(&parser.previous);
 }
 
-static void defineVariable(uint8_t global) {
-    emitBytes(OP_DEFINE_GLOBAL, global);
+static void defineVariable(uint32_t global) {
+    emitByte(OP_DEFINE_GLOBAL);
+    emitUint24(global);
 }
 
 static void binary(bool canAssign) {
@@ -188,7 +197,7 @@ static void expression() {
 }
 
 static void varDeclaration() {
-    uint8_t global = parseVariable("Expect variable name.");
+    uint32_t global = parseVariable("Expect variable name.");
     if (match(TOKEN_EQUAL)) {
         expression();
     } else {
@@ -270,13 +279,15 @@ static void string(bool canAssign) {
 }
 
 static void namedVariable(Token name, bool canAssign) {
-    uint8_t arg = identifierConstant(&name);
+    uint32_t arg = identifierConstant(&name);
     
     if (canAssign && match(TOKEN_EQUAL)) {
         expression();
-        emitBytes(OP_SET_GLOBAL, arg);
+        emitByte(OP_SET_GLOBAL);
+        emitUint24(arg);
     } else {
-        emitBytes(OP_GET_GLOBAL, arg);
+        emitByte(OP_GET_GLOBAL);
+        emitUint24(arg);
     }
 }
 

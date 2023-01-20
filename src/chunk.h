@@ -6,7 +6,6 @@
 
 #define OP_CODES \
     X(OP_CONSTANT) \
-    X(OP_CONSTANT_LONG) \
     X(OP_NIL) \
     X(OP_TRUE) \
     X(OP_FALSE) \
@@ -46,6 +45,5 @@ void freeChunk(Chunk *chunk);
 void writeChunk(Chunk *chunk, uint8_t byte, int line);
 
 int addConstant(Chunk *chunk, Value value);
-void writeConstant(Chunk *chunk, Value value, int line);
 
 #endif

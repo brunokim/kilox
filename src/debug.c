@@ -23,12 +23,6 @@ static void printConstant(const char *name, Chunk *chunk, int index) {
 }
 
 static int constantInstruction(const char *name, Chunk *chunk, int offset) {
-    uint8_t index = chunk->code[offset + 1];
-    printConstant(name, chunk, index);
-    return offset + 2;
-}
-
-static int constantLongInstruction(const char *name, Chunk *chunk, int offset) {
     uint8_t b0 = chunk->code[offset + 1];
     uint8_t b1 = chunk->code[offset + 2];
     uint8_t b2 = chunk->code[offset + 3];
@@ -77,8 +71,6 @@ int disassembleInstruction(Chunk *chunk, int offset) {
     case OP_DEFINE_GLOBAL:
     case OP_SET_GLOBAL:
         return constantInstruction(op_code_names[instruction], chunk, offset);
-    case OP_CONSTANT_LONG:
-        return constantLongInstruction(op_code_names[instruction], chunk, offset);
     default:
         printf("Unknown opcode %d\n", instruction);
         return offset + 1;

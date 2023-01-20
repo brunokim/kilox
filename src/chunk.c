@@ -48,16 +48,3 @@ int addConstant(Chunk *chunk, Value value) {
     return chunk->constants.count - 1;
 }
 
-void writeConstant(Chunk *chunk, Value value, int line) {
-    writeValueArray(&chunk->constants, value);
-    int index = chunk->constants.count - 1;
-    if (index < 256) {
-        writeChunk(chunk, OP_CONSTANT, line);
-        writeChunk(chunk, index, line);
-        return;
-    }
-    writeChunk(chunk, OP_CONSTANT_LONG, line);
-    writeChunk(chunk, (index >> 0) & 0X000000FF, line);
-    writeChunk(chunk, (index >> 8) & 0X000000FF, line);
-    writeChunk(chunk, (index >> 16) & 0X000000FF, line);
-}
